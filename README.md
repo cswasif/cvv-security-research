@@ -88,7 +88,26 @@ This is ongoing research. Contributions welcome through:
 
 ## 📄 License
 
-This research is shared under Creative Commons Attribution 4.0 International (CC BY 4.0) for academic and educational purposes.
+This research is shared under the **MIT License** - a permissive open-source license ideal for academic research that allows:
+- ✅ **Commercial use** - Others can use your research commercially
+- ✅ **Modification** - Others can modify and build upon your work
+- ✅ **Distribution** - Others can redistribute your research
+- ✅ **Private use** - Others can use your research privately
+- ✅ **No liability** - You're not liable for damages
+
+**Why MIT for thesis research?**
+- **Maximum reuse potential** for academic and industry applications
+- **Compatible** with most other open-source licenses
+- **Simple and permissive** - minimal restrictions on use
+- **Industry standard** for research code and documentation
+- **Future-proof** - won't restrict future publication or commercialization of your thesis
+
+**Alternative licenses considered:**
+- **CC BY 4.0** - Good for documentation, less ideal for code
+- **Apache 2.0** - Good for code, more complex
+- **GPL 3.0** - Copyleft, might restrict commercial use
+
+**MIT License** provides the best balance for academic research.
 
 ## 📞 Contact
 
