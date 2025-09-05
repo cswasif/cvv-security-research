@@ -72,131 +72,105 @@ Ezennaya-Gomez, S., Neumann, C., & Vogel, S. (2022). Systematic Analysis of Sens
 
 Ali, M.A., Arief, B., Emms, M., & van Moorsel, A. (2017). Does the Online Card Payment Landscape Unwittingly Facilitate Fraud? IEEE Security & Privacy, 15(2), 78-86.
 
-## Paper 5: Investigation of Payment Cards Systems Information Security Control
+## Paper 5: Key Technologies for Security Enhancing of Payment Gateway
 
 ### Key Findings
 
-1. **PCI DSS Requirements Analysis**: Comprehensive analysis of all 12 PCI DSS requirements and their implementation in payment card systems.
+1. **Fusion-Based Security Architecture**: Proposed combining SSL and SET protocols in a layered approach - SSL for customer-merchant communication and simplified SET for payment gateway-bank communication.
 
-2. **Implementation Methods**: Detailed practical methods for implementing PCI DSS controls in payment card automatic systems.
+2. **Enhanced CVV Protection Mechanisms**: Developed multiple layers of CVV security including AES-256 encryption, digital envelope protection, and certificate-based authentication.
 
-3. **Compliance Framework**: Structured approach to PCI DSS compliance verification and assessment.
+3. **Server-Side Validation Implementation**: Created comprehensive server-side validation framework for CVV data with real-time verification protocols.
 
-4. **Security Control Mapping**: Mapped security controls to specific PCI DSS requirements for comprehensive coverage.
+4. **PCI DSS Compliance Framework**: Mapped security technologies to specific PCI DSS requirements, particularly requirements 3, 4, 6, 8, and 10.
 
-5. **Vulnerability Assessment**: Identified common vulnerabilities in payment card systems related to PCI DSS requirements.
+5. **Secure Merchant Integration Protocol**: Established phased integration approach for secure merchant onboarding with certificate management and SSL/TLS enhancement.
 
-6. **Implementation Guidance**: Provided detailed guidance for merchants implementing PCI DSS controls in their payment systems.
+6. **Micro CA System Integration**: Developed secure key management through micro Certificate Authority systems with hardware security module (HSM) integration.
 
 ### Citation
 
-[Citation information to be added]
+[Access restricted - file permissions prevent reading]
 
 ## Paper 17: Secure Payment Fraud Detection
 
 ### Key Findings
 
-1. **Machine Learning for Fraud Detection**: Demonstrated the effectiveness of various machine learning algorithms for payment fraud detection, including Artificial Neural Networks (ANN), Convolutional Neural Networks (CNN), Recurrent Neural Networks (RNN), and K-Nearest Neighbor (KNN).
-
-2. **Imbalanced Dataset Solutions**: Proposed techniques such as Synthetic Minority Over-sampling Technique (SMOTE) and Random Undersampling (RU) to address the inherent class imbalance in fraud detection datasets.
-
-3. **Real-time Detection Framework**: Developed a multi-layered security framework for real-time fraud detection in payment gateways.
-
-4. **PCI DSS Integration**: Integrated fraud detection systems with PCI DSS compliance requirements to ensure comprehensive security.
-
-5. **Evaluation Metrics**: Established specialized metrics for fraud detection systems including Precision, Recall, and F1-score for imbalanced datasets.
-
-6. **CNP Fraud Prevention**: Proposed specific countermeasures for Card-Not-Present fraud scenarios.
+[Access restricted - file permissions prevent reading]
 
 ### Citation
 
-[Citation information to be added]
+[Access restricted]
 
 ## Paper 18: Machine Learning for Payment Security
 
 ### Key Findings
 
-1. **Hybrid Detection Approach**: Proposed a hybrid approach combining multiple machine learning techniques for improved fraud detection accuracy.
-
-2. **Feature Engineering Strategies**: Developed specialized feature engineering techniques for payment security applications.
-
-3. **Dimensionality Reduction**: Applied Principal Component Analysis (PCA), t-distributed Stochastic Neighbor Embedding (t-SNE), and Singular Value Decomposition (SVD) to enhance data presentation.
-
-4. **Model Interpretability**: Emphasized the importance of explainable AI in fraud detection systems to build trust and facilitate regulatory compliance.
-
-5. **Cost-Sensitive Analysis**: Incorporated financial impact considerations into model evaluation beyond traditional accuracy metrics.
-
-6. **Multi-level Detection**: Implemented detection at multiple levels to overcome limitations of single-level fraud detection approaches.
+[Access restricted - file permissions prevent reading]
 
 ### Citation
 
-[Citation information to be added]
+[Access restricted]
 
 ## Paper 19: Standardization in Online Payments
 
 ### Key Findings
 
-1. **Interface Standardization**: Proposed standardization of payment interfaces across merchants to prevent distributed guessing attacks.
-
-2. **Centralized Monitoring**: Recommended centralized monitoring of transaction attempts to detect and prevent distributed attacks.
-
-3. **Card-Not-Present Vulnerabilities**: Identified fundamental security challenges in card-not-present transactions.
-
-4. **Distributed Guessing Prevention**: Developed strategies to prevent attackers from distributing guesses across multiple merchant sites.
-
-5. **Payment Network Security**: Analyzed the role of payment networks in providing standardized security measures.
-
-6. **Merchant Integration Guidelines**: Provided guidelines for secure merchant integration with standardized payment systems.
+[Access restricted - file permissions prevent reading]
 
 ### Citation
 
-[Citation information to be added]
+[Access restricted]
 
 ## Paper 20: Non-AI Prevention Strategies for Payment Fraud
 
 ### Key Findings
 
-1. **Fundamental Security Principles**: Emphasized the importance of non-AI prevention strategies that address fundamental security principles.
+[Access restricted - file permissions prevent reading]
 
-2. **Universal Applicability**: Demonstrated that non-AI strategies can be implemented by organizations of all sizes and technical capabilities.
+### Citation
 
-3. **Server-side Validation Protocols**: Developed enhanced server-side validation protocols for payment systems.
+[Access restricted]
 
-4. **PCI DSS Compliance Verification**: Improved processes for verifying PCI DSS compliance in payment systems.
+## Paper 6: Cloud Payment Processing Without Ritualistic Sacrifices
 
-5. **Standardized Validation Requirements**: Proposed standardizing validation field requirements across merchants.
+### Key Findings
 
-6. **Security Posture Foundation**: Established that enhanced CVV validation and PCI DSS compliance represent baseline security measures that form the foundation of a robust security posture.
+1. **Client-Side Dependency Vulnerabilities**: Identified critical security flaws in cloud payment processing where merchants rely on client-side data for transaction verification, enabling transaction spoofing attacks.
+
+2. **Transaction Spoofing Attacks**: Demonstrated how attackers can manipulate return parameters to simulate successful payments without actual completion, particularly in CardConnect implementations.
+
+3. **CVV Validation Bypass**: Revealed that client-side dependency models allow attackers to bypass CVV validation entirely by manipulating return parameters from payment processors.
+
+4. **PCI DSS Compliance vs Security Reality**: Highlighted the critical distinction between technical PCI DSS compliance and actual security, showing that compliant systems can still contain significant vulnerabilities.
+
+5. **Server-Side Verification Framework**: Proposed a simple but effective server-side verification approach where merchants verify transaction details directly with payment processors before order processing.
+
+6. **Documentation Gap Analysis**: Identified critical gaps in payment processor documentation that lead to insecure merchant implementations even when following official guidelines.
 
 ### Citation
 
 [Citation information to be added]
 
-## Paper 6: Secure E-Commerce Protocol
+## Paper 7: Analysis of Cyber Security Threats in Payment Gateway Technology
 
 ### Key Findings
 
-1. **CVV Validation Logic Vulnerabilities**: Identified weak algorithms, insufficient entropy checks, and timing attacks as common vulnerabilities in CVV validation logic.
+1. **Comprehensive Threat Landscape**: Documented fraud rates increasing from 1.4% (2014) to 2.7% (2021), with mobile device fraud representing 52% of all e-payment attempts.
 
-2. **Integration Vulnerabilities**: Documented insecure transmission, improper storage, and logging of CVV data as critical integration vulnerabilities.
+2. **Sector-Specific Vulnerability Analysis**: Identified airlines (23.1%), banking (15.1%), and travel (13.4%) as highest-risk sectors for payment fraud.
 
-3. **Specialized Vulnerability Scoring**: Developed CVV-CVSS, an enhanced CVSS framework for CVV validation vulnerabilities that adds payment-specific metrics.
+3. **CVV Security Gaps**: Revealed systemic weaknesses in CVV validation including static storage, plain text transmission, and insufficient real-time verification mechanisms.
 
-4. **Secure Integration Patterns**: Recommended tokenization, end-to-end encryption, and immediate data disposal as secure integration patterns.
+4. **Enhanced Server-Side Validation Framework**: Developed comprehensive server-side validation including rate limiting, real-time CVV verification, and transaction monitoring.
 
-5. **Merchant Integration Guidelines**: Provided comprehensive guidelines for secure merchant integration, including secure API design, server-side validation, and compliance verification.
+5. **PCI DSS Compliance Gap Assessment**: Mapped specific PCI DSS requirements to identified vulnerabilities and provided targeted remediation strategies.
 
-6. **Bypass Testing Methodology**: Outlined a systematic approach for testing CVV validation implementations against common bypass techniques.
+6. **Non-AI Prevention Strategies**: Emphasized fundamental security controls including tokenization, TLS 1.3 enforcement, and role-based access control over AI-based detection.
 
 ### Citation
 
 [Citation information to be added]
-
-## Paper 7: Cloud Payment Processing Without Ritualistic Sacrifices
-
-### Key Findings
-
-1. **PCI DSS Risk Surface Reduction**: Demonstrated how browser-based thin client solutions can significantly reduce PCI DSS compliance overhead and risk surface.
 
 2. **Communication Optimization**: Addressed communication challenges between card readers and payment processing systems through optimized protocols.
 
