@@ -1,0 +1,458 @@
+The 7th IEEE International Conference on Intelligent Data Acquisition and Advanced Computing Systems: Technology and Applications
+12-14 September 2013, Berlin, Germany
+
+Investigation of Payment Cards Systems
+Information Security Control
+Valeriy Dudykevych, Oleksandra Bakay, Yuriy Lakh
+Information Security Chair of Lviv Polytechnic National University,
+Ukraine, 79005, Lviv, vul. Knyazya Romana, 1, room #204,
+julakh@polynet.lviv.ua, http://old.lp.edu.ua/index.php?id=ikta-zi
+documents which regulate bank activities. NBU's
+(National Bank of Ukraine) instruction "About special
+payment means emission and transactions with them"
+adopted 30.04.2010 [6] regulates the payment cards
+security standard documents. Considered payment cards
+work peculiarities the following issues must be regulated:
+x payment cards emission security work support;
+x bank actions directed on payment cards
+transaction risks minimizing;
+x security support during transactions with payment
+cards and work with overdraft clients debts.
+
+Abstract—Using Payment Card Industry Data Security
+Standard (PCI DSS), introduced to the required obligatory
+execution in 2008 for all organizations working with card
+systems VISA, MasterCard, American Express, Discover
+and JCB, has been described. Considered all the 12
+requirements of the standard, proved their productivity and
+the main ways of these requirements implementation in
+payment cards automatic systems have been investigated.
+Keywords—payment cards, standard, requirements,
+authorized staff, privileges, coding, encryption, decryption
+
+I.
+
+INTRODUCTION
+
+II.
+
+New information technologies not only widened
+business possibilities during the last years but also
+increased its susceptibility. On one hand electronic
+document and data exchange with clients and partners
+through the Internet makes business more effective [1],
+but on the other hand it threatens company's security [4].
+There are no impregnable systems. Corporative net
+vulnerability may cause not only financial damage but
+also reputation damage, loss of competitive advantages
+and other negative consequences. That is why it is
+important to know how to protect corporative
+infrastructure from the potential malefactor's actions.
+However, lately bank information system hacking
+happens more and more often all over the world, in
+particular the abusing and stealing of payment card
+holders data [3], [5]. That is why banks have to pay a lot
+of attention to information/data security. At the present
+banks have the correspondent experience in security of
+their transactions. It is based on banks' complex approach
+towards protective measures along all the stages the
+transactions consist of:
+x research and improvement of card standard
+technology base as well as of transactions;
+x counteraction to losses caused by abusing during
+emission and acquiring;
+x training of bank and trading (service) enterprises
+personnel and obligatory qualification test for
+those who have access to bank products - payment
+cards.
+Bank security documents including payment cards
+security documents are among the most important bank
+
+978-1-4799-1429-6/13/$31.00 ©2013 IEEE
+
+PCI DSS SEQURITY STANDARD PURPOSE
+
+Growth of losses from payment cards transactions
+became one of the main reasons that forced international
+payment systems to join their efforts and take additional
+measures to secure their clients. With this aim in 2004 a
+common security requirement document was adopted Payment Card Industry Data Security Standard. It joined
+security standards of the following payment systems:
+VisaInt, MasterCard, American Express, Dicovercard and
+JCB.
+Later, in September 2006 PCI Security Standards
+Council was established for the purpose of development
+and implementation of PCI DSS. The main Council's
+function is to develop and publish PCI standards,
+accompany documents, requirements determination for
+the companies that apply for PCI DSS /"QSA"/
+certification and scanning /"ASV"/, certification, trainings
+for future QSA auditors and audit control. In their turn
+international payment systems report in accordance to
+audit results and evaluate QSA work.
+All organizations authorized by Visa, MasterCard,
+American Express, Discover and JCB to hold, work with
+and forward payment cards information must meet the
+PCI DSS security standard. These organizations are banks,
+other suppliers of payment services, Internet shops and
+traditional trade enterprises.
+Conformity is not one-time requirement. Trade
+enterprises should show their conformity status once per
+year, at the same time provide the conformity support
+permanently.
+
+651
+
+III.
+
+STANDARD REQUIREMENTS
+
+the market. Otherwise the system will be additionally
+vulnerable.
+
+There are 12 obligatory requirements:
+A. Intersystem Screen Configuration and Support for
+the Purpose of Card Holder Data Security
+The requirement was proved to be important not long
+ago and points out on a necessity to use firewalls of ISA
+type. Contemporary firewalls block attacks on the session
+level as well as initialization of dangerous to web sites and
+systems code that cannot be protected with the older
+solutions.
+
+G. Data Access Delimitation in Accordance With Office
+Needs
+Only authorized personnel have access to important
+data. The best way is to introduce the so-called "white
+lists" - in other words everything is prohibited. First all
+privileges are cancelled, and after only authorized
+personnel gets minimal rights enough for to work with
+data.
+
+B. Not to Use Manufacturer Installed by Default System
+Passwords and Other Security Parameters
+This requirement is not excessive since the majority of
+companies - more than 60% - violate the rule installing
+and using passwords by default [2]. Trusted Computing
+base can be also used by malefactor. Operational systems
+and applications are usually equipped with automatic
+updating systems, but the majority of users do not pay
+attention to it and do not update software from the
+moment it was installed. Malefactors take the advantage
+of it.
+It also stands in the standard that the administrative
+access code cannot be neglected. The IPSec, SSTP, SSL,
+SSL/TLS technologies help with secure connection, that is
+especially important in case of remote administrative
+access.
+
+H. Giving Each Person a Unique Identification Number
+It helps to solve the problem when several users with
+equal rights have an access to one and the same data base.
+Double identification should be used for to strengthen
+access control. The remote access with the help of
+RADIUS and TACACS+ technologies gives more secure
+identification.
+I.
+
+Physical Data Access Limitation
+For security reasons the card information should be
+processed and stored in a secure place. If it is not available
+for some reason the physical control should be applied.
+Data classification and paper resources are covered by the
+rule.
+J.
+
+Net Resources Access Monitoring
+Audit is one of the PCI conformity key components. It
+helps to prove that the authorized user has access to the
+card data and reveal unauthorized access attempts.
+Monitoring and audit require date, time and transaction
+result recording.
+
+C. Card Holders Data Security Support
+The requirement describes card holder/user data
+(emitter bank is card owner). Ciphering should be used for
+security purpose. Any recorded information should be also
+ciphered. The standard is very precise: PIN-codes must
+not be recorded, but the rule is not always followed.
+
+K. Regular Security System and Process Testing
+Regular security system testing is a part of PCI
+standard. The systems with payment card information are
+scanned. For companies that have web sites with online
+payment opportunity, or store the credit card information
+online (even one-time storage), or forward payment card
+data with API monthly scanning is necessary.
+
+D. Card Holder Data Ciphering During Their
+Forwarding Through the Public Opened Networks
+The requirement continues the previous one and is no
+less important during payment transactions. The
+requirement describes how data should be ciphered,
+folded, distributed, secured, stored, forwarded, exchanged
+and how cipher keys should be stored.
+
+L. Information Security Policy Availability and
+Following
+Security policy concerns all PCI DSS requirements. It
+should be worked out, published, spread and supported in
+workable condition. It should contain maintenance rules
+for critical devices and be precise about personnel and
+partners duties concerning information security policy.
+The official personnel security upgrading program should
+be adopted and implemented.
+
+E. Antivirus Software Using and Updating
+The requirement can be standard itself, but usually a
+big percentage of users do not have antivirus programs or
+make mistakes using them. These users usually have weak
+updating strategies and/or incorrectly installed antivirus
+program that does not update itself and does not inform
+personnel about necessary updating [2].
+
+IV.
+
+F. Secured System and Application Research and
+Support
+The correct application research and its further life
+turned from recommendation to requirement in the PCI
+DSS standard. Research and use are separated in it. All
+test elements must be deleted before the product comes to
+
+SOFTWARE SAFEGUARDS CONSTRUCTION
+PRINCIPLES AND DEMANDS
+
+Information protection software most significant
+demerit is possibility to implement them in structural
+elements of automatized systems only with processor.
+Other information protection software demerits are:
+
+652
+
+x
+
+and decrypt data, maintain their integrity as well as work
+up digital signatures and certificates.
+At the highest level Cryptography namespace could be
+divided into four main parts, as shown at the Table I.
+
+Using processor operate time which increases
+request response time and therefore reduces
+working operating efficiency.
+x Decreasing of RAM volume as well as HDD
+volume accessible for functional tasks to use.
+x Possibility of random or suitable change, which
+may cause not only loosing protection functions
+but also become an additional security hazard.
+x Restrictions due to strict orientation on the some
+types data-flow computers architecture (even
+among the same class) – program depending on
+distinctive features of basic input/output system,
+break-point vector table etc.
+During organizing information protection software the
+most typical is development of complex programs
+fulfilling a number of protection functions, mostly users
+detecting, delimitation access to data dimensions,
+forbidding access to some RAM areas etc. The advantages
+of such programs are obvious: each program provides
+solving a number of important protection problems.
+Taking into account the described demerits and
+advantages, information protection software should
+confirm such demands as: functional completeness,
+flexibility and unified using.
+Provided analysis showed that the most complete
+correspondence for flexibility and unified demands
+provides such set of principles: open-ended module
+structure, total structuring, presentation at the machineindependent language.
+Open-ended module construction principle lie in the
+fact that any program at any level or volume has to be
+presented as a system of possible modules. At the same
+time every module at any level must be completely selfsupporting and have standard input and output, which
+allow connection with any other modules. Therefore,
+program software should be developed according to the
+“downwards” principle i.e. according to total structuring
+principle.
+Formulation at machine-independent language means
+that program module presentation should be in the form
+allowing to include them most easily into the program
+software of any automatized system. Such languages are
+often multiplatform and have been supported by MS
+CryptoAPI 2.0 and .NET Framework environments.
+V.
+
+TABLE I.
+
+MAIN ELEMENTS OF CRYPTOGRAPHY NAMESPACE
+
+Element
+
+Description
+
+Encryption
+algorithm
+
+Set of classes using for symmetric and
+asymmetric encryption as well as for hashing.
+
+Assisting
+classes
+
+Classes
+maintaining
+random
+number
+generation,
+providing
+transformation,
+cooperation with CryptoAPI libraries as well as
+encryption itself based on the stream model.
+Classes determined at the namespace
+System.Security.rptograph.
+509Certificates presenting digital certificates.
+Classes determining System.Cryptography.Xml
+at namespace and presenting digital signatures
+at XML-documents.
+
+.509
+certificates
+Digital
+signatures
+XML
+
+VI.
+
+MAIN SYMMETRIC ALGORYTHMS REALIZATION IN
+# LANGUAGE AT .NET FRAMEWORK
+
+Symmetric cryptoalgorithms DES and 3DES (TDES)
+are a few of symmetric cryptoalgorithms available from
+standard crypto-providers CryptoAPI.
+Generally DES has been no longer secure algorithm,
+therefore it could be used only in the systems where
+encryption safety is not critical.
+Algorithm 3DES uses different keys DES for each of
+iteration. 3DES/Triple DES variant using 2 keys is the
+mostly used application in applied systems.
+For investigation of data encryption/decryption during
+their transferring in the unprotected environment was used
+program module at C#, where beside DES and 3DES was
+realized AES algorithm, which is presented by the class
+Rijndael in .NET. This algorithm supports keys with
+length 128, 192 and 256 bits.
+Hereafter are presented open text and obtained its
+cryptogram encrypted by Triple DES algorithm, key
+length 192 bits with password “Rhbgnjpf[bcn” (Fig. 1, 2,
+3).
+
+CRYPTOAPI ENVIRONMENT
+
+CryptoAPI supports work with symmetric and
+asymmetric keys i.e. allows data encryption and
+decryption as well as works with electronic certificates.
+Set of supported cryptographic algorithms depends on the
+concrete crypto-provider. The main part of cryptographic
+classes .NET is based on the crypto-providers CryptoAPI.
+.NETFramework includes a set of cryptographic
+services, which are expanding similar Windows services
+using
+CryptoAPI.
+System.Security.Cryptography
+namespace opens program access to different
+cryptographic services, using which supplements encrypt
+
+Figure 1.
+
+653
+
+Encryption demonstration.
+
+x
+
+Simplicity of using – by means of available
+simple interface.
+Since used in program module algorithms have been
+encryption international standards, therefore this module
+could be used as a mean providing data security during
+their storage as well as transferring through unprotected
+net in pursuance of standard PCI DSS demands.
+VII. CONCLUSIONS
+PCI DSS is used to determine payment card holders
+information security and to give recommendations to trade
+and service enterprises, software producers and suppliers
+about software security.
+The standard was adopted for to help card holders and
+card information holding organizations to secure their
+business and minimize losses from fraud. It helps
+organizations that work with cards to upgrade their
+security level. But it cannot be taken as the only reason for
+the abovementioned measures.
+Elements of cryptographic protection were observed in
+the paper as one of the Standard demands. Were described
+means of encryption symmetric algorithms realization in
+the .NET Framework environment and presented example
+of encryption module, developed in this environment.
+Module is available in open access and could be integrated
+into any security system since was realized in high-level
+program language.
+Presented program realized encryption and decryption
+and writes its work results into the text file. Program
+allows to choose crypto algorithm itself as well as the
+level of its stability (through key length determining)
+direct-acting before the work beginning.
+
+Figure 2.
+Open text: ATM3598 – bankomat identifier; 2625 –
+account number; 4042610070973332 – card number; 141965 –
+security symbol; 2729 – client’s PIN; 50 – quantity of requested
+money in UAH; 685 – transaction number; 008003990225 – all data
+message control code.
+
+Figure 3.
+
+Cryptographed message.
+
+Decoding is providing similarly indicating file
+addresses using the same password. Changing password
+changes also generated on its base key and initialization
+vector making decoding impossible.
+Summarizing, such program module possesses
+following advantages:
+x Variability – possible to select encryption
+algorithm and its stability level (key length)
+direct-acting during process of each file
+encryption.
+x Flexibility – program module is written at highlevel object-oriented language # and realized at
+the platform .NET Framework allows be widely
+used in different systems e.g. systems of the firm
+Microsoft as well as in Unix-similar
+environments.
+
+REFERENCES
+[1]
+
+[2]
+[3]
+[4]
+[5]
+
+[6]
+
+654
+
+S. Budzherak, “Investigation of methods providing information
+security in SWIFT system,” XIII International PhD Workshop
+OWD 2011, 22–25 October 2011, Gliwice pp. 110–112, Webpage. - http://mechatronika.polsl.pl/owd/pdf2011/110.pdf
+R.M. Magalhaes, “PCI DSS security,” Section: Web-page. http://www.windowsecurity.com
+V.Gaikovitch, A.Pershin, Electronic Bank Systems Security.
+United Europe, Moscow, 1994. (in Russian)
+I. Goldovsky, The Internet Payments Security. Piter, SanktPetersburg, 2001. (in Russian)
+V.K. Zadiraka, O.S. Oleksiuk, M.O. Nedashkovsky, Bank
+Information Security Methods, Vyshcha Shkola, Kyiv, 1999. (in
+Ukrainian)
+National Bank of Ukraine instruction #223 “About special
+payment means emission and transactions with them,” 30.04.2010.
+Web-page. - http://zakon1.rada.gov.ua/laws/show/z0474-10. (in
+Ukrainian)
+
+

@@ -1,0 +1,1014 @@
+Bypass Testing of Web Applications
+Jeff Offutt, Ye Wu, Xiaochen Du and Hong Huang
+Information and Software Engineering
+George Mason University
+Fairfax, VA 22030, USA
+(+1) 703-993-1654 / 1651
+fofut,wuye,xdu,hhuang2g@ise.gmu.edu
+Abstract
+Web software applications are increasingly being deployed in sensitive situations. Web applications are used to
+transmit, accept and store data that is personal, company
+confidential and sensitive. Input validation testing (IVT)
+checks user inputs to ensure that they conform to the program’s requirements, which is particularly important for
+software that relies on user inputs, including Web applications. A common technique in Web applications is to perform input validation on the client with scripting languages
+such as JavaScript. An insidious problem with client-side
+input validation is that end users can bypass this validation. Bypassing validation can cause failures in the software, and can also break the security on Web applications,
+leading to unauthorized access to data, system failures, invalid purchases and entry of bogus data. We are developing
+a strategy called bypass testing to create client-side tests for
+Web applications that intentionally violate explicit and implicit checks on user inputs. This paper describes the strategy, defines specific rules and adequacy criteria for tests,
+describes a proof-of-concept automated tool, and presents
+initial empirical results from applying bypass testing.
+
+1. Introduction
+The World Wide Web gives software developers a new
+way to deploy sophisticated, interactive programs with
+complex GUIs and large numbers of back-end software
+components that are integrated in novel and interesting
+ways. Web applications are constructed from heterogeneous software components that interact with each other
+and with users in novel ways. Web software components are
+distributed across multiple computers and organizations, are
+often created and integrated dynamically, are written in diverse languages and run on diverse hardware platforms, and
+
+must satisfy very high requirements for reliability, availability and usability. These characteristics offer powerful new
+abilities and also present new problems to software developers.
+Analyzing, evaluating, maintaining and testing these applications present many new challenges for software developers and researchers. Most Web applications are run
+by users through a Web browser and use HTML to create
+graphical user interfaces. The user interfaces use the Internet to connect to software components that run on separate
+Web servers. Web servers are computers or collections of
+computers that host software that provides resources in response to HTTP requests. Because this research is primarily
+concerned with software, this paper uses the term “server”
+to be synonymous with “software on the Web server.” Users
+enter data and make choices by manipulating HTML forms
+and pressing submit buttons. Browsers send the data and
+choices to the server (that is, the software on the Web
+server) using HTTP requests. An important point to note
+is that HTTP is a “stateless” protocol, that is, each request
+is independent from previous requests and, by default, the
+server does not know whether multiple requests come from
+the same or different users.
+The type of HTTP request determines how the user’s
+data is packaged when sent to the server. Although
+HTTP defines a number of request types, this paper only considers the two most common types of
+HTTP requests, GET and POST. GET requests package the data as parameters on the URL that are visible in the URL window of most browsers (for example,
+http://www.buyit.com?name=george). POST
+requests package the data in the data packets that are sent
+to the server.
+A common activity of Web applications is to validate the
+users’ data. This is necessary to ensure that the software receives data that will not cause the software to do bad things
+such as crash, corrupt the program state, corrupt the data
+store on the server, or allow access to unauthorized users.
+
+Proceedings of the 15th International Symposium on Software Reliability Engineering (ISSRE’04)
+1071-9458/04 $ 20.00 IEEE
+
+This type of input validation is crucial for Web applications,
+which are heavily user interactive, often serve a very large
+user base, have very high quality requirements, and are always publicly accessible [14]. Because of the fundamental
+client-server nature of Web applications, input validation is
+done both on the client and the server.
+HTML pages (whether static html files or dynamically
+created) can include scripting programs that can respond
+to user events and check various syntactic attributes of the
+inputs before sending the data to the server. User events
+that JavaScript can respond to are defined by the HTML
+document object model (DOM) and include mouse over
+events, form field focus events, form field changes, and button presses, among others. Client-side checking is used to
+check that required fields are filled in, inputs conform to certain restrictions on characteristics such as length, characters
+used, and satisfaction of syntactic patterns (such as email
+addresses). Client-side checking can be done as soon as a
+user event is triggered or after the user clicks on a submit
+button but before the data is submitted. Doing input validation on the client avoids the need for a trip to the server and
+allows the checking to be defined within the input form.
+Server side checking is done by programs on the server
+such as CGI/Perl, Java servlets, Java Server Pages, and Active Server Pages. Server side checking can perform all of
+the checks that client-side checking can, but not until after
+the user presses the submit button. Server side checking
+cannot respond to user events, but has access to the state of
+the file system and database on the server. High level languages (such as Java) can be used on the server to provides
+more robust and flexible ways to check inputs and respond
+to invalid user inputs than client-side untyped scripting language (such as JavaScript).
+
+validation, then the users can bypass the validation. This
+technique is sometimes used by hackers.
+This research addresses the problem of testing server
+software for robustness and security. The technique of bypass testing is to utilize the ability to bypass client-side
+checking to create tests, thereby supplying invalid inputs to
+the software.
+An additional ability that is available when bypassing
+HTML forms is to override hidden form fields. HTML allows data to be placed into a page with the tag “<INPUT
+Type="Hidden" ...>”. These fields are not shown to
+the users in the browsers, but data in the fields are submitted
+to the server. Bypassing forms allow the additional ability
+to change or remove the contents of hidden form fields.
+One of the most common ways to violate data security
+is through “SQL injection.” Many Web applications use
+client-supplied data in SQL queries. However, if the application does not strip potentially harmful characters, users
+can add SQL statements into their inputs. This is called
+SQL injection, and Anley [2] claims that despite being simple to protect against, many production systems connected
+to the Internet are vulnerable. SQL injection vulnerability
+occurs when an attacker inserts an SQL statement into a
+query by manipulating data inputs.
+
+1.1. Running Web application tests through HTML
+forms
+
+2.1. Semantic input validation
+
+HTML forms expect users to type their values and make
+their choices by using the keyboard and mouse. However,
+it turns out to be easy for users to bypass the HTML to
+send values directly to the server software. For example,
+if the GET request is expected, the users can simply type
+the parameters into the URL box in their browsers. If the
+POST request is expected, a simple program can be written
+on the client that creates and submits the request. There are
+two reasons for bypassing HTML forms. One is for convenience; if a Web application is used a lot it might be more
+convenient to skip the relatively slow FORM interface. Another reason is for automation; when running multiple tests
+on a Web application, the test execution can be automated
+by bypassing the forms.
+This ability to bypass form entry allows another strategy
+to be used. If the Web application uses client-side input
+
+2. Types of Client-side Validation
+Input validation can check both the syntax and the semantics of inputs. Inputs can be validated on the client by
+using the HTML input boxes to restrict the size or contents
+of inputs (syntactic restrictions only), and by writing programs such as JavaScripts to evaluate the values before submission (syntactic and semantic restrictions).
+
+In an initial attempt at categorization, we have identified
+three types of semantic data input validation. A number is
+provided for each type to refer to later in the paper.
+1. Data type conversion (2.1.A). Most inputs to HTML
+form elements are plain strings that are converted to other
+types on the server. The client can check whether the string
+can be converted correctly. For example, if the input is an
+integer, the client can check to ensure that all characters are
+numeric digits.
+2. Data format validation (2.1.B). There are many more
+restrictive constraints on inputs that can be checked, and this
+is one of the most common ways to validate input on the
+Web. This includes checking the format of money, phone
+numbers, personal identification numbers, email address,
+and URLs.
+3. Inter-value constraint validation (2.1.C). There are often constraint relationships among input values. For exam-
+
+Proceedings of the 15th International Symposium on Software Reliability Engineering (ISSRE’04)
+1071-9458/04 $ 20.00 IEEE
+
+ple, when providing payment information, a check payment
+should include a bank routing number and a bank account,
+whereas a credit card payment should include a credit card
+number and an expiration date. The combination of a bank
+routing number and a credit card number should not be allowed.
+
+2.2. Syntactic input validation
+HTML can also be used to impose several types of syntactic restrictions, all of which can be avoided by bypass
+testing:
+1. Built-in length restriction (2.2.A). Text boxes can include a “maxlength” attribute to restrict the length of text
+inputs. In the following text input box, only three characters will be accepted:
+
+Illegal Character
+Empty String
+Commas
+Directory paths
+Strings starting with forward slash
+Strings starting with a
+period
+Ampersands
+Control character
+Characters with high bit
+set
+XML tag characters
+
+Symbol
+,
+.. ../
+/
+.
+&
+NIL, newline
+decimal 254 and 255
+,
+
+Table 1. Characters that sometimes cause
+problems for Web applications.
+
+<INPUT Type=text Name=Age Maxlength=3>
+
+2. Built-in input value restriction (2.2.B). HTML can
+use select boxes, check boxes, and radio boxes to restrict
+the user to a certain pre-defined set of inputs.
+3. Built-in input transfer mode (2.2.C). HTML forms
+define the type of request (GET or POST). Because of the
+differences in these requests, this is effectively a way to restrict the user’s input. HTML links always generate a GET
+request.
+4. Built-in data access (2.2.D). Web browsers manage
+two types of data, cookies and hidden form fields. Hidden
+form fields can be viewed if the users look at the source, but
+are normally not shown. Cookies are automatically managed by the browsers and server software and are sent to
+the server automatically. Cookies can also be viewed in
+most browsers (for example, in Mozilla by “Tools-Cookie
+Manager-Manage Stored Cookies”). A major difference is
+that cookies persist across multiple requests, whereas hidden form fields are transient data items that only appear in
+individual HTML pages.
+5. Built-in input field selection (2.2.E). An HTML form
+has a pre-defined set of form fields that users can select values for. Other values are normally not allowed, and clientside scripting can also disable certain input fields by making
+them unavailable or hidden.
+6. Built-in control flow restriction (2.2.F). HTML pages
+allow the user to transfer to a certain, fixed set of URLs.
+These are defined by Action attributes in FORM tags and
+by HTML links.
+
+2.3. Generalizing to input validation
+Some of the vulnerabilities (both on client and server)
+are due to the server not checking inputs from the client;
+but it would be a mistake to assume checking data is all that
+is necessary. By considering penetration techniques such as
+
+SQL injection, cross-site scripting, buffer overflow, embedded script attack, and shell escape vulnerabilities, Wheeler
+[18] gives a general solution to user input validation from a
+security perspective. Any input accepted from a user must
+be validated and any illegal input data should be filtered out.
+Here are some general rules that should be considered.
+1. Filters (2.3.A): Set up filters in the Web application
+to prevent illegal characters from reaching the server’s data
+store. Table 1 lists some specific characters that can be
+problems for Web applications.
+2. Numeric limits (2.3.B): Limit all numbers to the minimum (often zero) and maximum allowed values.
+3. Email addresses (2.3.C): A full email address checker
+should be enforced. A full email address includes a username and valid domain name. A complete email check
+should also ensure that the email contains all expected information, including subject, and recipient addresses.
+4. URLs (2.3.D): URLs (and more generally, URIs)
+should be checked to ensure that they have a valid form and
+the destination exists.
+5. Character patterns (2.3.E): When possible, legal character patterns need to be identified. They can often be expressed as regular expressions. Inputs that do not match the
+pattern should be rejected.
+
+2.4. Feasibility study: CyberChair
+As an initial feasibility study, we applied preliminary
+versions of the bypass testing techniques to CyberChair,
+a Web-based paper submission and reviewing system [17]
+that is used by a number of conferences, including ISSRE.
+It has been in use since 1996, and was opened as free software for downloading in 2000. The CyberChair web site
+(www.cyberchair.org) listed 242 users in April 2004.
+
+Proceedings of the 15th International Symposium on Software Reliability Engineering (ISSRE’04)
+1071-9458/04 $ 20.00 IEEE
+
+CyberChair has multiple phases to support a conference.
+Authors submit abstracts in the first phase, and then full
+papers in the second. We manually tested the submission
+page of the second phase. Tests were performed on the ISSRE 2004 conference server. We did not have access to the
+source code and did not download CyberChair. We started
+with a user id and access code from an abstract submission
+in the first phase. After logging in, CyberChair returns an
+HTML page with a form to submit papers. To implement
+bypass testing, we saved the page and then modified it.
+In this early feasibility study, our test creation process
+was not formalized. We broke the inputs into three levels;
+the control flow level, parameter level, and value level. At
+the control flow level, we attempted to submit a paper without logging in. At the parameter level, we removed some
+parameters from the form and then submitted. At the value
+level, we tried various values for parameters, including values that are normally not expected by the software. This
+process revealed five types of faults, all of which are potential security holes.
+1. Submission without authentication: After correctly
+logging in to CyberChair, a submission form is returned.
+We decided to attempt to use that form to submit without
+a valid login. We saved the page locally, and changed the
+Action attribute on the FORM tag from a relative URL to
+a complete URL. (A relative URL does not include a domain name and only works within a single browser session.)
+Then we copied the modified form to a second computer,
+and used it to submit a file. The submission was allowed,
+implying that the semantics of a login is to send the submission page, not to only allow authenticated users to submit.
+Whereas we used a valid login to find the submission page,
+it would not be difficult for someone to find or guess a valid
+URL for the submission, particularly since CyberChair is
+an open-source program.
+2. Unsafe use of hidden field: The submission page uses
+a hidden field to track the user. We customized the submission form by changing the value of the hidden form field
+and were still able to submit the paper. This allows the possibility of overwriting another user’s submission.
+3. Disclosing information: We also tried removing the
+hidden field and setting its value to empty. In these cases,
+the software failed and returned messages that indicated in
+which file and which line of code the program failed. This
+kind of information is confusing to valid users and potentially unsafe to show to malicious hackers.
+4. No validation for parameter constraint: The software
+does not check if the selected file type and the file submitted
+really match. For example, it is possible to select the file
+type to be pdf, but submit an rtf file instead. This lack of
+constraint checking can corrupt the state on the server.
+5. No data type or data value validation: CyberChair
+asks the user to submit the number of pages, which should
+
+be an integer value between 1 and some fairly small number such as 10 or 15. We tried submitting non-integer values, negative numbers, and extremely large numbers, none
+of which were detected by the software. Similar problems
+are also found in other fields.
+Although this experience is anectodal, and our process
+was fairly ad-hoc, it does demonstrate that bypass testing
+can be effective on software that has reasonably wide use.
+The rest of this paper provides a first attempt to formalize
+these ideas.
+
+3. Modeling HTML Input Units
+Web applications include static HTML files and programs that dynamically generate HTML pages. HTML
+pages can include more than one form, and each form can
+include many input fields. For example, we identified 169
+HTML hyperlinks and 20 forms on amazon.com’s home
+page. This makes automatic input validation difficult to
+manage by hand, thus we take a first step toward automation by constructing a formal model for HTML client-server
+inputs.
+Each HTML page, whether a static file or dynamically
+generated, can have zero or more HTML links and forms
+that let users interact with the server. An input unit I U =
+S D T  is the basic element of interaction on the client
+side. The inputs are sent to a software component S , which
+is on some Web server, and includes a set of input elements
+D . D is a set of ordered pairs, n v , where n is a name
+(parameter) and v represents the set of values that can be
+assigned to n. The set of values may be unlimited, as in a
+text box, or finite, as with a selection input. It is sometimes
+convenient to think of these sets of values as defining a type.
+T is the HTTP transfer mode (GET, POST, etc.).
+There are two types of input units, form and link. A form
+input unit is an HTML form that specifies the server software component as the Action attribute within the Form
+tag, and the input data corresponds to all the input fields
+within the form. The transfer mode is specified within the
+Method attribute of the Form tag.
+A link input unit is an HTML link in an <A> tag. A link
+input unit’s server target can either be a static HTML file
+or a program such as a servlet, and the target is specified
+as the HREF attribute of the <A> tag. By definition, link
+input units always generate GET requests and only have input elements when the URL is modified or extended with
+parameter values (URL rewriting). In the HTML link <A
+HREF="prog?val=1", S is prog and D is fval 1g.
+As an example, consider the screen shot of STIS in Figure 1. The Small Text Information System (STIS) was built
+by a student at GMU for a class project, and extensively updated by another student to be use as a classroom demo. It
+helps users keep track of arbitrary textual information. The
+
+Proceedings of the 15th International Symposium on Software Reliability Engineering (ISSRE’04)
+1071-9458/04 $ 20.00 IEEE
+
+main part of the screen in Figure 1 contains two form input
+units and 12 link input units, plus the menu bars on the top
+and the bottom have 5 more link input units apiece. Key
+portions of the HTML for the search form input units and
+the delete link input units are shown in the callout bubbles.
+
+3.1. Composing input units
+Some Web pages may have large numbers of inputs,
+which can be difficult to manage. For example, it is common to have identical forms for things like searching and
+logging in. It is easy to eliminate the redundancy associated
+with identical forms in static HTML pages, but harder for
+dynamically generated pages. Because the number of potentially unique dynamically generated pages is arbitrary,
+and which pages are generated depends on inputs and processing on the server, the problem of identifying all input
+units from a client without access to the program source is
+undecidable.
+When possible, the following three composition rules are
+used to reduce the number of input units to consider. To
+simplify the discussion, the following definitions assume
+two input units, each of which contains only one parameter: iu1 = S1 D1 T1  iu2 = S2 D2 T2 , and
+D1 = fn1 v1 g and D2 = fn2 v2 g. All three composition rules require the two input units to have the same
+server software component.
+1. Identical input units composition. Two input units
+iu1 = S1
+D1
+D2
+T1  and iu2 = S2
+T2  are identical iff S1 = S2 , D1 = D2 and T1 = T2 . The two units are
+merged into a new input unit iu = S1 D1 T1 . For example, it is common for a Web page to have the same search
+form in two different places on the page.
+2. Optional input element composition. Two input units
+iu1 = S1
+D1
+D2
+T1  and iu2 = S2
+T2  have optional elements if S1 = S2 , T1 = T2 and one input unit
+has an input element name that is not in the other. That is,
+there exists n1 v1  2 D1 such that there is no v2 where
+n1 v2  2 D2, or conversely, there exists n2 v2  2 D2
+such that there is no v1 where n2 v1  2 D1 . The two
+0
+input units are merged, forming iu = S1 D T1  where
+0
+D = fD1  D2 g. This happens when a dynamically generated page includes different input elements, for example,
+if an order entry form sometimes includes an input box to
+enter a discount coupon code.
+3. Optional input value composition. Two input units
+iu1 = S1
+D1
+D2
+T1  and iu2 = S2
+T2  have optional input values if S1 = S2 , T1 = T2 and there exists
+n1 v1  2 D1 and n2 v2  2 D2 , such that n1 = n2
+but v1 6= v2 . Then the two input units are merged, form0
+0
+ing iu = S1 D T1  where D = fD1 , n1 v1 g 
+fD1 , n2 v2 g  fn1 v1  v2 g. This happens when
+a dynamically generated page sometimes includes different
+
+input values. For example, in an online grade entry form
+at our university, undergraduate courses have fewer choices
+for grades than graduate courses do. Of course, this composition may lead to more invalid combinations of choices.
+The two search forms at the top and the bottom of the
+screen in Figure 1 are identical and are thus composed. The
+two search forms with buttons “Search” and “All Records”
+use the same server software component, but have different input elements, thus can be merged under the optional
+input element composition rule. Finally, the three “delete”
+link input units all reference the same server software component, so can be merged under the optional input value
+composition rule.
+
+4. Bypass Testing
+Most input validation focuses on individual parameters.
+This works well for traditional software, where the patterns
+of interaction between users and software are fixed and cannot be altered by the users. An interesting complexity is that
+the use of dynamic Web pages means that the same URL
+can produce different forms at different times, depending on
+the parameters supplied, state on the server, characteristics
+of the client, and other environmental information. Additionally, users of Web applications can not only change the
+values of input parameters, but can also change the number of input parameters and the control flow. This makes
+it easier to violate constraints among different parameters
+and between software components. This section describes a
+systematic approach to identify constraints among input parameters. This problem is common to all Web testing strategies as well as GUI testing strategies. Then rules are given
+to generate bypass test cases to test the Web application to
+ensure these constraints are adequately evaluated. According to the classification of input validation types from Section 2, bypass testing will be conducted at three levels, as
+discussed in the following subsections. Automatic recognition of failure and invalid behavior has not been addressed
+by this research.
+
+4.1. Value level bypass testing
+This type of bypass testing tries to verify whether a Web
+application adequately evaluates invalid inputs. This testing
+is based on the restrictions described in Section 2. Given
+a single input variable, invalid inputs can be generated according to the 14 types of input validation that are specified
+in Section 2.
+
+
+
+Data type conversion violation (2.1.A). HTML inputs
+are initially strings, but they are often converted to
+other data types on the server. Data type conversion
+testing uses values of different types to evaluate the
+
+Proceedings of the 15th International Symposium on Software Reliability Engineering (ISSRE’04)
+1071-9458/04 $ 20.00 IEEE
+
+<form action="update_search_params.jsp" method=POST>
+<select name="infoCategory">
+<option value="[*ALL*]">[All Records]</option>
+<option value="Computer">Computer</option>
+</select>
+Search:<input type="text" name="search" size="30">
+<input type="checkbox" name="sname" checked> Name
+<input type="checkbox" name="content" checked>Con…
+<input type="submit" value="Search"> </form>
+<form action="update_search_params.jsp" method=POST>
+<input type="submit" value="All records"> </form>
+<tr> <td> 1 </td>
+<td><a
+href="delete_record.jsp?rec_name=Downloads&
+rec_category=Computer">delete</a></td> ….
+</tr>
+<tr> <td> 2 </td>
+<td><a href="delete_record.jsp?rec_name=JBuilder&
+rec_category=Computer">delete</a></td> ….
+</tr>
+<tr> <td> 3 </td>
+<td><a href="delete_record.jsp?rec_name=JTB&
+rec_category=Computer">delete</a></td> ….
+</tr>
+
+Figure 1. STIS initial screen.
+
+server-side processing, including general strings, integers, real numbers, and dates.
+Built-in length restriction violation (2.2.A). The
+HTML tag input can have an attribute maxLength, as
+described in Section 2. Invalid values are generated to
+violate these restrictions.
+Built-in value restriction violation (2.2.B). Pre-defined
+input restrictions from HTML select, check and radio
+boxes are violated by modifying the submission to submit values that are not in the pre-defined set.
+Special input value (2.1.B, 2.3.A - 2.3.E). When data
+is stored into a database or XML document, and under
+certain kinds of processing, some special characters,
+as defined in Table 1, can corrupt the data or cause
+the software to fail. This data is often validated with
+client-side checking, but sometimes with server-side
+checking. Thus, following Wheeler’s suggestions [18],
+values for text fields are generated that contain special
+characters.
+
+4.2. Parameter level bypass testing
+This type of bypass testing tries to address issues related
+to inter-value constraint (2.1.C), built-in data access (2.2.D),
+and built-in input field selection (2.2.E).
+
+It is relatively easy to enumerate possible invalid inputs
+for an input parameter. However, the restrictive relationships among different parameters are hard to identify, hard
+to validate and are thus often ignored during testing. There
+are many kinds of relationships. One type is invalid pair,
+where two parameters cannot both have values at the same
+time. For example, it is not reasonable to have a checking account number and a credit card expiration date in the
+same transaction. Another type is required pair, where if
+one parameter has a value, the other must also have a value.
+For example, if we have a credit card number, we must also
+have an expiration date. Parameter level bypass testing tries
+to test Web application by executing test cases that violate
+restrictive relationships among multiple parameters.
+Because the HTML files are very often generated dynamically, these relationships cannot always be obtained
+statically and must be identified dynamically. They are
+sometimes described in English-language instructions, and
+sometimes simply assumed. Nevertheless, if we can identify and follow all possible ways to send parameters to a
+server program, we can ensure conformance to the restrictive relationships, and then find values to violate the restrictive relationships. Thus, we define the input pattern a particular set of parameters that can be used at the same time.
+In the example that is shown in Figure 1, four different buttons (two search buttons and two all record
+buttons) send requests to the same server software
+component
+update search params.jsp.
+
+Proceedings of the 15th International Symposium on Software Reliability Engineering (ISSRE’04)
+1071-9458/04 $ 20.00 IEEE
+
+Our model composes the four submit buttons
+into one input unit I U = fS D T g where
+S
+= fupdate search params.jspg,
+D
+=
+f(infoCategory,
+“Computer”
+or
+“[All
+Records]”), (search, “”), (sname, “checked”),
+(content, “checked”), (submit, “Search” or
+“All record”)g and T = fPOSTg.
+This input
+unit models all possible values that can be sent to
+update search params.jsp. But STIS is designed
+to send only two input patterns. The first one sends all
+the parameters to the server, and the second only sends
+(submit, “all record”).
+The following algorithm is designed to derive all possible input patterns in a Web application. As with finding input units, this is generally an undecidable problem without
+access to the server program source. Thus, this algorithm
+creates an approximation that is limited by the data that is
+supplied to existing forms in Step 2. The algorithm does
+not specify how the data is generated; this is up to the discretion of the tester. Likely approaches are to use all selections in list boxes and radio buttons and to generate arbitrary
+valid strings. Elbaum, Karre and Rothermel [5] proposed a
+method to generate tests by saving and modifying data that
+normal users have submitted; this method could be used to
+support bypass testing. The input patterns that are created
+by the algorithm are used to generate parameter level bypass
+tests.
+Algorithm: DFS to identify input patterns of Web
+applications
+Input:
+The initial page of a Web application, I
+Output:
+Identifiable input patterns
+Step 1 : Create a stack ST to retain all input units that need
+to be explored. Define an initial input unit ius as the
+URL for I with no parameters. Initialize ST to ius .
+Create a set IUS to retain all input units that have been
+identified. Initialize IUS to empty.
+Step 2 : While ST is not empty, pop an input unit (defined
+in Section 3) from ST, generate data for the input unit
+and send it to the server. When a reply is returned,
+analyze the HTML content. For each input unit iu in
+the returned HTML document:
+if iu is a link input unit (A tag) and the URL
+has already been explored, do not push iu onto
+the stack.
+if iu 2 I U S (it has already been found), do not
+push iu onto the stack.
+0
+
+if there exists an input unit iu 2 I U S such that
+0
+iu and iu have optional input elements, update
+the value of iu. Do not push iu onto the stack.
+
+Otherwise, a new input pattern has been identified; add iu to IUS as an optional input unit, and
+then push iu onto ST.
+After executing the algorithm, we have a collection of
+input units I U = S D T , where D = fP1 P2 ::: Pk g
+and Pi = fni1 v1i  ni2 v2i  ::: nia vai g. Each Pi is a
+valid input pattern for the input unit I U . Based on the input
+patterns, we generate three types of invalid input patterns to
+test the restrictive relationships among parameters.
+The empty input pattern submits no data to the
+server component. Formally, I U 1 = S  T .
+The empty input pattern will violate all required pair restrictive relationships.
+For example, in Figure 1, a normal delete request
+is
+delete record.jsp?reco name=JBT
+&rec category=Computer. The corresponding request of the empty input pattern will be
+delete record.jsp.
+The universal input pattern submits valid values for
+all parameters that the server component knows about.
+Formally, I U 2 = S P1 P2 ::: Pk T ). The
+universal input pattern will violate all invalid pair restrictive relationships.
+
+S S S
+
+The differential input pattern submits valid values for
+all parameters in one input pattern, plus a value for
+one parameter that is not in that input pattern (an invalid input). For each pair of input patterns Pi and
+Pj , generate an invalid input pattern in the following
+way. x is a parameter from Pj , Pi , chosen arbitrar0
+0
+ily. I U 3 = S P T , where P = Pi fxg. The
+intent of the differential input pattern is to make subtle
+changes that are not likely to be identified by checks
+other than invalid input checking.
+
+S
+
+Parameter level bypass testing focuses on relationships
+among different parameters, therefore, all values of input
+parameters are selected from a set of valid values.
+
+4.3. Control flow level bypass testing
+The previous two types of bypass testing assume users
+follow the control flow that is defined by the software. However, users of Web applications can alter the control flow
+(built-in control flow restriction violation 2.2.F) by pressing
+the back button, pressing the refresh button, or by directly
+entering a URL into a browser. This ability adds uncertainty
+and threatens the reliability of Web applications.
+Control flow level bypass testing tries to verify Web applications by executing test cases that break the normal execution sequence. As a first step, the “normal” control flow
+
+Proceedings of the 15th International Symposium on Software Reliability Engineering (ISSRE’04)
+1071-9458/04 $ 20.00 IEEE
+
+must be identified. The algorithm for finding input patterns
+in the previous section provides the needed information.
+The order for traversing the ius can be obtained from the
+partial ordering implied by the DFS graph. The input units
+that were identified can be used to define all normal control
+flows from that unit. So we expand the algorithm to derive
+all normal control flows for all input units. In the algorithm,
+an input unit iu is popped form the stack, data is supplied,
+then sent to the server. All the input units that are returned
+from that submission are considered to be candidates for the
+next step in the control flow. Given that, control flow bypass
+testing includes two types of control flow alterations:
+1. Backward and forward control flow alteration.
+Given a normal control flow iu1 iu2 ::: iuk , each pair
+of input units (iui iui+1 ) forms a transition. The user
+pressing the back button is modeled by changing each
+transition (iui iui+1 ) to (iui iui,1 ). The user pressing the forward button is modeled by changing each
+transition (iui iui+1 ) to (iui iui+2 ).
+2. Arbitrary control flow alteration. Given a normal
+control flow iu1 iu2 ::: iuk , for each input unit iui ,
+1
+i
+k , change the control iui to some arbitrary
+iut , such that t 6= i, t 6= i + 1, and t 6= i , 1.
+
+4.4. Summary of bypass testing
+The three levels of testing in this section, value level,
+parameter level, and control flow level, can be used individually or combined together. Parameter level and control
+flow level bypass testing focus on interactions among different parameters and different server components, thus can
+be run independently of value level bypass testing.
+
+5. Empirical Validation
+As an initial validation, we applied bypass testing to the
+STIS Web application from Section 3 (Figure 1). STIS
+stores all information in a database (currently mysql) and
+is comprised of 17 Java Server Pages and 5 Java bean
+classes. Eight of the JSPs process parameterized requests,
+login.jsp, browse.jsp, record edit.jsp, record delete.jsp,
+record insert.jsp, categories.jsp, category edit.jsp and register save.jsp. We extensively tested these eight JSPs with
+bypass testing.
+When a Web application receives invalid inputs, there are
+three possible types of software responses. (1) The invalid
+inputs are recognized and adequately processed by the software. (2) The invalid inputs are not recognized and cause
+abnormal software behavior, but the abnormal behavior is
+caught and automatically processed by software error handling mechanism. (3) The invalid inputs are not recognized
+
+and the abnormal software behavior is exposed directly to
+the users. Abnormal software behavior includes responses
+like run time exceptions and revealing confidential information to unauthorized clients. A type 1 response represents
+proper software behavior, while type 2 and 3 responses represent inadequate software behavior and are considered to
+be failures.
+Some input values had to be created by hand for bypass
+testing, including user names and passwords (STIS has two
+levels of access) and some very long invalid input strings.
+Other inputs were either automatically extracted from the
+HTML files or randomly generated. For comparison, we
+generated four levels of tests: (I) for just the value level, (II)
+the parameter level but not control, (III) the control level
+but not parameter, and (IV) both the parameter and control
+level.
+Table 2 summarizes the results. For each group of tests,
+the number of tests (T) and the number of tests that caused
+a failure (F) are shown. There were a total of 158 tests,
+66 of which caused failures. Of these 158 tests, none of
+the parameter level or control level tests could be executed
+without bypass testing, and only 55 of the value level tests
+could be executed without bypass testing. These 55 tests
+only caused 9 failures. This is strong evidence that bypass
+testing can find software problems related to invalid input
+data. Of course, no statistical analysis is possible with this
+early data. This was a case study, without a control comparison or true hypotheses that could be statistically tested.
+
+6. Related Work
+The bypass testing techniques are motivated by a combination of input validation and the category-partition method
+[15], a multi-step method to derive test frames and tests
+from specifications. The rest of this section discusses the
+most closely related test ideas, input validation testing and
+testing of graphical user interfaces. Similar techniques have
+been used for compiler checking, but these are not directly
+related to bypass testing.
+
+6.1. Input validation testing
+Input validation analysis and testing involves statically
+analyzing the input command syntax as defined in interface
+and requirement specifications and then generating input
+data from the specification. Hayes and Offutt [6] proposed
+techniques for input validation analysis and testing for systems that take inputs that can be represented in grammars.
+Both IVT and bypass testing attempt to violate input specifications, so bypass testing could be viewed as a special
+kind of IVT that addresses concerns of Web applications.
+
+Proceedings of the 15th International Symposium on Software Reliability Engineering (ISSRE’04)
+1071-9458/04 $ 20.00 IEEE
+
+Table 2. Failures found for each dynamic component.
+I
+II
+III
+IV
+Total
+Note:
+T
+F
+T F T F
+T
+F
+T
+F I: Value Level, No
+login
+15
+0
+2 2
+n/a
+n/a
+17
+2
+Parameter or Control
+browse
+7
+4
+1 0 1 1
+1
+1
+10
+6 II: Parameter Level,
+No Control Level
+record edit
+17
+9
+5 2 1 1
+5
+5
+28 17
+record delete
+5
+0
+2 0 1 1
+2
+2
+10
+3 III: Control Level,
+No Parameter Level
+record insert
+13
+9
+3 1 1 1
+3
+3
+20 14
+categories
+12
+2
+2 0 1 0
+2
+0
+17
+2 IV: Parameter Level
+and Control Level
+category edit
+13
+2
+2 0 1 0
+2
+0
+18
+2
+register save
+25 11
+6 3 1 0
+6
+6
+38 19 T: number of tests
+Total (#tests & #failures) 107 37 23 8 7 4 21 17 158 66 F: number of failures
+Component
+
+6.2. GUI testing
+HTML forms can be considered to offer a graphical user
+interface to run software that is deployed across the Web.
+Memon has developed techniques to test software through
+their GUIs by creating inputs that match the input specifications of the software [12, 13]. This approach focuses on the
+layout of graphical elements and the user’s interaction when
+supplying form data. Bypass testing relies on following the
+syntax of the GUI forms, but specifically finds ways to violate constraints imposed by the syntax. The two approaches
+are complementary, specifically, GUI testing could be used
+to develop values for bypass testing.
+
+6.3. Web application testing
+Most research in testing Web applications has focused
+on client-side validation and static server-side validation of
+links. An extensive listing of existing Web test support tools
+is on a Web site maintained by Hower [7]. The list includes
+link checking tools, HTML validators, capture/playback
+tools, security test tools, and load and performance stress
+tools. These are all static validation and measurement tools,
+none of which support functional testing or black box testing.
+The Web Modeling Language (WebML) [4] allows Web
+sites to be conceptually described. The focus of WebML is
+primarily from the user’s view and the data modeling. Our
+model derived from the software is complementary to the
+solutions proposed by WebML.
+More recent research has looked into testing software
+from a static view, but few researchers have addressed the
+problem of dynamic integration. Kung et al. [9, 11] have
+developed a model to represent Web sites as a graph, and
+provide preliminary definitions for developing tests based
+on the graph in terms of Web page traversals. Their model
+includes static link transitions and focuses on the client side
+
+without limited use of the server software. They define
+intra-object testing, where test paths are selected for the
+variables that have def-use chains within the object, interobject testing, where test paths are selected for variables
+that have def-use chains across objects, and inter-client testing, where tests are derived from a reachability graph that is
+related to the data interactions among clients.
+Ricca and Tonella [16] proposed an analysis model and
+corresponding testing strategies for static Web page analysis. As Web technologies have developed, more and more
+Web applications are being built on dynamic content, and
+therefore strategies are needed to model these dynamic behaviors.
+Benedikt, Freire and Godefroid [3] presented VeriWeb,
+a navigation testing tool for Web applications. VeriWeb explores sequences of links in Web applications by nondeterministically exploring “action sequences”, starting from a
+given URL. Excessively long sequences of links are limited
+by pruning paths in a derivative form of prime path coverage. VeriWeb creates data for form fields by choosing from
+a set of name-value pairs that are initialized by the tester.
+VeriWeb’s testing is based on graphs where nodes are Web
+pages and edges are explicit HTML links, and the size of the
+graphs is controlled by a pruning process. This is similar to
+our algorithm, but does not handle dynamically generated
+HTML pages.
+Elbaum, Karre and Rothermel [5] proposed a method to
+use what they called “user session data” to generate test
+cases for Web applications. Their use of the term user session data was nonstandard for Web application developers.
+Instead of looking at the data kept in J2EE servlet session,
+their definition of user session data was input data collected
+and remembered from previous user sessions. The user data
+was captured from HTML forms and included name-value
+pairs. Experimental results from comparing their method
+with existing methods show that user session data can help
+produce effective test suites with very little expense.
+
+Proceedings of the 15th International Symposium on Software Reliability Engineering (ISSRE’04)
+1071-9458/04 $ 20.00 IEEE
+
+Lee and Offutt [10] describe a system that generates test
+cases using a form of mutation analysis. It focuses on
+validating the reliability of data interactions among Webbased software system components. Specifically, it considers XML based component interactions.
+Jia and Liu [8] propose an approach for formally describing tests for Web applications using XML. A prototype tool,
+WebTest, based on this approach was also developed. Their
+XML approach could be combined with the test criteria proposed in this paper to express the tests in XML.
+Andrews et al. use hierarchical FSMs to model potentially large Web applications. Test sequences are generated
+based on FSMs and use input constraints to reduce the state
+space explosion [1]. Finally, our previous work on modeling of Web applications has led to the development of
+atomic sections, which can be used to model dynamic aspects of Web applications [19]. This approach is at the detailed analysis level and relies on access to the code, unlike
+bypass testing.
+
+7. Conclusions
+This paper has presented four results. First, the concept
+of bypass testing was introduced to submit values to Web
+applications that are not validated by client-side checking.
+Second, a detailed model for how to introduce inputs to
+server-side software components was developed. Third, this
+model supports more general input validation testing, and
+rules were defined for bypass and input validation. Finally,
+empirical results from an open-source conference management system and our own laboratory-built Web application
+were shown.
+Bypass testing is a unique and novel way to create test
+cases that is available only because of the unusual mix of
+client-server, HTML GUI, and JavaScript technologies that
+are used in Web applications. It is also more complicated
+than it appears on the surface. Although the concept is relatively simple, to submit inputs that violate client-side constraints, the distributed and heterogeneous nature of Web
+applications brings in many complexities. Not surprisingly,
+the most complicated part is handling inputs to dynamically
+generated HTML forms. The algorithm presented in Section 4.2 is a first attempt to approximate the kinds of input
+forms that can be generated dynamically.
+This research does not directly address the problem of
+automatically determining if the test results are correct,
+commonly called the oracle problem, However, many of the
+failures that bypass testing is trying to cause are quite obvious – including unauthenticated access, unsafe disclosure
+of information, accepting invalid data, and unhandled exceptions. The oracle problem is easy to solve by hand or
+automatically in these cases. For other failures, for example, subtle corruption of a server-side database, the oracle
+
+problem is harder to solve. This is left as an area for future
+research.
+The existence of bypass testing may motivate Web application developers to check data on the server, obviating much of the need for bypass testing. This may already be a trend in the industry. Five years ago, many
+books on Web software advocated checking inputs with
+JavaScript as a mechanism to reduce network traffic; modern books and instructors usually advocate doing input validation on the server. Nevertheless, major e-commerce and
+e-service sites still use client-side checking and hidden form
+fields. We found client-side checking on amazon.com and
+netflix.com, and the use of hidden form fields to store
+sensitive information on fastlane.nsf.com. The long
+history of buffer-overflow problems leads us to be somewhat pessimistic that developers will develop software well
+enough to make bypass testing completely obsolete.
+A major advantage of bypass testing is that it does not
+require access to the source of the back-end software. This
+greatly simplifies the generation of tests and automated
+tools, and we expect bypass tests can be generated automatically. Our current plan is to build tools that parse
+HTML, discover and analyze the form field elements, parse
+the client-side checking encoded in the JavaScript, and automatically generate bypass tests to evaluate the server-side
+software.
+
+References
+[1] A. Andrews, J. Offutt, and R. Alexander. Testing Web applications. Software and Systems Modeling, 2004. Accepted
+per minor revision.
+[2] C. Anley.
+Advanced
+SQL injection in
+SQL
+server
+applications.
+online,
+2004.
+http://www.nextgenss.com/papers/advanced
+sql injection.pdf, last access February 2004.
+[3] M. Benedikt, J. Freire, and P. Godefroid. Veriweb: Automatically testing dynamic Web sites. In Proceedings of 11th
+International World Wide Web Conference (WW W’2002),
+Honolulu, HI, May 2002.
+[4] S. Ceri, P. Fraternali, and A. Bongio. Web modeling language (WebML): A modeling language for designing Web
+sites. In Ninth World Wide Web Conference, Amsterdam,
+Netherlands, May 2000.
+[5] S. Elbaum, S. Karre, and G. Rothermel. Improving Web
+application testing with user session data. In Proceedings of
+the 25th International Conference on Software Engineering,
+pages 49–59, Portland, Oregon, May 2003. IEEE Computer
+Society Press.
+[6] J. H. Hayes and J. Offutt. Increased software reliability
+through input validation analysis and testing. In Proceedings
+of the 10th International Symposium on Software Reliability
+Engineering, pages 199–209, Boca Raton, FL, November
+1999. IEEE Computer Society Press.
+[7] R. Hower. Web site test tools and site management tools,
+2002. www.softwareqatest.com/qatweb1.html.
+
+Proceedings of the 15th International Symposium on Software Reliability Engineering (ISSRE’04)
+1071-9458/04 $ 20.00 IEEE
+
+[8] X. Jia and H. Liu. Rigorous and automatic testing of Web
+applications. In 6th IASTED International Conference on
+Software Engineering and Applications (SEA 2002), pages
+280–285, Cambridge, MA, November 2002.
+[9] D. Kung, C. H. Liu, and P. Hsia. An object-oriented Web
+test model for testing Web applications. In Proc. of IEEE
+24th Annual International Computer Software and Applications Conference (COMPSAC2000), pages 537–542, Taipei,
+Taiwan, October 2000.
+[10] S. C. Lee and J. Offutt. Generating test cases for XMLbased Web component interactions using mutation analysis.
+In Proceedings of the 12th International Symposium on Software Reliability Engineering, pages 200–209, Hong Kong
+China, November 2001. IEEE Computer Society Press.
+[11] C. H. Liu, D. Kung, P. Hsia, and C. T. Hsu. Structural
+testing of Web applications. In Proceedings of the 11th International Symposium on Software Reliability Engineering,
+pages 84–96, San Jose CA, October 2000. IEEE Computer
+Society Press.
+[12] A. M. Memon. GUI testing: Pitfalls and process. IEEE
+Computer, 35(8):90–91, Aug. 2002.
+[13] A. M. Memon, M. L. Soffa, and M. E. Pollack. Hierarchical GUI test case generation using automated planning.
+IEEE Transactions on Software Engineering, 27(2):144–
+155, February 2001.
+
+[14] J. Offutt. Quality attributes of Web software applications.
+IEEE Software: Special Issue on Software Engineering of
+Internet Software, 19(2):25–32, March/April 2002.
+[15] T. J. Ostrand and M. J. Balcer. The category-partition
+method for specifying and generating functional tests. Communications of the ACM, 31(6):676–686, June 1988.
+[16] F. Ricca and P. Tonella. Analysis and testing of web applications. In 23rd International Conference on Software Engineering (ICSE ‘01), pages 25–34, Toronto, CA, May 2001.
+[17] R. van de Stadt. Cyberchair: A free web-based paper submission and reviewing system.
+online, 2004.
+http://www.cyberchair.org/, last access April 2004.
+[18] D. A. Wheeler.
+Secure Programming for Linux
+and Unix HOWTO.
+Published online, March 2003.
+http://www.dwheeler.com/secure-programs/, last access Feb
+2004.
+[19] Y. Wu, J. Offutt, and X. Du.
+Modeling and testing of dynamic aspects of Web applications. Submitted
+for publication, 2004. Technical Report ISE-TR-04-01,
+www.ise.gmu.edu/techreps/.
+
+Proceedings of the 15th International Symposium on Software Reliability Engineering (ISSRE’04)
+1071-9458/04 $ 20.00 IEEE
+
+

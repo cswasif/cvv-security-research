@@ -1,0 +1,1019 @@
+Security Issues on Server-Side Credit-based Electronic Payment Systems
+
+Alan Liu, Vincent Y. Shen, Jogesh K. Muppala’
+Department of Computer Science,
+The Hong Kong University of Science and Technology,
+Clear Water Bay, Kowloon, Hong Kong
+csalan@cs.ust.hk, shen@cs.ust.hk, muppala@cs.ust.hk
+
+Abstract
+
+Many electronic payment systems have been
+developed to facilitate the purchase of goods and
+services over the Internet. For the class of goods and
+services that can be categorized as low-value
+transactions, they require electronic payment systems
+that are efficient but reasonably secure. This class of
+goods and services includes news clippings, songs,
+video clips, etc. For efficiency the payment systems,
+commonly called “micropayment” systems, are
+designed with lightweight security measures, and hence
+could be attractive targets of malicious attacks.
+
+This paper proposes three architecture designs for
+server-side credit-based electronic payment systems to
+resist external attacks. A simulation model has been
+built for the proposed architectures to analyze their
+performance and their levels of security. Such analyses
+should be useful for designers of electronic payment
+systems, especially those of micropayment systems.
+
+1. Introduction
+
+Electronic commerce has been rapidly expanding
+over the past decade. Customers can now purchase
+goods and services over the Internet by using their credit
+cards [4]. Since the Internet is a public medium, sending
+credit card information through the Web is considered
+insecure since a third party might gain access to the
+credit card information during transmission. In order to
+deal with this problem, the Secure Electronic
+Transaction (SET) protocol [5] was proposed and
+implemented by some electronic payment systems,
+which provides a secure way of purchasing goods online
+using credit cards.
+
+As the Internet becomes more and more popular and
+the bandwidth of the network increases, another class of
+goods and services, characterized by their low value are
+becoming available. Examples include buying and
+downloading digital contents, such as news clippings,
+
+songs, video clips, etc. These goods and services cost
+only a small amount, say a few dollars, which could be
+too small for credit card purchases [3]. Therefore,
+low-cost electronic payment mechanisms, called
+“micropayment” systems [4], have been proposed and
+built to facilitate such transactions. This paper addresses
+the issue of providing a fast and secure electronic
+transaction in electronic payment systems in general,
+while focusing on micropayment systems.
+
+In section 2, we propose a mechanism and three
+system architecture designs to protect sensitive data in
+electronic payment systems. We then discuss in sections
+3 and 4 the payment mechanism and performance
+evaluation of the proposed architectures.
+
+2. System architectures of the payment
+gateway
+
+An electronic payment system normally involves
+four components: the customer, the Internet content
+provider (ICP), the payment partner, and the payment
+gateway (Figure 1). The customer decides to click the
+“pay” button on the ICP’s website for the digital
+contents to buy (Step 1). The ICP sends payment
+information to the customer for confirmation (Step 2.1).
+The customer then sends the payment authorization
+request to the payment gateway (Step 2.2). The payment
+gateway needs to consult the payment partner for
+authorization (Step 3). The payment partner checks the
+customer’s credit and responds to the ICP through the
+payment gateway and customer (Steps 4.1, 4.2, and 4.3).
+If the response is positive, the ICP sends the purchased
+digital contents to the customer (Step 5). At regular
+interviews the payment gateway sends the accumulated
+proceeds to the ICP (Step 6). To facilitate transaction the
+payment gateway needs to store sensitive data, which
+may include customer information, credit card numbers,
+etc. Failure to protect such data could have serious
+consequences; for example, on March 8, 2000 CNN
+reported that a computer hacker has breached the
+security of the company SaleGate.com, stealing credit
+
+* This research was supported in part by Hong Kong University of Science and Technology Sino Software Research Institute Grant No.
+
+SSRI98/99.EG09.
+
+Proceedings of the 3rd_ International Symposium on Electronic Commerce (ISEC’02)
+0-7695-1861 -3/02 $17.00 © 2002 IEEE
+
+COMPUTER
+SOCIETY
+card numbers and posting them on the Internet. This
+incident eventually led to the company’s collapse.
+
+The normal approach is to encrypt the sensitive data
+using an encryption algorithm with a secret key. The
+encrypted data is stored in the database of the payment
+gateway so that it would not be possible to access the
+
+The Payment Partner
+
+original data without the key. It is therefore very
+important to protect the key from unauthorized
+individuals. We propose three architecture designs for
+the payment gateway that will protect sensitive data.
+Table 1 summarizes the comparisons of the three
+proposed architecture designs at the end of this section.
+
+3. Authorization request
+7, Accumulated transaction
+
+4.1 Authorization response
+
+2.2 Customer logins to
+the payment gateway
+
+Customer
+
+2.1 Send transaction
+information to the customer
+
+5. Receipt & Goods Delive:
+
+The Payment Gateway
+
+4,2 Authorization response
+
+4.3 Authorization response
+
+6. Accumulated transactions
+
+1. Clicks ‘Pay’ button
+
+ICP
+
+Figure 1. Typical transaction flow of a payment system
+
+2.1. The 1-tier model
+
+Figure 2 shows the 1-tier model design where both
+the e-commerce storefront of the payment gateway and
+its database are running on the same machine. The secret
+key is stored in the e-commerce storefront and all the
+
+encrypted sensitive data are stored in the database.
+When an application needs to accesses sensitive data on
+line, possibly due to a customer request, the program
+that is running on the e-commerce storefront will use the
+key to decrypt the stored data to retrieve the sensitive
+data.
+
+Payment Gateway
+
+Customer
+
+E-commerce
+
+Storefront
+
+Figure 2. The 1-tier model design
+
+2.2. The 2-tier model
+
+In the 1-tier model, the e-commerce storefront
+becomes a security ‘weak point’ of the whole electronic
+payment system. The 2-tier model attempts to strengthen
+security by adding an extra layer, as shown in Figure 3.
+
+Proceedings of the 3rd_ International Symposium on Electronic Commerce (ISEC’02)
+
+0-7695-1861 -3/02 $17.00 © 2002 IEEE
+
+The e-commerce storefront is mainly responsible for
+the receiving and forwarding of messages. The database
+in the payment gateway stores all the data for its
+operations, including the encrypted sensitive data. The
+
+COMPUTER
+SOCIETY
+encryption server is responsible for all other remaining
+activities, such as encrypting or decrypting the messages,
+creating or verifying the messages, etc. It also stores the
+secret key. When the system needs to access sensitive
+data, it will retrieve the data from the database through
+
+the encryption server using the key. Notice that the
+e-commerce storefront just forwards and receives
+messages. The input and output of the encryption server
+are all messages which would make external attacks
+difficult.
+
+Payment Gateway
+
+Customer E-commerce
+
+Storefront
+
+Machine A
+
+Encryption server
+
+Machine B
+
+Figure 3. The 2-tier model design
+
+2.3. The 3-tier model
+
+In the second solution, running the encryption server
+and the database in the same machine may affect the
+overall performance, especially when there are a lot of
+requests. This solution adapts the second one and tries to
+enhance the performance. Figure 4 shows the 3-tier
+
+This solution works in the same way as the second
+one, except that there are multiple encryption servers
+that run concurrently and they share a single database.
+All the sensitive data are first encrypted by the secret key
+that is stored in the encryption servers; only the
+
+model design. encrypted data are stored in the database.
+Payment Gateway
+Customer Encryption server
+E-commerce E DB
+Storefront
+Machine A \ : Machine C
+Encryption r
+Machines B, - B,
+Figure 4. The 3-tier model design
+Table 1. Comparisons of the three proposed solutions
+Solution Advantages Problems
+
+The 1-tier model
+
+the database.
+
+Only the encrypted data are stored in the database.
+This solves the problem of the unauthorized
+access of the sensitive data from backup tapes of|
+
+e The secret key is embedded in the
+executable program. However, it is still
+possible, although difficult, for hackers
+to figure out the key from the
+executable file.
+
+e If a hacker hacks into the
+e-commerce storefront and takes
+control of it, the hacker can then
+connect to the database and perform an
+
+Proceedings of the 3rd_ International Symposium on Electronic Commerce (ISEC’02)
+0-7695-1861 -3/02 $17.00 © 2002 IEEE
+
+COMPUTER
+SOCIETY
+attack on it. The whole payment
+system could be interrupted for a long
+time to recover from a successful
+attack.
+
+The 2-tier model
+
+Only the system administrator of the computer can
+figure out the secret key from the executable file.
+Proper security policies will reduce the risk of a
+dishonest administrator.
+
+It protects the encryption server from being
+attacked by outside hackers.
+
+A successful hacker can only damage the program
+in the e-commerce storefront, which could be
+easily recovered.
+
+e Running the encryption server in
+the same computer as the database may
+affect overall system performance
+when there are a lot of requests, since
+the computer resources are shared
+among the encryption server and the
+database.
+
+The 3-tier model
+
+It has all the advantages described in the second
+solution.
+
+It protects the sensitive data from being
+compromised by a _ dishonest database
+administrator.
+
+By using multiple encryption servers and sharing
+a single database, it enhances overall system
+performance.
+
+3. Security considerations of the payment system
+
+In this section we describe possible attacks to the
+payment gateway and methods to resist these attacks
+under the different architectures. We then describe the
+event flow of the payment system for performance
+analysis.
+
+3.1. Dishonest customer
+
+A dishonest customer may try to modify the
+
+the item, transaction ID and the ID of the item will be
+sent to the payment gateway through the customer for
+processing. If the details are not encrypted before they
+are sent to the customer, then a dishonest customer can
+modify them. This may cause serious losses to the ICP,
+since any customer can modify the price of the items
+purchased easily.
+
+The solution to this problem is to use secret-key
+cryptography to protect the message before it is sent to
+
+the payment gateway for processing. Since the message
+is encrypted by the shared secret key of the ICP and the
+payment gateway, other people cannot view its contents.
+
+transaction details (Figure 5).
+
+The If some unauthorized persons modify the encrypted
+Customer , Payment message, the details will be corrupted and the payment
+Gateway gateway can reject the message. On the other hand, if
+1, 2. Sends the transaction details public-key cryptography is used, then the message
+Customer to the gateway broker through should be signed by the ICP. In this case if some
+buys the customer. unauthorized persons have modified the message, the
+goods Qh payment gateway can reject it by verifying the digital
+; signature. Both encryption methods can prevent
+
+icp The customer may modify the customer fraud for all architectures.
+
+transaction detail (e.g. the cost
+of the item purchased)
+
+Figure 5. Modification of the transaction 3.2. Dishonest ICP
+
+detail by customers. After the customer clicks the ‘pay’ button and the
+
+encrypted transaction details are sent to the payment
+gateway, the customer enters the authentication page at
+the payment gateway. If the customer does not know the
+transaction details, a dishonest ICP may cheat by
+
+When the customer visits the ICP’s website and
+clicks the ‘Pay’ button for buying an item, the
+transaction details which contain data such as the cost of
+
+COMPUTER
+SOCIETY
+
+Proceedings of the 3rd_ International Symposium on Electronic Commerce (ISEC’02)
+0-7695-1861 -3/02 $17.00 © 2002 IEEE
+charging more than the amount that the customer
+expects to pay (Figure 6). The solution to this problem is
+to display the price, which the payment gateway will
+
+charge the customer in the authentication page, so that
+the customer can confirm the price. This solution applies
+to both secret- and public-key encryption methods.
+
+3. Customer authentication
+
+Customer
+
+1. Customer clicks
+
+2. Sends transaction detail
+
+‘Pay’ button
+ICP
+
+Pm The Payment
+
+The token may charge more than
+the customer expects to pay.
+
+Figure 6. Modification of the transaction detail by ICPs
+
+3.3. Password capture at the payment gateway
+
+After the customer has typed in his login name and
+password at the authentication page, the payment
+gateway sends the data to the payment partner for
+verification (Figure 7). Since the login name and
+
+password should not be exposed to the public, the data
+should be encrypted before transmission to the payment
+partner.
+
+The Payment Gateway
+
+E-commerce
+
+Sends Login name, Password
+
+<
+
+storefront
+
+Ke-~
+
+Someone may monitor and capture the data
+that sends through this link.
+
+p | Encryption server
+
+Figure 7. Password capture at the payment gateway
+
+Using the 2-tier model, all the encryption and
+decryption processes are performed at the encryption
+server. Hence, the login name and the password need to
+be sent to the encryption server. Note that the
+e-commerce storefront and the encryption server are
+connected by the internal network of the payment
+gateway. A dishonest employee of the payment gateway
+will be able to monitor and capture all the data that is
+passing through the internal network, including
+customer passwords.
+
+The solution to this problem is to hash the password
+at the e-commerce storefront and send the login name
+and the hashed password, instead of the password itself,
+to the encryption server. Since this one-way encryption
+is rather secure, it can prevent a dishonest employee of
+the payment gateway from getting the passwords of the
+customers. This solution therefore provides a barrier for
+an attacker to obtain the customer’s password, which
+requires a lot of computing resources to overcome. The
+security level can be further enhanced by connecting the
+e-commerce storefront with the encryption server via a
+secure link.
+
+Proceedings of the 3rd_ International Symposium on Electronic Commerce (ISEC’02)
+0-7695-1861 -3/02 $17.00 © 2002 IEEE
+
+3.4. Attack during the transmission of the
+authentication request
+
+The payment gateway needs to authenticate the
+customer by sending the customer information, which
+contains the login name and the hashed password, to the
+payment partner. Suppose the authentication request is
+not encrypted before it is sent to the payment partner, a
+hacker may capture the information and perform a
+“birthday” attack, iie., an intensive search of the
+password by irying different hash algorithms and
+passwords, and comparing the result with the hashed
+password. The transmission can be made more secure
+using either private- or public-key cryptography.
+
+3.5. Man-in-the-middle attack
+
+The payment gateway needs to send an
+authentication request, which is an encrypted token that
+contains the login name of the customer and the hashed
+password, to the payment partner for verification. After
+
+COMPUTER
+SOCIETY
+the payment partner has verified the request, it sends an
+authentication response back to the payment gateway.
+The response contains the status of the verification
+(Okay/Fail). Even if the response is protected by either
+secret- or public-key cryptographic technique, it still
+may not be secure if the authentication response is
+transferred through the Internet due to the possibility of
+“man-in-the-middle” attack on the system (Figure 8). In
+this scenario the hacker removes the authentication
+request from the payment gateway or authentication
+response from the payment partner and replaces it with
+his own request/response.
+
+1. Sends the
+authentication request
+The | The Payment
+Payment Partner
+Gateway AN 2. Sends the authentication
+
+response.
+Someone may replace the
+
+authentication requests or
+response during the transmission.
+
+Figure 8. Man-in-the-middle attack
+
+Suppose an attacker can capture all the
+communications between the payment gateway and the
+payment partner. He may capture an authentication
+request, which contains someone’s (e.g. Bob) login
+name and his hashed password or he may capture an
+authentication response with status ‘Okay’. Although
+both the request and the response are encrypted and
+unknown to the attacker, he can still take advantage of it.
+
+When the attacker wants to buy an item from the ICP,
+he can send the transaction details to the payment
+gateway and type a fake login name and password on the
+authentication page. The payment gateway then sends
+the authentication request to the payment partner. The
+attacker may perform one of the following actions:
+
+e The attacker removes the request and replaces it
+with the previously captured authentication request,
+i.e. Bob’s authentication request. The request is
+verified and the attacker gets the item and the
+payment partner charges Bob for this purchase.
+
+e The attacker removes the request and sends the
+previously captured authentication response with
+status ‘Okay’ back to the payment gateway. Then he
+can get the item without paying the charge.
+
+The solution to this attack is to create authentication
+requests/responses that are transaction dependent. For
+the authentication request and the authentication
+response, the transaction ID should be included in the
+encrypted token. Then the payment gateway can verify
+the transaction ID, which should be unique for each
+
+transaction. This prevents someone from capturing the
+request/response for other uses.
+
+3.6. Password capture at the payment
+partner
+
+For every transaction, the payment gateway will
+send an authentication request to the payment partner for
+verification. As discussed, the request should be
+encrypted and contain the login name and the hashed
+password. However, if the payment partner stores the
+customer passwords in the database as plain text, then
+some dishonest employee there may gain access to the
+passwords without permission. Since the payment
+partner’s role is to verify the authentication request, it is
+not necessary to store the passwords in its database.
+Instead, the payment partner can just store the hashed
+passwords in its database for audit purpose, which can
+prevent unauthorized persons to steal the passwords for
+other uses and at the same time reduce the number of
+operations at the payment partner for each transaction.
+
+3.7. Calculation errors of the accumulated
+transactions
+
+Since each transaction of the micropayment system
+is so small that it may be too costly for a payment partner
+to charge for each transaction, a more efficient approach
+is for the payment gateway to accumulate the
+transactions for each customer and send the list to the
+payment partner periodically (e.g., monthly). Then the
+payment partner can charge the customer for the total
+amount during its normal billing cycle.
+
+Suppose all the transactions are stored in the
+payment gateway only, if someone modifies the record
+or if there are errors in calculating the accumulated
+amount, then there is no way for the ICP’s nor the
+payment partners to verify the result. The solution to this
+problem is for the payment gateway, payment partners
+and the ICP’s to record the transactions separately.
+When the payment gateway sends the accumulated
+transaction list for each customer to the payment partner
+and the ICP periodically, both of them can verify the
+transactions. Although there will be extra storage space
+and cost required for the ICP and the payment partner,
+they only need to store the transactions for a limited
+period of time. They can delete the record after they
+have been settled. It is a worthwhile step to take since it
+can prevent fraud and errors occurring at the payment
+gateway.
+
+3.8. The event flow of the payment system
+
+It will be helpful to summarize our designs through
+
+COMPUTER
+SOCIETY
+
+Proceedings of the 3rd_ International Symposium on Electronic Commerce (ISEC’02)
+0-7695-1861 -3/02 $17.00 © 2002 IEEE
+event-flow diagrams. As mentioned earlier, the payment @ PP: Payment Partner.
+
+system consists he four components: customer merchant © TIMEx: Timestamp generated by X.
+
+(such as an Internet conten provider * ), paymen @ H(M): A strong collision-resistant one-way hash
+gateway and payment partner. It is designed for the f : ;
+
+: : function, which takes message M as input and
+server-side credit-based systems. The payment :
+
+: : : returns a fixed-size hash value as output.
+mechanism makes use of the system architecture design ; . : .
+that is described in section 2. The sensitive data being © — Ex(M): Public key encryption on message M using
+protected are the passwords of customers, which will be public key of x.
+accessed frequently during online transactions. © — Sx(M): Digital signature of message M using
+
+Since the 2-tier system design is more complicated private key of X. Assume the signature function
+than the 1-tier design, the event flow during a transaction hashes the message before signing.
+for the 2-tier model will be described. It should be easy @ = ex(M): Symmetric key based encryption algorithm,
+to apply this mechanism to the 1-tier model by which takes the key of X and a message M and
+combining the events in the encryption server and the return the ciphertext.
+e-commerce storefront. For security reasons, instead of ® DESC: Description of the content.
+storing the customer’s passwords in the database directly, @ — Result: Result of the authentication response. The
+the hashed values ‘ the passwords are sored and they value is either ‘Okay’ or ‘Fail’,
+re oegonly me Payment ame GaaeEME —@Transaon deta
+
+w th ge low y ORDER = {Product ID, Price, DESC,
+version and public-key version of the payment :
+
+. . : : Transaction ID, ICP ID}
+mechanism for the 2-tier/3-tier model respectively. e A .
+
+The notations that will be used in the description of sufentication request ; ; ;
+the event flow are given below: UTH_REQ = {Transaction ID, Price, Login
+Name, TIMEpg, H (password)}
+@ = =C: Customer. Las
+e@ = Authentication response:
+
+e ICP: Internet Content Provider.
+@ PG: Payment Gateway.
+
+AUTH_RESP = {Result, Transaction ID, TIMEpp}
+
+rm —Payment Gateway ——|
+H
++
+
+I
+Customer ic¢P [p-Commerce Storefront
+
+Initial buy request: 1()
+
+Payment Partner
+
+Encryption Server
+
+ICP_ID, Price, DESC, cICP(ORDER, H(ORDER)): 2()
+
+ICP_ID, Price, DESC, cICP(ORDER, H(ORDER)), Login Name, Passwd: 3()
+>
+I
+i
+I
+
+ICP_ID, Price, DESC, eICP(ORDER, H(ORDER)), Login Name, H(Passwd): 4()
+
+TIMEpg, ePP(AUTH REQ, H(AUTH REQ)): 5(
+
+Time
+
+TIM Epp, ePP(AUTH RESP, AUTH REQ)): 6()
+a
+
+TIMEpp, eICP(AUTH_ RESP, H(AUTH_RESP)): 7()
+Ss
+
+I
+iT
+TIMEpp, eICP(AUTH_RESP, H(AUTH_RESP)): B()
+!
+TIM Epp, eIC P(AUTH_RESP, H(AUTH_
+
+RESP)): 9()
+
+Sends content: 10()
+
+Figure 9a. Secret-key version of the payment mechanism for the 2-tier/3-tier model
+
+COMPUTER
+SOCIETY
+
+Proceedings of the 3rd_ International Symposium on Electronic Commerce (ISEC’02)
+0-7695-1861 -3/02 $17.00 © 2002 IEEE
+rm —Payment Gateway --!
+| I
+
+Customer | IcP | [E-Commerce Storefront |
+
+Initial buy request: 1()
+
+Encryption Server
+
+Payment Partner
+
+ORDER, Sicp(ORDER): 2()
+a |
+H i
+I I
+H I
+
+ORDER, Sicp(ORDER), Login Name, Passwd: 3()
+
+ORDER, Sicp(ORDER), Login Name, Hash(Passwd): 4()
+J
+
+Epp(AUTH_REQ, Spg(AUTH_REQ)): 5()
+es |
+
+Time
+
+AUTH_RESP, Spp(AUTH_RESP): 6()
+5
+AUTH_RESP, Spp(AUTH_RESP): 7()
+
+AUTH_RESP, Spp(AUTH_RESP): 8()
+
+AUTH_RESP, Spp(AUTH_RESP): 9()
+
+Sends content: 10()
+
+Figure 9b. Public-key version of the payment mechanism for the 2-tier/3-tier model
+
+4. Performance Evaluation
+Throughput and response time are the performance
+4.1. Performance Evaluation Technique metrics selected. By estimating the number of
+transaction that can be handled by the system, resources
+can be used more efficiently, leading to savings in
+
+The simulation model is built using Simpack’s [2] hardware and maintenance cost. In the business world,
+event-driven object-oriented API. Inside the model, each the response time of the system is important to the users.
+component is represented as a facility. In order to It is because the user will not be patient enough to use
+evaluate the performance of the payment mechanism the system if the performance of the system is bad. With
+and the architecture, four models have been built. For a slow response time, any secure electronic payment
+the 1-tier model, there are three facilities: Web Server, system cannot be successful. Due to limited space only
+Database Server and Authentication Server. For the the response time analysis is presented in this paper.
+2-tier model, there are four facilities in the model: Web
+Server, Encryption Server, Database Server and
+Authentication Server.
+
+In general, when a transaction requires a facility, if
+the facility is available, the transaction uses the facility
+within a period of time that is exponentially distributed. The system parameters for the simulation study that
+If the facility is not available, then the transaction will be are related with encryption and hash algorithms are
+put into the waiting queue until it can be served. taken from the Cryptot++ 4.0 benchmarks [10] and the
+
+4.3. Results of the performance Evaluation
+study
+
+Statistics are collected after 10,000 transactions have others are recorded by measurement.
+
+been processed by the model. The workload selected is a In the simulation, we use the RSA 1024-bit
+
+string of purchase requests with varying arrival rates. encryption in the public-key version of the payment
+mechanism and the Rijndael algorithm in the secret-key
+
+4.2. Performance Metrics version of the payment mechanism. We speed up public
+
+Proceedings of the 3rd_ International Symposium on Electronic Commerce (ISEC’02) COMPUTER
+0-7695-1861 -3/02 $17.00 © 2002 IEEE SOCIETY
+key encryption by using a digital envelope, ie., we
+encrypt the message with secret-key encryption by a
+randomly generated key and then encrypts the key with
+public key encryption. When simulating the public-key
+version with digital envelope, the Rijndael algorithm is
+used to encrypt the messages and we have used RSA
+512-bit, 1024-bit and 2048-bit encryption to encrypt the
+randomly generated session key. Since the results for the
+1-tier and 2-tier model are very similar, only the
+performance of the 2-tier model will be discussed.
+Figure 10 summarizes the response time comparison by
+
+using the 2-tier model. The secret-key version requires
+the shortest time to process a transaction, while the
+public-key version, which uses RSA 2048-bit and the
+Rijndael algorithm, needs the longest time to process the
+same request. The response time difference is due to the
+use of different encryption algorithms. The trend of
+these curves is the same; the response time remain
+steady initially and when requests are queuing in the
+payment gateway, the response time rises and finally it
+declines due to the buffer of the gateway server is full
+and it drops the income requests in the server.
+
+3000 —?@— Secret-key version
+
+2 2500
+
+S 2000 —-— Public-key version
+
+= (RSA1024)
+
+1500
+
+8 ~~ Public-key version
+
+3 1000 (RSA1024/Rijndael)
+
+we 500 — > — Public-key version
+0 (RSA512/Rijndael)
+
+—*— Public-key version
+0 250 500 750 1000 1250 1500 Fae nosed
+Arrival Rate (Request per Second)
+
+Figure 10. Response time comparison using the 2-tier model
+
+4.4. Discussion
+
+Note that the system we proposed in this study has
+a special feature in order to be a fast and secure system.
+The feature is that the communications between the
+payment gateway, the ICPs and the PPs form a star
+topology and we do not need to consider the
+communications between the ICPs and PPs. The
+diagram is shown in Figure 11.
+
+between
+
+Communication model
+payment gateway, PPs and ICPs
+
+Figure 11.
+
+Recall that one major problem of the secret-key
+cryptosystem is the key management problem for a
+group of users, especially when the group is large.
+However, the star topology reduces the need of
+communications between the different PPs and ICPs.
+Because of this feature it is possible to use the secret-key
+version of the payment mechanism in our system.
+
+The risk of using the secret-key version is on the
+secret keys stored in the payment gateway’s database.
+Since all the keys will be stored in the payment gateway,
+the gateway operator will be in deep trouble if these keys
+were compromised. To safeguard this sensitive
+information, the servers in the payment gateway must be
+monitored tightly. As a result, the 1-tier model must not
+be used in the secret-key version; the 2-tier model will
+be more appropriate. In the real world, there may be
+millions of ICP’s in the system and it is too risky to store
+millions of their secret keys in the payment gateway
+centrally, which requires lots of resources and the
+payment gateway may not want to take the responsibility.
+Hence, we propose a mixed version of payment
+
+COMPUTER
+SOCIETY
+
+Proceedings of the 3rd_ International Symposium on Electronic Commerce (ISEC’02)
+0-7695-1861 -3/02 $17.00 © 2002 IEEE
+mechanism. The message flow of this version and it
+performance prediction are shown in figure 12 and
+
+figure 13 respectively.
+
+180 } }
+150 | hi —@ Mixed Version
+cy (AES+RSA1024)
+&
+Ss 120 | ; ;
+= —fli— Public-key with
+aa 90 Digital Envelope
+2 (RSA1024+AES)
+=| .
+8 ~ ——Public-key
+BO es —F Version
+4 30 | (RSA1024)
+— Secret-key
+0 / / / / Version (AES)
+0 200 400 600 800 1000
+Arrival Rate (Request per Second)
+
+Figure 12. Response time comparison of different versions using the 2-tier model
+
+r—Payment Gateway ——y
+1
+H
+
+Customer
+
+[ecommerce Storefront
+
+[pavm ent Partner
+
+[Encryption Server
+
+Initial buy request: 10)
+
+ORDER, Sicp(ORDER): 2()
+et
+
+ORDER, Sicp(ORDER), Login Name, Passw d: 3()
+>|
+i
+t
+
+i
+ORDER, Sicp(ORDER), Login Name, Hash(Passwd): 4()
+>
+
+Time
+
+I
+I
+AUTH _RESP, Spp(AUTH RESP): 7()
+
+>|
+i
+|
+
+TIM Epg, ePP(AUTH _REQ,H(AUTH REQ)):
+i
+
+! !
+TIM Epp, ePP(AUTH_RESP,AUTH REQ)):
+ot
+
+AUTH RESP, Spp(AUTH_ RESP): 9()
+!
+AUTH _RESP, Spp(AUTH_RESP): 10()
+
+Sends content: 11()
+
+Figure 13. Mixed version of the payment mechanism for the 2-tier/3-tier model
+
+5. Conclusions
+
+Micropayment systems can be used to handle
+transactions on the Internet involving a small amount of
+money, such as those costing within a few dollars.
+Companies and even individuals can sell small items
+such as news clippings, songs, video clips, etc. on the
+
+Proceedings of the 3rd_ International Symposium on Electronic Commerce (ISEC’02)
+0-7695-1861 -3/02 $17.00 © 2002 IEEE
+
+Web by using a micropayment system. Buyers do not
+need to worry about exposing their sensitive private
+information such as a credit card number to an unknown
+party by going through a trusted payment gateway. A
+micropayment system therefore enables one to purchase
+or sell digital contents online securely and efficiently.
+
+A big concern to all micropayment system designers
+is the trade-off between security and performance. In
+
+COMPUTER
+SOCIETY
+this study, we focused on the server-side credit-based
+approach, which is used in many popular systems built,
+for detailed analysis. We then studied the system
+architecture of the payment gateway, especially in its
+ability to resist external attacks and to protect keys that
+are used in encrypting sensitive data. A simulation
+model has been built to analyze the performance of the
+proposed architectures. We have addressed the trade-off
+between security and response time and showed that the
+secret-key algorithms such as Rijndael(AES) are
+suitable to be used together with public-key algorithms
+such as RSA1024 in server-side micropayment systems
+to provide a cost-effective and secure payment system.
+The results of this study may be useful to micropayment
+system designers.
+
+Also, we have mentioned the importance of
+protecting servers in the payment gateway, and provided
+some suggestions on the design of security policies.
+They can help system administrators to protect the
+payment gateway’s servers.
+
+6. REFERENCES
+
+[1] G.R. Blakley, Safeguarding cryptographic keys, AFIPS
+Conference Proceedings 48 (1979), 313-317.
+
+[2] Robert M. Cubert and Dr. Paul Fishwick, Sim++ Version
+1.0, University of Florida, Gainesville FL USA, July, 1995.
+
+[3] 8. Crocker, The Siren Song of Internet Micropayments,
+Information Impacts ({MP) Magzine,
+http://www.cisp.org/imp/april_99/04_99crocker.htm.
+
+[4] D. O'Mahony, M. Pierce and H. Tewari, Electronic
+Payment Systems for E-Commerce, Second Edition, Artech
+House, 2002.
+
+[5] Visa-Electronic Commerce-SET.
+
+http://www-s2.visa.com/nt/ecomm/security/set.html, June
+2000.
+
+[6] Visa-Electronic Commerce-SET Background.
+
+http://www-s2. visa.com/nt/ecomm/set/bkernd.html, June
+2000.
+
+[7] SET Secure Electronic Transaction LLC homepage.
+http://www.setco.org/, June 2000.
+
+[8] A. Shamir, How to share a secret, Communications of the
+ACM 22 (1979), 612-613.
+
+[9] Vijay Varadharajan and Yi Mu. On the Design of Secure
+Electronic Payment Schemes for Internet. Computer Security
+Appliactions Conference, 1996,
+
+[10] Wei Dai. Crypto++ 4.0 Benchmarks. March 2000.
+http://www.eskimo.com/~weidai/benchmarks.html
+
+Proceedings of the 3rd_ International Symposium on Electronic Commerce (ISEC’02) COMPUTER
+0-7695-1861 -3/02 $17.00 © 2002 IEEE SOCIETY

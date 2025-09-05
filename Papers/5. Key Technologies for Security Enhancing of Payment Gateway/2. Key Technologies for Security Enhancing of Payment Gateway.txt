@@ -1,0 +1,822 @@
+International Symposium on Electronic Commerce and Security
+
+Key Technologies for Security Enhancing of Payment Gateway
+
+Xuewang Zhang, Linlin Wang
+College of Software, Chongqing University of Posts and Telecommunications, Chongqing, China
+esxwzhang(@gmail.com
+
+Abstract
+
+The secure payment gateway is necessary for ensuring
+the development of E-commerce. The breaking down of
+hash algorithm of MDS and the like have imposed great
+potential security hazard on payment gateway. We have
+brought forward a kind of solution for enhancing the
+security of payment gateway and expounded the major
+key technique for security enhancing centering on the
+payment protocol which blends SSL and SET: optimize
+and realize AES algorithm and integrate it into SSL
+protocol, establish secure hash algorithm based on the
+optimized AES and integrate it into SSL protocol, design
+and implement security proxy and micro authority
+certificate(CA) system.
+
+1. Introduction
+
+Payment gateway plays a critical role in the whole E-
+commerce activity, on the one hand, it supports the secure
+online trades of business units/merchant through Internet;
+on the other hand, it ensure security of financial network
+of banks through security channel and it is the bridge of
+both communications and trade dealings of business
+units/merchant and financial network, therefore, it has
+combined all the participants of E-commerce as a whole
+body.
+
+At present, the security solution of payment gateway
+mainly falls into two categories, one is based on SSL
+protocol and the other is based on SET protocol '7! ;
+besides, various certification authority(CA) centers have
+been established for supporting the security operation of
+payment gateway. Only in China, there are more than 30
+CA centers!!! However, the SSL protocol and SET
+protocol can meet the actual demands only when they are
+perfected and expanded according to the Chinese
+situations"! and there are many unresolved technologies
+and application problems in sectors of PKI relevant to
+payment gateway, especially, it shall be researched
+further that the application of advance encryption
+standard(AES) in payment gateway is nearly a plank spot,
+the digital signature problems resulting from the cracked
+hash algorithms such as MDS hasn’t attracted sufficient
+attention and recognition, discussion of new payment
+model and the like shall be researched further ">"!
+
+978-0-7695-3258-5/08 $25.00 © 2008 Crown Copyright
+DOT 10.1109/ISECS.2008.37
+
+743
+
+2. Fusion-based Security solution of payment
+gateway
+
+2.1. Fusion-based payment protocol blending SSL
+and SET
+
+The security solution of payment gateway based on
+SSL is easy to implement, convenient and reliable to
+operate but its security is low; the external environment
+requirements of security solution of payment gateway
+based on SET are exigent and its security is high,
+however, the solution is difficult to be realized. At
+present, all the security solutions of mainstream payment
+gateways are based on SSL, so there is much potential
+security hazard © *! Based on OpenSSL! | which is a
+famous open source software, utilizing the confidentiality
+and integrity provided by SSL 3.0/TLS 1.08! (herein
+below called SSL for short) and combing perfect
+authentication system of SET protocol °°"! we have
+brought forward a kind of fusion-based security
+enhancing solution for payment gateway blending the
+above two protocols.
+
+(1) Basic idea of fusion-based solution
+
+The basic idea of fusion-based solution is to apply the
+two protocols in different layers in one online trade; it
+includes the following three parts: @) improve the SSL
+protocol, and develop a secure data-transfer-platform is of
+confidentiality, integrity and identification by utilizing the
+improved SSL protocol. @) simplify the SET protocol and
+solve the problem of cannot realizing authentications of
+multiple parties of SSL protocol by utilizing the perfect
+authentication system provided by smallest core subset of
+SET protocol. @) protect the confidentiality of customers’
+information (generally refer to cardholders) to the hilt.
+
+Figure 1 shows the payment gateway system based on
+fusion-based solution. Both the connection between
+customers and merchant and the connection between
+merchants and payment gateway use the improved SSL
+protocol the expedience and simplicity shall be realized as
+much as possible on the premise of not reducing the
+security; in consideration of high security requirements of
+financial network, the secure and reliable communication
+between payment gateway and banks shall be ensured and
+the simplified SET protocol shall be used between
+payment gateway and banks.
+
+IEEE
+@®computer
+society
+Financial
+network
+
+Internet.
+
+Payment informaulog(SET)
+
+Fig. 1 Payment gateway system basing on fusion-based
+payment protocol blending SSL and SET
+
+(2) Payment flow of fusion-based solution
+
+The main body of payment system consists of
+cardholders, merchants, payment gateway and banks.
+Take B2C mode for example, the Figure 2 shows the
+payment and trade flow of the fusion-based solution ©".
+
+\6. launch request of SSL connectigh
+___ Le order request,
+\ 7. set up the connection of
+alles) | ee ee
+
+9. authorization
+bidirection ID authentication,
+send certificale af cardte
+
+13. E-wallct launches I
+juest of SSL connectig!
+
+SUPPL
+
+Japjoy parc)
+avnaeD EMM
+
+13.payment request
+
+payment information
+[4g 14. payment resporise
+
+Fig. 2 Flow chart of fusion-based payment protocol blending
+SSL and SET
+
+@) Cardholders enter the website of merchants for
+shopping through browser.
+
+@The browser of cardholder is redirected to E-wallet
+of this computer and the browser accesses E-wallet
+through HTTPS; the address of payment gateway,
+certificate of payment gateway, order information, and
+etc. are sent to E-wallet as parameters.
+
+@)The cardholder logins E-wallet and chooses the
+payment card to complete the payment. As the client-side,
+the E-wallet shall carry out the dual signature on order
+information and payment information then change the
+payment information to digital envelope with the public
+key of payment gateway, finally send them to merchants
+through SSL protocol (bidirectional authentication of SSL
+protocol must be used, the merchants’ website shall
+authenticate the ID of cardholder).
+
+@ After receiving the dual signature of order
+information and payment information, the merchants shall
+complete two tasks: 1) generate the purchase response
+message and sign with the private key of merchants then
+send the purchase response message to E-wallet finally
+the E-wallet saves the purchase response message. 2) the
+merchants’ client-side software composes “authorization
+request message” with the cardholder’s certificate, the
+dual signature and the digital envelope which includes
+
+744
+
+payment information, and sends them to payment gateway
+through SSL protocol (bidirectional authentication of SSL
+protocol must be used, the merchants’ website shall
+identify the ID of cardholder).
+
+®) After acquiring the cardholder’s certificate, the
+payment gateway identifies the signature of cardholder,
+decrypts the digital develop and saves them provisionally.
+Furthermore, the following four steps shall be completed:
+1) the payment gateway forms the sensitive information
+(trade amount, cardholder ID, PIN and so on) in
+authorization request message into an abstract. 2) digitally
+sign the abstract with private key of payment gateway. 3)
+form the abstract’s signature and sensitive information of
+authorization request into message to message of
+“authorization request of payment gateway” in cascading
+way, encrypt the message of “authorization request of
+payment gateway’ with stochastically generated
+symmetrical cipher key K and encrypt the cipher key K
+with the public key of banks of card holder then form it
+into the digital envelope which is finally sent to banks of
+cardholder through ISO8583 specification. 4) after the
+generation of “authorization response” message and
+signing the “payment finished flag” with private key of
+payment gateway, payment gateway sends them to the
+merchants through SSL connection.
+
+©After receiving the “payment finished flag” signed
+by payment gateway and the authorization response
+message, the merchants identifies the “payment finished
+flag” with public key of payment gateway and saves the
+“payment finished flag” for dealing the payment. After
+completing the purchase request, the merchants
+implement the order.
+
+@After implementing the order, the merchants make
+the “payment request” and digitally signs the “payment
+request”; then send the message to payment gateway
+through SSL connection, which consists of the “payment
+request”, digital signature of payment request and the
+previously saved payment finished flag.
+
+The payment gateway confirms the merchants’
+payment request message with the public key of
+merchants and confirms that whether the merchants’
+“payment request” and the “payment finished flag” is
+consistent. Then the following operations shall be
+completed: 1) the payment gateway generates the abstract
+of the merchants’ payment request message. 2) digitally
+sign the abstract with private key of payment gateway. 3)
+the signed abstract and “payment request” is formed into
+message of “payment request of payment gateway’,
+encrypt the “payment request of payment gateway”
+message with stochastically generated symmetrical cipher
+key K and encrypt the cipher key K with the public key of
+banks of cardholder then generate the digital envelop,
+send the envelop coded by ISO8583 specification to
+banks of cardholder through financial network and finally
+launch payment request.
+©) The payment gateway generates message of
+“payment response” and its digital signature, sends them
+to the merchants through current SSL connection.
+
+QA fier receiving t the message of “payment response”
+and its digital signature, the merchants confirms the
+signature of “payment response”, and saves the message
+of “payment response” for later reconciliation with banks.
+
+2.2. Brief analysis of fusion-based solution
+
+The fusion-based solution fully develops the
+advantages of SSL protocol and SET protocol and avoids
+their disadvantages, besides, it enhances the security of
+payment gateway system according to the practices of
+payment gateway construction and present payment
+situations of banks of China.
+
+@Function: the authentication system of fusion-based
+solution is similar to that of SET protocol and ensures the
+business quality, easy-to-use quality and integrity up to
+the hilt.
+
+@)Security: though based on SSL, the fusion-based
+solution uses the core techniques of SET protocol: public
+key system, digital envelop, digital signature, dual digital
+signature, digital certificate and MAC detection. Its
+security is far higher than that of SSL and nearly be equal
+to that of SET protocol.
+
+@) Load capacity of system: SET takes a lot of
+operations of encryption and identification. For example,
+during one process of trade it requires 9 times
+identification of digital certificate, 6 times identification
+of digital signature, 7 times certificate transfer, 5 times
+digital signature, 4 times symmetrical encryption, 4 times
+asymmetrical encryption and many times hashing
+operation, together with transmission time, one complete
+trade process takes about 1~2 minutes or even longer
+time!*?!, Obviously, it’s too long. In fusion-based solution,
+the perfect authentication system provided by smallest
+subset of SET protocol is maintained and is the same as
+that of SET protocol on authentication logic. However,
+the improved SSL protocol on aspect of identification
+logical is much simpler and its process speed is much
+faster than that of SET protocol. Generally speaking, the
+trade process time consuming of fusion-based solution is
+close to that of SSL protocol. Though a little longer, the
+security is improved significantly.
+
+@User interface: both fusion-based solution and SET
+solution need to use E-wallet. It shall be specially
+emphasized that the security of E-wallet software is close
+correlated to security of payment gateway and the E-
+wallet software with high security must be installed; the
+common method is to divide the E-wallet software into
+two large parts. One part of function is realized by “server
+mode” E-wallet, the other one is solidified in intelligent
+card with strong computing power and the two parts
+complete the function of E-wallet together.
+
+745
+
+©) Maintenance and development: most of products
+with SSL and SET protocols are foreign products while
+the foreign countries impose strict limit of export to China
+on high intensity encryption products, in addition, the
+development of SET protocol is huge and complicated, so
+the costs of development and maintenance are very high.
+Based on OpenSSL, the development cost of fusion-based
+solution can be reduced greatly, besides, the products with
+independent intellectual properties shall be developed to
+avoid any export limit of foreign countries, it is more
+important that the SSL can be expanded to enhance the
+security.
+
+3. Major key technologies of fusion-based
+solution
+
+3.1. Optimization of AES algorithm and_ its
+application in hash algorithm
+
+(1) Quick realization of AES
+
+For the moment, Advanced encrypted standard (AES)
+algorithm’! is one of the securest block cipher algorithms,
+the length of block is 128 bits and the length of cipher key
+is 128, 192, or 256 bits. All the operations of this
+algorithm are carried out on state matrix. The core of this
+algorithm is to carry out of round operations on this
+matrix for many times, each round operation consists of
+four functions, they are SubBytes (the only nonlinear
+transformation), ShiftRows, MixColumns and
+AddRoundKey (no AddRoundKey function in the tenth
+round operation), each round operation needs a group of
+sub cipher keys, therefore, the inputting original cipher
+keys need to be extended.
+
+The key point of quickly realize the AES algorithm is:
+combine different steps of round operation as the search
+of one set of forms. The following is the brief statement:
+
+@) Suppose that a represents the input of round
+operation, b represents the output of SubBytes function,
+then:
+
+b,, =Sapla,,],051< 4,05 j< N,
+
+(3.2.1)
+
+@Suppose that c represents the output of ShiftRows
+function, d represents the output of MixColumns function,
+then:
+
+Coy By jc
+b
+
+So Fo) | ge pen,
+Cy Dy ine,
+La [Pst (3.2.2)
+[4,,] [o2 03 o1 o1]fa,
+
+O1 02 03 O1]| ¢,
+4s | | |.Os7<N,
+d,,| | 01 01 02 031} a,
+|@, | [03 01 01 02]| 4, (3.23)
+Of the two, the additional method of subscripts in
+formula (3.2.2) must be mod N, .
+
+@Combine the formula (3.2.1), (3.2.2) and (3.2.3)into
+formula (3.2.4):
+
+d,,| [02 03 01 01] | San l 40.546, 7
+
+4, | _}o10203 01) | San ly. O<j<N
+= ; 0< ;
+
+d,, 01:01:02 03) | Sap fy j.¢, 1
+
+d 03 01 01 02
+
+Saol As 4 (3.2.4)
+The matrix multiplication operations of above formula
+
+can be considered as linear combination among the
+following 4 column vectors:
+
+d;||@ 8 a a
+
+d;||a @ ) a =
+dla Bcd G Sl dicl® Sele . Soli lOSSN,
+d,| |B a a @
+
+(3.2.5)
+@Define the following 4 T forms (i.e. To, T;, T2, T3),
+
+each T form includes 256 *4 bytes and occupies storage
+space of 4KB.
+
+02.8,,fa] 03.8,,f4]
+| OLS gp fa] | 028,,fa]
+Po la]= o1sapfat) lors. rar
+03.S,5fa] O1S,, fa]
+OLS,,fa] O1S,,,fa]
+r[a)= 038 _pfa] Lal O1S,,,fa]
+ae 1028 ,fa] 1 03S ep fa]
+Sef a] | 028,,,fa] (3.2.6)
+
+®With these 4 T forms, (3.2.5) can be rewritten as:
+d,
+
+OF
+
+4,
+a,
+4a,
+
+Then in each time of loop iteration, a column of
+operation result of one round operation can be got only
+through 4 times of table look-up and 4 times of XOR
+operation. Besides, form T,, T2 and T3 can be got through
+cyclic shift of form TO, therefore, only adding 3 times of
+circularly shift operations to each time of loop iteration,
+the computation of round functions can be realized only
+by using form To, and it only occupies the storage space
+of 1KB.
+
+The experimental result shows that the AES quick
+realization algorithm was improved greatly. Under the
+completely same condition, the contrast of computation
+time between this algorithm and the standard algorithm is
+showed in Figure 3:
+
+=T14 j5<,] CLG, JPLL 4, ,.., J OTL... LOST <N,
+
+746
+
+2 146851
+
+tsa
+
+1500
+
+—@ improved algorithm
+—®— original algorithn|
+
+5
+
+1391
+3736
+
+time of encryption(ms)
+
+64
+encrypted data(MB)
+
+Fig. 3 Contract figure of computation time between AES
+improved algorithm and original algorithm
+
+(2) Construct secure hash algorithm based on the
+optimized AES
+
+Based on the construction method, the hash algorithm
+can be divided into three categories!!“l. @ the hash
+algorithm based on block ciphers; @the hash algorithm
+based on modular arithmetic, for example, the hash
+algorithm based on RSA; @)dedicated hash functions,
+such as md5 and sha-1. Among them, for the operation
+speed of the second category is too slow, it has no use
+value; the advantage of the third category is its quick
+operation speed, however, its security can not be proved
+and the md5 and sha-1 have been cracked. The first
+category of hash algorithm is the first to be researched,
+however, most of them are based on DES; for the output
+of DES is 64 bits, the output lengths of these hash
+algorithm are 64 or 128 bits. With the increasing of the
+computer technology, the experts generally consider that
+the hash algorithm with the output length of 128 bits has
+not been able to meet the demands, the hash algorithm
+with the length at least more than 160 bits must be
+worked out. Therefore, we construct the secure hash
+algorithm with the length of 256 bits by using the above
+optimized AES block cipher.
+
+The basic ideal® 1! is: for the HASH algorithm of
+block ciphers is iterated algorithm, the message with any
+length of n bits can be compressed to the abstract with
+fixed length of m bits. First, the message or files with
+length of n is divided into blocks with fixed length of bits,
+the length of each block shall be equal to the input length
+m of encryption function E or the length | of cipher key.
+Provided the length of message x is not integral times of
+block, the filling message enables it to be integral times of
+block, furthermore, add a block which includes numbers
+of filling d bits and is represented by binary number.
+
+This program takes the usual Rabin scheme™ '! (the
+
+block of message x is ¥=%,x,---x, , block length
+
+is| x, |=/). The detailed progress is as follows:
+h,=1V
+h, =E(h,%,)6=1,2,..4t
+h(x) =h,
+
+(Among them, IV is random initial block, “+”
+represents the vector addition in F;” ).
+
+Figure 4 shows the realization flow for constructing
+Hash function with the optimized AES.
+
+divide the explaintext data into explaintext
+block with the length of 256 bytes
+
+if the lengthol last block is less than 256
+bytes the fill with Ox5e
+
+take the first 256-byte block as the initial
+cipher key Ka for encryption, carry out AES
+encryption on the first block with Ky
+
+take
+encryption
+explaintext,
+next explaintext block as
+cipher K; then encrypt
+by AES
+
+the 256-byte
+result as
+
+take the
+
+v ‘
+
+take the encryption
+
+result as the hashed
+value and return
+
+Fig. 4 Flow chart of Hash function constructed with AES
+It is easy to prove that the security hash function
+constructed with the optimized AES has good ONE-WAY
+function, collision-resistant and sensitivity of initial value,
+besides, it inherits the special advantage of quick speed of
+AES algorithm and it has strong ability to resist the
+differential attack and linear attack.
+
+3.2. Security enhancing of SSL protocol
+
+(1) Integrate the new type ciphers into SSL protocol
+
+Only SSL products with low secure cipher
+combinations are allowed by American government to be
+exported to China; What is more serious is that with the
+crack of MDS and SHA-1 hash algorithms, all the cipher
+combinations supported by SSL protocol!®l itself are
+facing great security threat. Therefore, we designed and
+developed new type cipher interface of SSL based on
+OpenSSL and integrated new type cryptographic
+algorithm into SSL protocol seamlessly. In this solution,
+we integrated the optimized AES algorithm into SSL
+protocol in seamless way.
+
+The idea of loading new type ciphers in dynamic way
+is: realize through component technology, designate
+unified interface function and load dynamic library of
+ciphers in dynamic way. As the initialization of system,
+firstly register the cipher which is needed to be loaded and
+designate the dynamic library files in which the algorithm
+to be loaded lies in registration item. After fetching the
+registration item, the system will call in the designated
+algorithm dynamic library according to the content of
+registration item, and load the algorithm in algorithm
+container of itself. We have realized loading interface of
+new type cipher based on OpenSSL 0.9.8a.Load the
+following cryptographic algorithm function:
+
+747
+
+int EVP_add_cipher(const EVP_CIPHER *cipher);
+
+The EVP_CIPHER "! type interface pointer which is
+needed to be returned by new ciphers library. The
+function names of these ciphers are unified such as
+(int)init(...) function, (int)do_cipher(...)function and the
+like, when other modules of system need to use one
+cipher, they can acquire corresponding cipher through
+searching nid (i.e. the ID of cipher) or names. The
+description of the whole working flow is as follows: @
+load the cipher and complete the initialization, @external
+module sends out the algorithm request and call the
+corresponding algorithm object through algorithm
+container, ©) uninstall the cipher when the system
+operation ends.
+
+(2) Integrate the secure hash algorithm which is
+constructed with the optimized AES into SSL protocol
+
+In process of cipher key agreement, SSL protocol
+takes the MD5 algorithm!” in default way, however, the
+crack MD5 is a great potential security hazard, a new
+security hash algorithm shall be constructed to replace the
+MD%S algorithm. We integrate the secure hash algorithm
+which is constructed based on the optimized AES into
+SSL protocol. The detail realization process is described
+briefly as follows:
+
+@) Revise openssl-0.9.x\ssl\ssl_algs.c file, add the
+following code to SSL_library_init function:
+#ifndef OPENSSL_NO_MD2
+
+EVP_add_ digest(EVP_md2()),
+#endif
+#ifndef OPENSSL_NO_AES HASH
+
+EVP_add_digest(EVP_aes_hash()),
+
+EVP_add_ digest _alias(SN_ aes hash,“ssl2-aes_hash”),
+
+EVP_add_ digest _alias(SN_aes_hash,“ssl3-aes_hash”),
+#endif
+#ifndef OPENSSL_NO_MD5
+
+EVP_add_ digest(EVP_md5()),
+
+EVP_add_ digest _alias(SN_md5, “ssl2-md5”),
+
+EVP_add_ digest _alias(SN_md5, “ssl3-md5”),
+
+@)Revise openssl-0.9.x\crypto\objects\obj_mac.h file,
+add the following code to 1080th line:
+
+#define SN_md5 “MDS”
+
+#define LN md5 = “md5”
+
+#define NID md5 4
+
+#define obj md5 = OBJ_rsadsi.2L.5L
+
+#define SN_md5_hash “MDS5-SHAIL”
+
+#define LN_md5_hash “md5-shal”
+
+#define NID md5 shal 114
+
+#define SN_aes hash “AES HASH”
+
+#define LN_aes_hash “aes_hash”
+
+#define NID_aes_ hash 80
+
+#define SN hmacWithSHAI “hmacWithSHA1”
+
+#define NID_hmacWithSHA! 163
+
+#define OBJ_ hmacWithSHAL OBJ_rsadsi.2L.7L
+
+#define SN_re2_cbe “RC2-CBC”
+
+#define LN_re2_cbe “re2-cbc”
+
+#define NID re2_cbe 37
+
+@Copy the aes hash.c file (realize the function of
+constructing secure hash algorithm based on _ the
+optimized AES) written independently to openssl-
+0.9.*\crypto\evp\aes_hash.c, and recompile Openssl.
+
+3.3. Micro CA
+
+The mainstream payment gateway products generally
+take strong authentication technologies such as dynamic
+password (individual) and digital certificate (enterprise)
+and the like. We emphasizes that the digital certificate is
+the necessary item for enhancing the security of payment
+gateway "]. The digital certificate supports X.509 V3 or
+V4 format and new type of cipher (such as AES). The
+functions of actually operating digital certificate of
+payment gateway has been developed and realized with
+CFCA or secondary development kit provided by the third
+party CA ":2-41, we have developed and designed a micro
+CA system independently based on OpenSSL to issue and
+manage the certificates and the like. This micro PKI/CA
+authentication system provides services such as
+authentication, access control, confidentiality, non-
+repudiation and so on; we took the OpenSSL development
+kit as the base of basic ciphers, took composite PKI trust
+model in realization and stressed the key techniques such
+as Web automatic management, provision of dual cipher
+key pair (signature cipher key pair used in digital
+signature and its identification, encryption cipher key pair
+used in data encryption and its decryption), loading
+database in certificate management, real time query of
+certificate status and the like. The function of module of
+the whole authentication system consists of two parts,
+
+namely user function module and system function module.
+
+Of the two, the user function modules include: user login,
+certificate application, certificate query, certificate
+download, certificate cancellation, certificate
+identification, CRL download, cipher key renewal and
+cipher key recovery. The system function modules
+include: CA initialization, certificate issuing, CRL
+issuance and intercross authentication.
+
+3.4. Security proxy
+
+The main carrier for applying security-enhanced SSL
+protocol is security proxy, the security proxy falls into
+Client proxy and Server proxy. Client proxy and Server
+proxy are used in different environments and interacted
+with different applications. This makes their operation
+flows are a little different, however, this difference only
+lies in the confirmation of target address of forwarding
+request. On the Client, the URL address of request shall
+be extracted from the request data (HTTPS request) of
+browser to confirm the forwarding address requested;
+
+748
+
+while, on the Server, there is no need to get forwarding
+address from received data. It confirms the target address
+of forwarding request mainly through address mapping,
+i.e. realizes it through map between side for receiving
+request and target address. We developed our work in two
+ways, one is to develop based on the research of
+traditional SSL security proxy and the other is to develop
+the security enhancing which faces Message-Oriented
+Middleware (MOM) based on message service. Because
+the length limit, the details are omitted.
+
+4. Conclusions
+
+After researching for more than two years, the
+experimental result shows that the security of fusion-
+based solution was enhanced significantly and it can resist
+the currently known security attacks.
+
+Acknowledgements
+
+The work was supported by National Science
+Foundation Project of CQ CSTC under grant No.
+2006BB2369.
+
+References
+
+[1] Qiu Weidong. On the Security Techniques in Electronic
+
+Payment Systems. PhD. Shanghai: Shanghai Jiaotong
+
+University, 2001(in Chinese)
+
+Zhang Chuanwu, Peng Qicong, Shen Yeqiao, et al.. Secure
+
+Payment Gateway Techniques and System Implementation.
+
+Systems Engineering and Electronics, 24(3), 84-86, 2002
+
+(in Chinese)
+
+Liang Jin. Research of E-commerce Secure Electronic
+
+Transaction Technology. PhD. Xi’an: Xi’an Jiaotong
+
+University, 2000(in Chinese)
+
+Yi Rongfeng. Total Solution for Payment Gateway of
+
+HUAXIA bank. Computer Systems & Applications, No 9,
+
+10-11, 2004(in Chinese)
+
+Li song. The Research and Implementation of Security
+
+Architecture of Electronic Payemnt. PhD. Chengdu:
+
+Sichuan University, 2005(in Chinese)
+
+William Stallings. Cryptography and Network Security:
+
+Principles and Practices.4th edition. New Jersey: Prentice
+
+Hall Press, 2006
+
+OpenSSL 0.9.8. http://www.openssl.org
+
+Eric Esescorla. SSL and TLS: Designing and Building
+
+Secure Systems. Massachusetts: Addison-Wesley Press,
+
+2000
+
+MasterCard&Visa. SET Secure Electronic Transaction
+
+Specification. Book Three: Formal Protocol Definition.
+
+Version 1.0, 1997
+
+[10] Preneel B. Analysis and Design of Cryptographic Hash
+Functions. PhD. Belgium: Katholieke University, 1993
+
+[2]
+
+[3]
+
+[4]
+
+[5]
+
+[6]
+
+[7]
+[8]
+
+19]

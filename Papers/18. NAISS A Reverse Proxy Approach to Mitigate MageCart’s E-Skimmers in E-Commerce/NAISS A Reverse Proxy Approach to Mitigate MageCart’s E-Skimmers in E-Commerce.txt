@@ -1,0 +1,2293 @@
+Journal Pre-proof
+NAISS: A Reverse Proxy Approach to Mitigate MageCart’s E-Skimmers in E-Commerce
+
+Adrian-Cătălin Rus, Mohammed El-Hajj and Dipti Kapoor Sarmah
+
+PII:
+
+S0167-4048(24)00098-1
+
+DOI:
+
+https://doi.org/10.1016/j.cose.2024.103797
+
+Reference:
+
+COSE 103797
+
+To appear in:
+
+Computers & Security
+
+Received date:
+
+31 July 2023
+
+Accepted date:
+
+29 February 2024
+
+Please cite this article as: A.-C. Rus, M. El-Hajj and D.K. Sarmah, NAISS: A Reverse Proxy Approach to Mitigate MageCart’s E-Skimmers in E-Commerce,
+Computers & Security, 103797, doi: https://doi.org/10.1016/j.cose.2024.103797.
+
+This is a PDF file of an article that has undergone enhancements after acceptance, such as the addition of a cover page and metadata, and formatting for
+readability, but it is not yet the definitive version of record. This version will undergo additional copyediting, typesetting and review before it is published in its
+final form, but we are providing this version to give early visibility of the article. Please note that, during the production process, errors may be discovered which
+could affect the content, and all legal disclaimers that apply to the journal pertain.
+© 2024 Published by Elsevier.
+
+Computer And Security 00 (2024) 1–40
+
+NAISS: A Reverse Proxy Approach to Mitigate MageCart’s
+E-Skimmers in E-Commerce
+Adrian-Cătălin Rus1,a , Mohammed El-Hajj2,a,* , and Dipti Kapoor Sarmah 3,a,*
+a Department
+
+of Semantics, Cybersecurity & Services, University of Twente, Drienerlolaan 5, 7522 NB, Enschede, The Netherlands
+
+Abstract
+The rise of payment details theft has led to increasing concerns regarding the security of e-commerce platforms. For the MageCart
+threat family, the attacks employ e-skimmers, which are pieces of software code that instruct clients to forward payment details to
+an attacker-controlled server. They can be injected into hosting providers’ servers as HTML tags such as script, iframe, and img.
+By leveraging image steganography - the technique of hiding structured information inside images without visual perturbances MageCart groups can deliver e-skimmers without raising suspicion. In this work, we systematically review applicable solutions in
+the literature and evaluate their drawbacks in the setting of a compromised hosting provider. While promising, existing solutions in
+the literature present shortcomings such as a lack of compatibility, adaptability, or functionality in the presence of an attacker. Based
+on this review, we compile a set of features for a better solution, which we use as a foundation for designing our proposed solution
+- NAISS: Network Authentication of Images to Stop e-Skimmers. Through our solution, digital signatures of individual images
+are checked inside a server-side middlebox residing in the hosting provider’s network to prevent the transmission of unauthorized
+images to clients. Elliptic curve signatures are provided by the e-commerce platform developer prior to uploading a website to
+the hosting provider. Our proof-of-concept implementation shows that NAISS is capable of filtering 100% of present stegoimages,
+regardless of their novelty, while imposing a minimal performance detriment and no client-side modifications.
+© 2011 Published by Elsevier Ltd.
+Keywords: Image Steganography, E-skimmers, MageCart, Digital Signatures, Network Filter, E-commerce, Elliptic Curve
+Cryptography
+
+1. Introduction
+E-commerce is a continuously growing market specialized in selling goods and services through the internet and
+is quickly becoming the preferred method of purchasing, especially through periods when customers do not leave
+their homes such as the recent COVID-19 global pandemic [1]. An increasing number of businesses desire and enable
+e-commerce capabilities to increase sales [2] and customers are opting to make online purchases more often each
+year. As the driving factor of e-commerce platforms is the increase in sales and reduced operational costs, technical
+security measures are often overlooked, especially for those who outsource their platforms to web hosting providers
+[1]. The hosting providers’ main selling point is to ensure the availability of the stored data [3], and sadly security is
+∗ Corresponding
+
+authors: m.elhajj@utwente.nl,d.k.sarmah@utwente.nl
+URL: ruscatalin97@gmail.com,m.elhajj@utwente.nl,d.k.sarmah@utwente.nl (Adrian-Cătălin Rus1,a , Mohammed El-Hajj2,a,* ,
+and Dipti Kapoor Sarmah 3,a,* ), https://people.utwente.nl/m.elhajj,https://people.utwente.nl/d.k.sarmah (Adrian-Cătălin
+Rus1,a , Mohammed El-Hajj2,a,* , and Dipti Kapoor Sarmah 3,a,* )
+
+1
+
+/ Computer And Security 00 (2024) 1–40
+
+2
+
+an area where they fail to invest [4], leaving hosted e-commerce platforms vulnerable to exploits.
+One type of dangerous exploit for e-commerce platforms is represented by the stealing of payment card details
+from customers. MageCart is a threat family that specializes in the theft of customer payment credentials via the
+use of electronic skimmers (e-skimmers) [5], [6]. These e-skimmers are typically injected into the stored data of the
+hosting providers through methods such as Cross-Site-Scripting (XSS) [7], yet more injection procedures are being
+steadily developed [8]. The prevalence of MageCart attacks has been increasing in recent years [9], [10], with numerous high-profile attacks on major companies, such as British Airways [11]. As e-commerce continues to expand
+its reach, the number of victims is likely to increase unless effective countermeasures are implemented [12]. As a response, the Federal Bureau of Investigation (FBI) of the United States of America has issued a warning for the rising
+threat posed by MageCart and the Payment Card Industry Data Security Standard has been revised after a prolonged
+period of stagnation [13]. With over 4,800 publicly reported attacks in 2020 alone [10], the proliferation of MageCart
+represents a significant threat to the trust and profitability of payment platforms. In order to understand how to protect
+against MageCart attacks, it is first crucial to understand the nuances of e-skimmers hiding within images.
+E-skimmers deployed by MageCart are code snippets that instruct clients to forward their entered payment details
+to a server controlled by the attackers [14]. E-skimmers can be hidden inside various HTML tags, including script,
+iframe, form, table, and more others1 , but also inside Exchangeable Image File Format (EXIF) metadata, favicons
+[15] or, loaded dynamically by other pieces of code [16] embedded into the web pages. However, as these code
+snippets can be easily read through visual code inspection, some MageCart groups have turned to image steganography [17] to obfuscate their code from security testing tools and wary clients. Image steganography, as detailed
+in Section 1.1, is a technique of hiding information within images without considerably altering their appearance.
+The resulting images, henceforth referred to as stegoimages, present no obvious visual artifacts that would indicate
+tampering, yet once decoded by the clients’ browsers, the embedded code would be executed. By embedding their
+e-skimmers inside stegoimages, these MageCart groups have gained an average of three years before their state-ofthe-art image steganography techniques can be detected [18]. Unfortunately, researchers have yet to create a practical
+"Universal Detector" for stegoimages [19, 20] and, as a result, it is not recommended that the prevention of stegoimage
+e-skimmers rely solely on detection [21, 22]. Hence, more effective solutions are required to address the stegoimage
+e-skimmers challenge.
+
+1.1. Terms background
+For improved clarity on this topic for non-technical readers, we define the key terms necessary to grasp the discussions and importance of our work.
+• Steganography is a procedure of hiding information in plain sight [17]. The information can be hidden in
+various media such as text and sound. Historical examples of steganography are long pieces of text where a
+meaningful sentence can be composed from the first letters of each word and such will be hidden by readers not
+looking to decipher any hidden meaning.
+• Image steganography is the steganography technique that involves hiding information within images. For digital
+images, additional bits are added such that the visual impact on the image is minimal - no significant pixel color
+changes. Additionally, information can also be hidden by overwriting inside the metadata of an image, which
+is a set of data pertaining to the creation, characteristics, and context of a file.
+• Stegoimages is the result of image steganography, where they are relatively indistinguishable visually from their
+original images. These images typically contain more information and therefore occupy more storage space.
+• Steganalysis is the process of detecting and extracting the hidden information created by a steganography technique. The extraction step does not always yield the hidden information in full form, especially for images
+[18].
+1 object,
+
+form, script, embed, ilayer, layer, style, applet, meta, img, frame, iframe, frameset, script, table, base
+
+2
+
+/ Computer And Security 00 (2024) 1–40
+
+3
+
+• Code Injection is the process of moving a piece of software or instruction within another piece of software
+or computer system without the consent or permission of the receiving end. This is typically performed for
+malicious purposes, for example forcefully instructing a database to list all its stored information.
+• E-skimmers are pieces of software that effectively steal payment credentials from online customers. The name
+originates from the card skimmers that can be attached to Automated Teller Machines (ATMs) and reads the
+magnetic strip from payment cards. The "e" part of the name refers to "electronic", as in a skimmer that exists
+solely in the digital domain.
+• Digital Signatures are unique bit sequences that are mathematically produced from an input (e.g., an image)
+and a key. The uniqueness of the resulting sequence is strictly influenced by both the input and the key, such
+that even the most minimal change to any of them will result in a uniquely different sequence.
+1.2. Research Objective and Questions
+The overarching research objective of this paper is to find a practical and efficient way to prevent stegoimage
+e-skimmers. To this extent, we divide this objective into the following research questions:
+RQ1: What does the literature present as solutions against e-skimmers?
+RQ2: How do we fill in the gaps identified in the literature?
+RQ3: How does our solution compare with other solutions identified in the literature?
+The first research question is answered by performing a systematic literature review in Section 2. The second
+research question is partially answered in Subsection 2.4 by referring to an ideal solution, while in Subsection 5.2 we
+showcase how our proposed solution answers this question. A more in-detail view of the comparison of our solution
+with other solutions in the literature is presented in Subsection 5.1, where performance, behavior, ease of adoption,
+and robustness are used as evaluation criteria. By fulfilling the research objectives in this way, we bring forward our
+contribution to the fight against MageCart attacks.
+1.3. Research scope
+To better contextualize the contribution of our work, we need to draw the lines that define the capabilities of this
+research. Namely, our proposed solution is tested against stegoimage e-skimmers only, with a simplistic and possibly
+unrealistic setup that does not include mobile browser usage. We do not systematically evaluate the security posture
+of the proposed solution and solutions found in the literature, but we offer an opinion on that matter. We categorize
+solutions in the literature based on a subjective understanding of where their working mechanisms operate in the attack
+chain. For each category, generally strong and weak points are compiled, yet for each solution in particular, we mainly
+comment on the weak points, so as to help create a well-documented recommendation list that addresses drawbacks
+in the literature. Finally, when performing the literature review, we attempted to explore the boundaries, yet this
+goal might have been incomplete due to methodology shortcomings. All in all, our research scope is exploratory and
+simplistic, while aiming to contribute maximally to the field of e-commerce security.
+1.4. Contribution
+We can summarize the contribution of this work in five main points:
+• We performed a comprehensive literature review on the topics related to the MageCart threat, e-commerce
+implications, and related solutions.
+• We provided a list of seven important features for a solution against MageCart.
+• We proposed and implemented a solution based on the list of seven features and outline the methodology for
+developing a proof-of-concept for NAISS. Although restricted to images, NAISS can be feasibly extended to
+include any MageCart attack vector.
+3
+
+/ Computer And Security 00 (2024) 1–40
+
+4
+
+• We provided a benchmark comparing NAISS with related solutions based on performance, robustness, and
+behavior.
+• We evaluated the practical implications of using Elliptic Curves or RSA in the context of signing images
+Moreover, for both the literature review and our proposed solution, we identify and suggest future directions of
+improvement and research based on the identified limitations and assumptions.
+The rest of this paper is organized as follows: In section 2.1, we presented the design and execution of a semisystematic literature review. In section 2.3, we examined the literature we identified, culminating in a compilation of
+recommendations in subsection 2.4 Section 3 provided a comprehensive overview of our proposed solution, including
+the methodology for the proof of concept in section 3.4, the testing process, results, and experiments are presented
+in section 4, and the interpretation of these findings in section 5. We concluded by summarizing the significance and
+contribution of our study in section 6, as well as outlining directions for future research and development 7. Section 8
+provided a concise overview of our conclusions.
+2. Literature Review
+In this section of the scientific paper, we present a comprehensive methodology employed to conduct a systematic
+literature review (SLR) aimed at gathering relevant studies related to our research topic. The application of an SLR
+ensures an unbiased and rigorous approach to identifying and selecting pertinent literature from a diverse range of
+sources. Subsequently, we outline the analytical process undertaken to extract essential insights from the amassed
+papers, enabling a thorough examination of the existing body of knowledge in the field.
+Furthermore, this section sheds light on the limitations encountered during the SLR process, underscoring the
+challenges and potential biases inherent in such reviews. By acknowledging these limitations, we aim to provide
+transparency and credibility to our research findings, as well as suggestions for improving future reviews. An integral
+part of this section is the presentation of our benchmark analysis, which compiles various solutions documented in the
+literature pertaining to our research problem. By critically evaluating the strengths and weaknesses of each solution,
+we gain a comprehensive understanding of the current state-of-the-art approaches in the field. This benchmark analysis
+will serve as a valuable resource for researchers, practitioners, and stakeholders seeking to explore existing solutions
+and their associated drawbacks, thus fostering opportunities for innovative advancements in the domain.
+2.1. Designing the Systematic Literature Review
+When conducting a literature review, one has many methodology options for doing so [23]. The chosen type is
+heavily influenced by aspects such as the scope and goals of the study, the study discipline, and even available time.
+Each type of review balances out with respect to these aspects, exchanging a characteristic such as time for another
+(e.g. the extensiveness of explored literature). For instance, an Umbrella Review (e.g. [24]) employs a methodology
+that restricts its scope to analyzing only secondary sources, such as other literature reviews. While this approach allows
+for a broad and rapid overview of the research problem and proposed interventions, it is constrained in its ability to
+evaluate individual studies, and consequently, may yield less nuanced and potentially outdated results that do not
+reflect the current state-of-the-art knowledge in the field. Conversely, a Systematic Literature Review is not restricted
+by a fixed timeline and strives to undertake a thorough search of the literature, followed by a meticulous appraisal of
+each individual study. This approach provides a comprehensive overview of the current state-of-the-art knowledge,
+identifies gaps in the existing research, clarifies uncertainties in the findings, and suggests practical recommendations
+for future research and practice. By conducting a systematic literature review, we aim to structurally collect relevant
+knowledge, filter and align it such that we obtain an extensive view of the best available information. Furthermore, the
+synthesis of this information shall yield actionable and practical insights on how to tackle the challenge of MageCart
+e-skimmers hiding within images. The structured workflow of this type of literature review shall ensure that the
+scientific standards and procedures are taken to the core of the process.
+
+4
+
+/ Computer And Security 00 (2024) 1–40
+
+5
+
+2.2. Methodology
+Our Semi-Systematic Literature Review entails several stages (refer to Figure 1). Firstly, we identify relevant
+keywords aligned with RQ1 to facilitate a comprehensive exploration of the topic area. Next, we perform a search
+using two distinct techniques (i.e., programmatic and manual) utilizing these keywords. Subsequently, we scrutinize
+and sift through the outputs using filtering protocols to obtain a batch of pertinent and high-quality literature. Lastly,
+we examine and classify the filtered literature, synthesizing its content to address RQ2. The systematic workflow
+followed in our review assures that the entire process is conducted with precision and rigor.
+2.2.1. Search terms
+The selected search terms were chosen to enable us to conduct an exhaustive exploration of the literature, seeking
+relevant solutions that address the intricate issue of e-skimmers, which is further compounded by the limited research
+on this specific niche topic, particularly in the context of image steganography. Owing to the multidimensional nature
+of the problem, potential solutions can be located in several areas of interest (e.g., prevention of code injection, secure
+transmission sanitization, robust web server protection, and enhanced content integrity). To cover the boundaries of
+the literature through these areas of interest, we designed our terms to be short and generic in order to generate a large
+number of hits, but to sometimes also include keywords (e.g., e-commerce, e-skimmer) that might steer the results
+towards works related to our topic. Therefore, we have employed the following search terms (parentheses indicate
+interchangeable terms):
+• Blocking image steganography e-commerce.
+• (malicious/compromised/untrusted) Hosting providers e-commerce.
+• (e-skimmer/magecart) Defense e-commerce.
+• (image/html) Authentication.
+• End to End (integrity/authenticity) E-commerce.
+• Secure web application host.
+• Secure code (distribution/poisoning).
+• Credential sniffing.
+• Web skimmer filter.
+• Code injection (defense/prevention).
+We believe better keywords can be compiled for this purpose, yet the search hits yielded, combined with deeper
+searching based on cited and citing works resulted in a satisfactory coverage of the literature boundaries.
+2.2.2. Search Databases
+In order to systematically retrieve relevant works on the topic, the appropriate research databases need to be
+queried. To this extent, and to homogenize the queries, the searching is performed solely through the largest database
+aggregator as of the date of writing, Google Scholar. The search process involves the use of both programmatic and
+manual approaches. The distribution of the selected works across the publishing years and databases is depicted in
+Figure 2 and Figure 3, respectively. Notably, Figure 2 reveals that no works were selected for the time frames of
+2013-2015 and 2017-2018, despite yielding results during the initial search. However, the works from these time
+frames were discarded during the filtering process.
+In Figure 3 we observe that the databases with the most relevant selected works are IEEE, Google Scholar, and
+ACM. The Google Scholar category here is comprised of works that cannot be found in web sources where querying
+is available - and so the sole query database to reach those is Google Scholar or other aggregators. Apart from these
+databases, we see a rather uniform and extended distribution, covering 11 other research and patent databases.
+5
+
+/ Computer And Security 00 (2024) 1–40
+
+Figure 1. Overview of the literature review process
+
+6
+
+6
+
+/ Computer And Security 00 (2024) 1–40
+
+7
+
+Figure 2. Year distribution of solutions identified in the literature
+
+Figure 3. Distribution of research databases for selected works
+
+2.2.3. Programmatic literature search
+We used a Python script2 to programmatically retrieve the top 20 hits, sorted by relevance. We attempted to further
+the automatization process by filtering the results using OpenAI DaVinci [25]: in order to determine the relevance to
+our research challenge, the title and the abstract snippet of each paper was fed to DaVinci alongside a brief description
+of the research challenge. We concluded that the abstract snippet (i.e. a small, randomly chosen piece of the abstract)
+returned by Google Scholar was not enough to provide the right context for obtaining a pertinent answer. We then
+proceeded to filter the given results manually.
+2.2.4. Manual literature search
+The manual search was conducted using Google Scholar, which provided the added advantage of enabling a
+targeted exploration of interesting cited and citing works, thereby facilitating a deeper exploration of the citation
+chain. Furthermore, this step leveraged the insights obtained from prior searches conducted on the topic of image
+steganography, including surveys and analyses of related challenges, which helped to guide the search for relevant
+literature. In some cases, keyword searching was complemented by the "Cited by" functionality of Google Scholar,
+which facilitated the identification of relevant papers that had cited a specific article of interest.
+2.2.5. Filtering
+We used the criteria in Table 1 to include or exclude found works. The same criteria were applied to papers that
+were not found with keyword searching, but through exploring references or citing works from specific papers. To
+manually evaluate the relevance of one work, we mainly investigated the title and abstract, but in some cases, the
+introduction and conclusion as well. Given that code injection and web-based malware are long-living threats, we
+2 scholar.py
+
+in the literature branch of our repository
+
+7
+
+/ Computer And Security 00 (2024) 1–40
+
+8
+
+Table 1. Inclusion and exclusion criteria for selecting solutions and ideas for Literature
+
+Inclusion criteria
+Posted in journals, conferences, websites, or patent
+databases
+Presents an idea or solution addressing contemporary
+e-skimmers
+Presents an idea or solution that indirectly or partially
+addresses e-skimmers
+The work was published after 2001
+
+Exclusion criteria
+Electronically inaccessible.
+The work is not written in (comprehensible) English.
+The work does not contain (relevant) references.
+The work has a superficial take on the topic
+OR is less than 4 pages long.
+
+considered looking into ideas and solutions that were introduced a long time ago, and which might be of good use
+in today’s e-skimmers landscape. However, as observed in Figure 2, the identified solutions are predominantly dated
+around 2007-2011, but since 2016, there has been an increased interest in addressing the MageCart challenge.
+Before performing the analysis of the identified literature, we plot in Figure 4 the keyword relationship of the
+selected works using VOSviewer [26]. The width of the links was set to be proportional to the link strength and as
+such, we can tell that the keywords attack, user, signature, content, integrity and server are the most prominent ones,
+with "server" being the node with most connections. Moreover, we observe colored groups which aggregate larger
+ideas: the red cluster is generally oriented towards describing a solution and its workings, while the blue and green
+groups generally refer to the issue and methods of MageCart attacks.
+
+Figure 4. Keyword correlation of selected papers
+
+2.3. Analysis and categorisation
+In this section, we explored the topics related to image steganography used in the context of e-skimmers to gain a
+grasp of the suitability of proposed solutions. We begin by reviewing the methods of detecting stegoimages and then
+8
+
+/ Computer And Security 00 (2024) 1–40
+
+9
+
+discuss solutions based on a rough categorization. A shortened description of found solutions and their drawbacks is
+given in Table 2. Through this incursion into the literature, we expect to gain the necessary insights to compile a list
+of features for an ideal solution.
+We analyzed the selected papers by reading the abstract and skimming through the conclusion and results sections to
+identify the following:
+• The unique solution proposed
+• The working mechanism
+• The performance
+If not enough satisfactory information is retrieved through skimming, a more in-depth reading is performed.
+During this phase, we might discover that a given work does fit the exclusion criteria, in which case said work is
+removed. The subsequent categorization as seen in Figure 2.3 is based on where the solution is applied on a network
+topology level (e.g. in the hosting provider’s network) and whether they present some outstanding characteristics
+(e.g. using security policies instead of malware analysis). To this extent, we use the working mechanism to roughly
+categorize the papers like so:
+• Solutions against stegoimages
+• Protocols and frameworks
+• Server-side solutions
+• Client-side solutions
+• Solutions relying on policy systems
+• Solutions relying on third-party assistance
+
+Figure 5. Proposed categorisation overview
+
+9
+
+/ Computer And Security 00 (2024) 1–40
+
+10
+
+Table 2. List of solutions drawn from the literature and their drawbacks
+Category
+
+Solution
+Secure E-commerce Transaction [27]
+WS-Security tokens [28]
+An efficient secure electronic payment system
+for e-commerce [29]
+
+Protocols and
+frameworks
+
+WebShield [30]
+Unified Detection and Response Technology for
+MaliciousScript-Based Attack [31]
+Verena [32]
+HTML integrity authentication based on fragile
+digital watermarking [33]
+Method and apparatus for providing geographically
+authenticated electronic documents [34]
+Authenticity and revocation of web content using signed
+Microformats and PKI [35]
+Trusted cloud computing with secure resources and
+data colouring [36]
+Why HTTPS Is Not Enough–A Signature-Based Architecture for
+Trusted Content on the Social Web [37]
+Ensuring Web Integrity through Content Delivery Networks
+[38]
+Subresource Integrity [39]
+Protecting Users from Compromised Browsers and
+Form Grabbers [40]
+Fostering the Uptake of Secure Multiparty Computation in
+E-Commerce [41]
+Automated pen-testing
+
+Server-Side
+
+Toward secure and dependable storage services in cloud
+computing [42]
+Content Threat Removal \cite{CTR}
+Sanitization of Images Containing Stegomalware via Machine Learning
+Approaches [43]
+A robust defense against Content-Sniffing XSS
+attacks \cite{defense_sniffing_xss}
+JS-SAN [44]
+A signature-based intrusion detection system for web applications
+based on genetic algorithm [45]
+An effective detection approach for phishing websites using URL and
+HTML features [46]
+
+Client-side
+
+A novel approach for analyzing and classifying malicious web pages [47]
+Pixastic [48]
+Identifying JavaScript Skimmers on High-Value Websites [7]
+SpyProxy [49]
+Cujo [50]
+JSSSignature [51]
+
+Policy-based
+
+Content Security Policy} [52]
+PHMJ [53]
+
+Third-party based
+
+Providing a fast, remote security service using hash
+lists of approved web objects [54]
+MageReport [55]
+
+10
+
+Drawbacks
+The website initiating the transaction is not protected by
+the same integrity measures as the transaction itself.
+Cannot apply to modern context because it is SOAP-based.
+Furthermore, it was not explored further in the literature.
+It didn’t take into consideration the risk of a compromised
+hosting provider server.
+Incompatibility with HTTPS and performance bottlenecking for
+frequently-updating web pages The middlebox can be skipped by
+steganography-based attacks.
+Cannot prevent attacks that use HTML tags instead of scripts.
+The middlebox can be escaped by steganography-based attacks.
+Enforces integrity for databases only, not images/websites.
+Involves client-side modifications and does not provide
+confidentiality out-of-the-box.
+Has embedding limitations. It can lead to indirect DoS.
+Relies on client-side filtering.
+Unreliable in the context of cloud hosting providers.
+Relies on end-user for filtering.
+Involves client-side modifications.
+Malicious scripts can be interpreted before element checking occurs.
+Does not provide a method of enforcing end-to-end integrity
+of transmitted data.
+This does not apply to the modern context because it is
+Extensible Markup Language (XML) based.
+It does not work with HTML tags and is not generic enough
+Involves client-side modifications (browser extension).
+It filters out an entire transmission instead of only
+malicious elements.
+It is poorly used in practice and allows a malicious hosting
+server to authenticate malicious elements.
+Complex and reliant on experimental technologies that are
+yet to be fully researched. Hard for users to adopt.
+-Still in the research phase.
+-Fundamentally slow.
+-Might involve additional parties.
+Multiple automated tools should be used for consistent results.
+Manual pen-testing has been found to be more accurate.
+Not all hosting providers can or want to switch to a distributed
+cloud storage system.
+Can be disabled by a malicious hosting provider as it is an egress
+solution. Moreover, some e-skimmer loaders can still be effective
+after being reconstructed by CTR.
+Works solely for PowerShell scripts and PNG images.
+Adds scaled delay per each image
+Only addresses content sniffers injected by XSS.
+Cannot keep up with evolving sniffers and client
+device heterogeneity.
+Limited testing. 89% rate of true positives for some types
+of injection attacks.
+Involves client-side modifications and addresses injection
+attacks only.
+Might fail to detect malware embedded in images,
+despite yielding an accuracy of 94.49%.
+Comes with shortcomings of relying solely on static and
+dynamic analysis
+Relies on synchronising updates.
+A compromised server can update the plugin to work for a
+malicious version of the website.
+Relies on a blacklist, which will not catch zero-day attacks.
+12% increased load time. Limited to JavaScript only.
+Does not work correctly with websites involving session-based randomness.
+Being a middlebox, it can be escaped by steganography-based attacks.
+Can be escaped by steganography-based attacks.
+Only addresses JavaScript code provided by third-parties.
+A malicious hosting provider can allow its own added scripts to be executed.
+Moreover, it restricts functionality and bottlenecks performance.
+Although an improvement (in other areas) over CSP,
+it suffers from the same essential drawbacks.
+It filters the whole transmission, instead of only malicious elements,
+resulting in an indirect DoS.
+Addresses only Magento-based platforms and relies on
+(not state-of-art) behavior patterns.
+
+/ Computer And Security 00 (2024) 1–40
+
+11
+
+Table 3. Strengths and weaknesses for each category of solutions
+Category
+Stegoimage detection
+Protocols and Frame-works
+
+Strengths
+-The capability of evaluating malicious intent;
+-Allows for granular action-against e-skimmers.
+-Capability for improving security beyond defending
+against e-skimmers.
+
+Server-side
+
+-Prevents the spread of malicious content over the internet;
+-Effective and relatively easy implementation.
+
+Client-side
+
+-Clients have control over the security posture they get.
+
+Policy-based
+Third-party based
+
+-Logically efficient; Relatively easy to implement.
+-Provides a safety net for both the involved parties;
+-Parties can rely on the security specialty of the third party.
+
+Weaknesses
+-Unable to defend against new methods (3 years of delay);
+-Can be bypassed by dynamically loading stegoimages at client-side.
+-High degrees of complexity;
+-Slow implementation and adoption process.
+-Can be invalidated/deactivated by an intruder;
+-Single point of compromise;
+-Some solutions only address a single aspect.
+-The impractical adoption process, therefore with low real-world impact.
+-Susceptible to deactivation on the server-side by an intruder;
+-Restrict functionality and can heavily reduce performance
+-Sacrificing security autonomy;
+-Few solutions were found.
+
+For the readers’ convenience, the analysis overview of the unique strengths and weaknesses of each category was
+compiled in Table 3. We assess the efficacy and usefulness of a solution by contextualizing the working mechanism
+and performance with the challenges of addressing MageCart attacks. Based on this, we identify strong points and
+weak points, which will be used to compile the list of recommendations.
+2.3.1. Stegoimage detection
+Through image steganalysis, a defender can take a suspect image and attempt to extract the payload inside it
+[18]. Steganalysis techniques tend to be a response to a specific steganography technique, but they take on average
+3 years to develop and are hard to combine into a one-fits-all solution [18]. Although Deep Learning and Generative
+Adversarial Networks have shown promising developments in detecting stegoimages, the "Universal Detector" is still
+far from becoming a reality [18], [19], [56]. Also in [56], the authors propose a framework for analysing suspect files
+(incl. images) which are primarily comprised of metadata and file content analysis (using stego-toolkit [57], StegSpy
+[58] and StegExpose [59]) followed by file sandbox analysis (with a Cuckoo [60] environment). In this way, common
+attacks are blocked and newer ones get statically and dynamically checked. We remind that steganalysis tools are
+tailored to work only with specific image formats3 : e.g. StegExpose [59] works with Portable Network Graphics
+(PNG) and bitmap (BMP) and JRevealPEG [61] works only with Joint Photographic Experts Group (JPEG/JPG).
+In their conclusion, the authors of [21] state that to stop steganography-enabled malware, mechanisms that do not rely
+on detection should be used (e.g. Content Threat Removal (CTR) [62]).
+2.3.2. Protocols and Frameworks
+A systemic approach requires modifications in the typical communication pattern with a client, possibly including
+modifications on both server-side and client-side. We searched for protocols and frameworks that propose suitable
+methods of protecting users from e-skimmers or other related risks such as injection. Data integrity was an aspect
+we focused on due to its critical importance of maintaining the web code outsourced by the e-commerce platform
+untouched [63]. In [27], Secure E-commerce Transaction (SET) is described to employ signatures of crucial data
+such as cardholder name, CVV, and amount, yet the website initiating SET is not checked for its delivered content.
+In 2002, security tokens are proposed by [28] and discussed briefly as being useful for authenticating transmitted
+Simple Object Access Protocol (SOAP) [64] messages, although no protocol or further elaborations of this idea were
+found among citing papers. Recently, in 2020, a secure payment system model is being proposed by [29], however,
+it does not consider the risk of a compromised hosting provider serving malicious web pages - again, like SET, the
+transaction itself is well protected, while the preliminary interaction is not. WebShield [30] proposes a middlebox (i.e.
+intercepting traffic) solution that runs fingerprint checking and anomaly detection on behalf of the client. It requires
+no client-side changes, which is crucial as the issue of client device rigidity and heterogeneity is impacting the acceptance of security solutions. WebShield’s main limitations are the performance bottleneck for frequently-updating
+web pages, lack of support for plugins (e.g. the now-unsupported Flash4 ) and incompatibility with HTTPS. One rarely
+3 github.com/DominicBreuker/stego-toolkit#tools-detecting-steganography
+
+4 Adobe Flash is a software program that enables a user to view interactive content on a website. Flash content is usually embedded in a web
+page using the Flash Player plugin.
+
+11
+
+/ Computer And Security 00 (2024) 1–40
+
+12
+
+found advantage of WebShield is that it filters malicious parts of the website, as opposed to blocking the whole content.
+In 2016, a unified approach is proposed by [31] to collect web page information a priori, perform deep content
+inspection, and generate signatures based on dynamic and static analysis, all within a middlebox. It imposes a delay
+of 960ms when accessing a web page, but is unable to cover attacks that use HTML tags instead of scripts (e.g. Client
+Denial of Service (DoS), Auto complete Phishing). Moreover, one more disadvantage is shared with all the other
+sandbox-typed solutions: steganography-based attacks can escape the sandboxed environment [65]. Verena [32] is a
+framework built for providing end-to-end integrity for databases in web applications. It consists of a Verena server
+and a client: the server works with the database and provides correctness proofs for queries, while the Verena client
+runs inside the client’s browsers verifying and filtering data to the client based on those proofs; all this on top of web
+page integrity verification. The authors mention that using correctly Verena’s integrity policies is a challenge for the
+security of the solution and that further research shall explore easing that. One last notable limitation is that their
+framework does not provide confidentiality, although they propose fixing it by combining it with one of their works,
+Mylar [66].
+Cryptographic signatures allow for granular authentication of content along with its delivery to the user. An initial and simplistic idea is to sign the whole HTML file transferred to the client [33]. The authors propose that the
+watermarking technique is used - so the signature is hidden inside the file - leading to limitations in embedding capabilities and insecure hash values 5 for large HTML files. Moreover, the client would be responsible for evaluating
+the watermark and, in case of any small malicious change, the whole HTML would be denied, leading to an implicit
+DoS. We note another similar attempt in a 2007 patent [34]. Although its design is meant for providing businesses
+with document authentication based on geographic data, this could be useful for securing externally-linked images
+(e.g. loaded through a Content Delivery Network (CDN)) and include geographical verifiable information from the
+publisher side. The geographic aspect is however problematic if taking into mind cloud hosting solutions that might
+cluster many legitimate businesses and attackers in the same geographic location.
+In [35], the author of web content can attach element-specific signatures to each structured element (e.g. HTML
+div tag). The client can then use the Public Key Infrastructure (PKI) to authenticate the origins and integrity of these
+elements using the public key of the author. The signature is attached at the end of the element, meaning that a
+malicious payload can be interpreted before the signature is read. An older and simpler alternative based on XML
+signatures concludes that a more generic version is needed, one which works clearly with typical HTML tags [37].
+In a similar vein to [35], in 2010, [36] introduces the process of data colouring and digital watermarking which effectively ties a data resource (i.e. an image in our context) to the data publisher and the right users to access it. The
+interesting claim is that the computational complexity of this solution is lower than using traditional cryptography and
+PKI. However, this solution is more addressing the issue of authorisation and authentication for cloud data storage
+and it does not provide enforcement or filtering for secure data transmission to the client.
+To prevent CDNs or other in-transit nodes from manipulating the web content of an application, [38] proposes
+that each resource be signed by the author. A browser extension will then automatically check the found signatures
+against the author’s public key retrieved from a Domain Name Server (DNS). While effective and efficient, this solution requires client-side modifications (i.e. installing an extension) and does not filter out only malicious elements,
+possibly inducing DoS. Moreover, JavaScript code is not checked as the authors hold that the issue can be solved
+by Subresource Integrity [39] (SRI) - a recommendation which is poorly used in practice [67] and can be used by a
+malicious server to craft ’authentic’ hash values for malicious elements.
+An interesting idea to prevent a client from sending away credentials is to omit them in the first place. A complex
+system described in [40] has a trusted server provide a signature for a payment page which is then turned into a QR
+code and scanned by the client using a mobile application. A blockchain system would then assure that pre-registered
+client card data can be securely delivered to the verified payment server automatically, without the client having to
+5 breaking
+
+the second preimage resistance
+
+12
+
+/ Computer And Security 00 (2024) 1–40
+
+13
+
+enter them into any form. While we deem this solution elegant and assume that server-side implementation would be
+accepted in the industry, the opposite can be said for the client-side - convincing clients en mass to adopt and trust an
+experimental technology with their payment and personal data is close to impossible.
+We think that a promising avenue is represented by the use of homomorphic encryption [41] for e-commerce
+purposes. One could imagine that an encrypted website reaching a client would disable the malicious content inside
+images. Furthermore, a client would reply with encrypted data, yielding ’malformed’ credentials for the attacker.
+However, this would require the introduction of yet undeveloped and slow protocols which might imply the involvement of additional parties in order to provide the right level of security.
+2.3.3. Server-side
+This subsection touches upon solutions that (mostly) require changes to the hosting provider and website authors.
+These solutions are elegant because they do not typically require client-side modifications, which should improve
+adaptability. Not all solutions were found to address the issue directly, but they nonetheless shed light on how to
+reduce web-based threats. File integrity monitoring is proposed as a detection best practice against MageCart by the
+Payment Card Industry (PCI) Security Standards Council and the Retail and Hospitality ISAC [68]. To complement
+this picture, in 2010, [42] proposes a system for distributed storage that is secured against malicious data modifications
+(e.g. XSS) and is moreover able to detect misbehaving servers. It, however, enforces the switch of hosting providers
+to a distributed cloud system, which is a change unlikely to be adopted widely. Other best practices mentioned in [68]
+are the use of vulnerability security assessment to perform scans and engaging in periodic penetration testing. On this
+note, it is found that automated pen testing has an accuracy of 70% (compared to 100% for manual pen testing) [69]
+and that multiple automated tools (e.g. BurpSuite [70] and OWASP ZAP [71]) should be used for consistent results
+[72], [73].
+A comprehensive survey [74] shows that not all web vulnerabilities can be identified by current mechanisms (e.g.
+static, dynamic analysis, and black-box testing). They also show that protection techniques (such as attack-agnostic
+sandboxes and URL reputation lists) are attack-independent and require almost no human interaction while returning
+no false positives. Content Threat Removal [62], as discussed in [19] and [21], counters steganography-based malware
+by removing redundancy from the encoding of each file before sending them into the network. Here we can imagine
+a malicious hosting provider easily disabling CTR, as CTR’s design perspectives did not consider such a complication. Moreover, CTR will not drop malicious elements that load e-skimmers dynamically on the client side. Suffering
+from the same drawback, but designed for stegoimages in particular, [43] introduces the use of a neural network that
+sterilizes stegoimages created with Invoke-PSImages [75] - which only embeds PowerShell scripts into PNG images.
+It is able to destruct malicious payloads in 25ms without a dedicated Graphical Processing Unit (GPU). On top of
+the previously mentioned drawbacks, it is mentioned that this solution does not detect stegoimages, so a delay will
+be inevitably added to the transmission, proportionate to the number of transmitted images. A server-side upload
+filter for malicious HTML elements is proposed by [76] to prevent content-sniffing XSS attacks. Regular expressions
+based on these elements are derived to detect malicious ones with no false negatives. However, the authors mention
+that this type of solution will not be able to keep up with evolving sniffers and client device heterogeneity. Another
+sanitizing solution found is JS-SAN: sanitizing web apps’ inputs against JavaScript injection [44] in HTML5-based
+applications. The method works by clustering and identifying attack vectors based on templates. The authors test the
+application on just two web applications and obtain promising results, although, for some types of injection attacks,
+their solution only achieves an 89% rate of true positives. Intrusion Detection Systems (IDSs) typically use signatures
+of a certain behavior to determine whether a node within a network is malicious and [45] proposes an extension with
+genetic algorithms to adapt and evolve with new threats. Their initial results show that it can detect application layer
+attacks (e.g. XSS, Simple Query Language (SQL) Injection).
+A survey on code injection countermeasures [77] shows that static analysis tools (e.g. model checking, dataflow analysis, etc.) are easily implementable and used during web application development, while dynamic analysis
+tools (e.g. whitelisting, runtime tainting, and policy enforcement) require modifications that reduce adaptability and
+are hence employed during production. Approaches discussed are flexible, but the authors point out that attackers
+"continuously find new ways to introduce malicious code..."[77]. Moreover, a classification of XSS attacks and
+13
+
+/ Computer And Security 00 (2024) 1–40
+
+14
+
+defenses [78] regards that defenses cannot protect against Document Object Model (DOM) based attacks and typically
+require heavy modifications on both client and server-side. Considering supply chain compromise, the authors of [79]
+investigate the issue of including JavaScript from third parties and find that many high-profile websites do not take
+proper security measures for importing remote JavaScript, and sometimes have typos in their links, leading to unknown
+files being finally delivered to the client. The authors also experiment with the execution sandboxing technique for
+intercepting and evaluating executable code. Their experimentation concludes that fine-grained analysis profiles are
+better than coarse-grained ones, but they require constant adaptation as the malicious scripts evolve as well and are
+therefore hard to maintain.
+2.3.4. Client-side
+We will briefly discuss client-side solutions, for exploratory reasons mostly, as we do not find this category as
+an elegant approach against e-skimmers. Precisely, clients should not have to bear the risks of e-commerce platforms’ or hosting providers’ stale security posture, and such, server-side solutions are deemed better [80] and more
+elegant. Clients can use tools for determining whether a website is malicious or not [46], [47]. These tools can also
+be implemented by third parties or by server administrators to help clients avoid attacks. For [46], Document Object
+Model (DOM) feature extraction is pipelined to a classification algorithm (i.e. XGBoost [81]) yielding an accuracy of
+98.48%. However, the authors mention that their solution might fail to detect malware enabled by JavaScript, Flash,
+or images. A detection rate of 99% is achieved [47] with a K-Nearest Neighbor (KNN) model trained on features
+extracted using static and dynamic analysis from JavaScript code and respectively the DOM changes. The author
+suggests that a hybrid type of analysis should be developed to compensate for the shortcomings of existing static and
+dynamic analysis systems. In the context of securing banking clients from phishing websites, Pixastic [48] is proposed - a web extension that decodes a steganographic message hidden by the bank in a website. The web extension
+can then decide at runtime whether the website is clean or not based on the extracted payload. Although interesting,
+one can imagine that a compromised distribution server can be used to deploy malicious versions of the websites in
+question, yielding positive checks. Moreover, it is heavily dependent on the client synchronizing the extension with
+any updates, which adds even more effort on the user’s part.
+Another proposed web extension is made in [7], where a Chrome extension does dynamic analysis to prevent
+loading JavaScript skimmers and blocks outgoing requests going to attacker domains. It has a reported 97.5% detection rate and a 12% increase in load time, but it limits itself to being able to stop only JavaScript skimmers and
+is prone to be left out-of-date or one step behind new attacks by relying on a blacklist. Execution-based web content analysis is explored with SpyProxy [49]. It involves a middlebox (running a Virtual Machine) residing inside
+the client or a network, intercepting (unencrypted) traffic, and applying on-the-fly execution analysis to block malware transmissions to the client. It shows good results and adds 600 milliseconds of latency for page rendering, but
+theoretically struggles to work correctly with non-deterministic websites (i.e. involving session-based randomness).
+Another, newer version of this approach is found in Cujo [50], a learning-based approach that uses static and dynamic
+analysis inside a proxy/middlebox to identify JavaScript attacks before reaching the client. Their empirical evaluation
+showed that out of 200,000 web pages, Cujo detects 94% of the attacks. Cujo’s signature-based counterpart is found
+in JSSignature [51] - instead of JavaScript code processing, the authenticity of the third-party JavaScript is verified
+using digital signatures and an in-browser agent. This approach can protect clients efficiently if pieces of code are
+modified, while not imposing technical or compatibility drawbacks on clients or third parties involved. The authors
+mention intending to extend and transform JSSignature into a World Wide Web standard for all third-party resources,
+not just for JavaScript ones.
+2.3.5. Policy-based
+Content Security Policy (CSP) allows developers to specify permissions for loading and running JavaScript resources [52], but does not stop a malicious server from modifying the existing CSP to allow ’self’ in-line scripts to be
+executed. An earlier study concluded that HTML security policies "today have too many problems to be used in real
+applications" - primarily functionality restrictiveness and performance clogging [82]. Another policy-based solution
+named PHMJ [53] is proposed as an improvement over CSP, where the developer outsources an additional policy for
+the web page which can be enforced by the browser. It provides an efficient and comprehensive protection mechanism
+against (dynamically loaded) malicious HTML and JavaScript code and allows developers to better control high-risk
+14
+
+/ Computer And Security 00 (2024) 1–40
+
+15
+
+JavaScript Application Programming Interfaces (APIs). Yet, as with CSP, we foresee issues with an attacker that can
+modify the PHMJ website policy to allow malware execution.
+2.3.6. Third-party-based
+This brief category of solutions relies on or is a service offered by a third party. These benefit from not necessarily
+relying on either client or server-side modifications, but also from an alleged better security posture than the client and
+server. However, the trust investment into a third party’s secure operations and decision-making brings risks that some
+parties cannot tolerate. A patent from Google proposes a Security as a Service (SECaaS) solution [54] that passes
+web pages through their security modules and, if benign, tracks their changes over time, distributing hash lists of nonmalicious web pages and their URL. These hash lists are stored locally by clients and used to gain faster access time
+only to verified and authenticated web pages. One drawback we observe is the same as for [38]: web pages containing
+malicious code are not delivered at all, leading to implicit DoS for trivial elements such as images. MageReport [55] is
+a website that provides reports of MageCart’s presence in Magento platforms based on behavior-based identification
+patterns. While not state-of-art, tools like this can help to easily identify older e-skimmers living in platforms [83].
+2.4. Recommendation
+The literature shows (partial) solutions for the problem of e-skimmers, varying from server-side to client-side,
+Machine Learning, and middlebox/sandbox approaches. While we deem these solutions good, we observe drawbacks
+and limitations that make them unsuitable for the setting of a hosting provider delivering malicious payment pages.
+We also see that hosting providers need and are the best suited to combat the issue of malicious web pages [80].
+Given that the solution and attack both reside in the same place, we propose the following features list of an ideal
+solution for stopping e-skimmers :
+1.
+2.
+3.
+4.
+5.
+
+Maintains content integrity under malicious hosting provider.
+Works with all attack surfaces of e-skimmers (including dynamically-loaded content).
+Requires no client-side modifications.
+Integrates with TLS/HTTPS.
+Involves both manual and automated pen-testing prior to web page publication in order to detect zero-day
+attacks.
+6. Stops only the transmission of malicious elements to avoid indirect DoS.
+7. Allows the client to verify the authenticity of received data.
+Recommendation 1 helps assure that the client receives only data intended by the e-commerce platform developer
+and furthermore Recommendation 7 allows the client to verify that the data indeed belongs to the developer. An ideal
+solution (Recommendation 2) would work not only with images, but with code blocks, other media assets, and even
+scripts that load malicious content at runtime. In order to be implemented in a practical and effective manner, the
+ideal solution should not ask for any adaptation on the client-side (Recommendation 3). Transmitted data needs to be
+always secured, so any ideal solution should not interfere with the best practice of relying on TLS/HTTPS for data
+transmission (Recommendation 4). To properly ensure that the developer itself does not push the malicious content to
+the hosting provider, systematic security testing should be performed (Recommendation 5). Finally, Recommendation
+6 assists in maintaining service availability and protecting the client at the same time by only denying malicious data
+to reach the client.
+Additionally, future researchers should read about the weak points of our methodology in Subsection 2.5 to improve upon the literature review conducted here.
+2.5. Methodology limitations
+Let us now discuss the shortcomings of our literature review process. These should be taken into account by future
+research to build upon the work presented here, but also by readers wanting to assess the quality of the process itself.
+First, a trivial limitation, but relevant nonetheless, is the implicit bias of the authors due to an incomplete or
+skewed perspective on the subject. This is especially relevant in building the search terms and in conducting the
+in-depth manual search. As an effect of building incomplete or biased search terms, the search process might not
+completely cover the boundaries of the research topic, leaving interesting ideas undiscovered.
+15
+
+/ Computer And Security 00 (2024) 1–40
+
+16
+
+The second limitation is related to the words used in the search terms for querying a single aggregator. It can be
+that better results would have been obtained if slightly different or synonym terms would have been used instead or that
+a different aggregator might have given different results. We deem that some variations (in terms and/or aggregators
+used) would prove to be slightly beneficial for the obtained results.
+The third limitation again addresses the search process but is referring to the inability to programmatically apply
+the inclusion/exclusion criteria based on the title and abstract retrieve through the Google Scholar API. As discussed
+in the section regarding the programmatic search, one can only retrieve a snippet of the abstract, which has proven
+to us insufficient as an input for OpenAI DaVinci (the ’smartest’ GPT3 [84] available through an API at the time of
+writing) to determine the relevance of one work. A method of obtaining the full abstract would greatly benefit the
+automated literature review process, reducing the time needed to filter thousands of works in a matter of minutes.
+Lastly, the performance evaluation of selected works might be imperfect and therefore skew the opinions on the
+strong and weak points of each solution. Although we deem that this would not greatly impact the final recommendations made, it is important for future researchers to check for themselves whether an individual assessment of one
+solution is fitting.
+2.6. Conclusion
+We reviewed many research works to gain a comprehensive overview of addressable solutions and ideas against
+MageCart threats. Although the literature was not specifically oriented to these types of threats, by checking on the
+boundaries of this topic, we were pleased to find a diverse range of applicable measures, which were diverse enough
+that we could compile recommendations out of their strong and weak points. These recommendations are relevant for
+fellow researchers and for establishing targets for our proposed solution’s design.
+3. Proposed solution
+Based on the recommendation list compiled by broadly analyzing the literature in Subsection 2.4, we create our
+solution to fill in the existing gaps with a simplistic and compatible approach that provides integrity under the premise
+of a compromised hosting provider. We begin by discussing our threat model to understand the assumptions and
+limitations in place for the parties involved. We follow with a brief summary of the usefulness and relevance of
+cryptographic digital signatures, then describe the inner workings of our solution and conclude by evaluating the
+identified research gaps against the proposed solution.
+3.1. Threat model
+Understanding the picture we composed before designing our solution is essential for evaluating the relevance of
+this work. The attacker, hosting server, and e-commerce platform developer are assumed to have certain limitations,
+modus operandi, and responsibilities.
+First, the e-commerce platform is ultimately the one that holds responsibility for the security of the customer’s
+payment credentials, even if a hosting provider is compromised. The developer is assumed to take responsibility for
+all security aspects regarding their web page source code, including third-party source code, media, or resources used
+for their service. In more technical means, this implies that the developer has a form of security testing for their web
+page, especially for modifications that relate to its source code and images. This testing would include specific tests
+for images, including steganalysis techniques, meant to make sure that stegoimages are not being published from their
+repository to the hosting provider. However, we do not assume that these security testing procedures will catch or
+manage to solve all the problematic vulnerabilities, leaving the source code exploitable by (novel) injection attacks.
+Second, we assume that the hosting provider has a precarious external security posture due to the low return on
+investment compared to other areas such as performance, connectivity, uptime, and multi-tenant isolation [4]. On top
+of this, injection and remote code execution vulnerabilities from their clients’ source code can open the door to an
+attacker gaining access to the physical server, possibly compromising all services running on that said unit. In this
+context, attackers have multiple options for gaining and elevating their access to deliver e-skimmers and propagate
+16
+
+/ Computer And Security 00 (2024) 1–40
+
+17
+
+further. We assume the extent of security monitoring performed by hosting providers is to guarantee service availability and cross-tenant contamination, yet system or network-wide monitoring is not as thorough and therefore might
+allow an intruder to maintain elevated privileges for an extended or indefinite period of time. The result of either the
+injection or the intrusion into the server is that stegoimage e-skimmers are placed on the payment page.
+Third, the attacker is assumed to have gained elevated access to the hosting server and therefore influence the
+running services on it. Although this would possibly allow the attacker to perform lateral movement within the
+hosting provider’s network, we limit those capabilities of our attacker model in favor of exploring it in future works.
+Hence, the hosting server is assumed to be fully malicious under the intruder’s command, but the network it resides
+in and its nodes are unaffected. The affected websites are assumed to contain stegoimage e-skimmers created using
+novel or state-of-art techniques (e.g., Generative Adversarial Networks) and therefore be virtually impossible for most
+related works to detect or stop. We also assume that the attacker would be mainly interested in modifying the affected
+websites such that minimal suspicions are being raised from the clients, hosting provider, or developer.
+Therefore, our solution is designed to counteract additions and alterations of web elements, not necessarily other
+types of changes such as structural, logical, or aesthetical ones. To this end, digital signatures are leveraged to identify
+deviations from a developer-validated form.
+3.2. Digital signatures
+A digital signature is a unique string of bits generated by a mathematical algorithm that depends on two parameters:
+the private key of the signer and the input message or document [85]. Any changes to the input will result in a different
+signature, ensuring its uniqueness and providing integrity and non-repudiation. Digital signatures are widely used in
+e-commerce and other applications where message authenticity is crucial [86]. Their use has also been noted in related
+works in the literature and inspired our own research.
+The unique property of digital signatures lies at the heart of our proposed solution. We leverage this uniqueness
+to tie every image of a website to its developer’s private key and append the resulting signatures to the website. This
+results in a collection of signatures that can be checked for authenticity by any party through the developer’s public
+key. To prevent any misbehavior of a hosting provider to affect a client, a reverse proxy is attached to the hosting
+server and filters downstream traffic by checking the found images and their signatures against the public key of the
+developer. Finally, the result is that even if an intruder injects stegoimages or modifies the attached signatures on the
+server side, the client will not receive the malicious changes. We coin this solution NAISS: Network Authentication of
+Images to Stop e-Skimmers, but we acknowledge the future possible extension of its capabilities to cover other attack
+vectors of MageCart [87], [76].
+Figure 6 shows the flow and architecture envisioned for NAISS to function properly. It first begins on the developer’s side where a new element (e.g. image) has been changed. The element should pass through an evaluation
+process to determine whether it is malicious or not. Typically this involves security testing [69], where addition to
+the current best practices for security testing, we assume that stegoimage detection tools can be implemented as well.
+Following the decision that an element is not malicious, its signature will be computed by an employee that has access
+to a secure key. For example, this key can be one which is higher up in the key hierarchy of the developer. By choosing the key in that way, it would increase the difficulty of an attacker to obtain it, as it would be protected better than
+the other keys lower in the developer’s key infrastructure. This step is needed to minimize the accidental automated
+signing of a malicious image, which might, for example, be committed by a compromised developer account or an
+injection attack.
+The fact that our solution requires manual interaction slows down automated pipelines and enables powerful
+insider attacks. However, integrity being the most important value of a payment platform [63], a time tradeoff can be
+a cheap price to pay for high levels of integrity. In fact, automated pen testing tools suffer from false alarms that can
+only be found or reduced by involving people in the process [69], [72], [74], [88], [89]. Also, as automation increases
+year-by-year [88], the time spent on manual inspection will be lesser as time passes.
+Another factor of the time investment is the frequency and size of updates of the payment page. Considering that these
+mainly contain a couple of text fields (i.e., where one enters credit card number and cardholder details) and buttons
+(i.e., for submitting the details) with limited functionality, changes made to the page would be atomic, rare, and require
+little background knowledge to be comprehended by reviewers. Hence, involving human-led and automated testing
+will strengthen the confidence that signatures will only be produced for trustful images.
+17
+
+/ Computer And Security 00 (2024) 1–40
+
+18
+
+Developer's environment
+Secret
+key
+
+Reject
+update
+
+Repository
+
+1
+
+New push
+
+3*
+
+New web code
+Old element
+
+New element
+
+New web page
+Yes
+
+Security Officer
+
+2
+looks
+malicious?
+
+3
+Compute
+Signature
+
+No
+
+New element signature
+Old element
+
+New element
+
+Old element
+
+Old element
+Security
+Analysis tools
+
+4
+
+Update
+
+Hosting provider's network
+
+5
+
+1 hop away
+
+Request the website
+
+6
+
+Forward request
+
+NAISS Filter
+Clean response
+
+9*
+Client(s)
+
+8
+
+Filter by missing /
+mismatching
+certificates
+
+Hosting server
+7
+
+Reply to request
+New web page
+
+Figure 6. NAISS Flowchart
+
+The input we are using for creating the image signatures is of two types: either it is the byte string content of an
+image, in the case of locally-referenced images, or, in the case of images referenced by external URLs, the URL string
+itself. Note that in the latter case, NAISS can only validate signatures based on the correct URL, not on the media
+content referenced by that URL, and hence it falls under the responsibility of the developer to ensure that external
+URLs do not point to malicious resources at any point in time. The generated signatures are collected and added
+to the head tag of the web page in a new tag named naiss_signatures. The website is then published to the hosting
+provider as natural. After the new website and its content is stored at the hosting provider, we can assume that it can
+be compromised by an intruder inside or outside the hosting server.
+The NAISS filter is located one hop away from the server in the hosting provider’s network. It acts as a reverse
+proxy, and hence its Internet Protocol (IP) address is where the client finally connects instead of the server. In this
+way, we make sure that the supposed malicious hosting server is obliged to pass its communication through the reverse
+proxy filter so that its response eventually reaches the client back. The reverse proxy would represent an additional
+layer of difficulty for the intruder to achieve complete control over the delivered websites. The filter itself is a server
+modified to perform the filtering process on the GET requests for the stored websites and could be hardened to prevent
+lateral movement intrusion (refer to Section 7). It is similar to solutions identified in the literature, yet it fills in crucial
+gaps in a simple manner.
+
+18
+
+/ Computer And Security 00 (2024) 1–40
+
+19
+
+3.3. Research gaps comparison with NAISS
+We can briefly showcase how our proposed solution NAISS generally compares to the related work based on the
+shortcomings identified in the literature:
+1. Digital signatures can be effectively used by NAISS to ensure integrity as long as the input is unique enough.
+NAISS does not have any limitations for image formatting nor for any other attack vector of MageCart, as long
+as it can be represented through a unique byte string.
+2. NAISS does not require any client-side modifications because it is a server-side solution. Moreover, the client
+will not need to change any previous behavior, greatly increasing its adaptability.
+3. Any change made (i.e. even a single bit change) to the hosted files or signatures will eventually ripple out due
+to the uniqueness property of digital signatures and be finally detected by the NAISS filter. Therefore, the only
+avenue for an intruder to deliver stegoimage e-skimmers is to not modify anything.
+4. Regardless of how recent an attack is, if it is reliant on the modification of the already pushed data at the hosting
+provider, it will be caught by NAISS, as explained in the point above. This aspect is nuanced in 3.4.2.
+Fulfilling these design gaps requires modern and reproducible methods of implementation and testing in order to
+provide a valuable and provable contribution to the fight against MageCart.
+3.4. Methods
+This section describes the materials, algorithms, and other technical details used in our proof-of-concept implementation of NAISS. We used Python [90] as our main programming language and Docker [91] as our method of building our test environment. The decision to go for Python was for ease of implementation, and therefore open-source
+adoption, and for the vast available packages. Moreover, the simplicity of the language itself serves the demonstrative
+purposes of our work perfectly, proving how much can be achieved with as least code as possible. Docker was chosen
+for ease of implementation as well, especially because it could automate the creation and connectivity between the
+dummy hosting server and the NAISS filter. Moreover, Docker is widely used in the e-commerce industry as a means
+to achieve consistent and reproducible environments, making it an ideal choice for our testing needs. By encapsulating
+our application and its dependencies within Docker containers, we ensured that the test environment remains isolated
+and portable across different systems.
+The hosting server is a simple Python HTTP server, while the NAISS filter is using Flask (a lightweight, flexible,
+and easy-to-implement web framework [92]) as its baseline. The decision of using HTTP instead of HTTPS was done
+in favor of the ease of development and testing NAISS, with the security implications of it being of second importance
+to our research objective overall. Moreover, we do not think that using HTTPS communication would produce results
+that significantly differ from the HTTP counterpart. In our testing, both the hosting server and filter containers ran on
+the same machine inside a shared Docker network, while the automated tests were run from the same machine, but
+not from within the Docker network, so as to emulate a real client as much as possible.
+The source code of our work can be accessed on GitHub [93], where further usage instructions can be found. The
+code is mainly split into four directories:
+• client: Contains a script for running automated tests and one for visualizing the results of those tests. Additionally, the resulting plots are stored alongside the collected measurements under the test_results subdirectory.
+• filter: Contains the scripts and the Dockerfile to spin up the NAISS filter container.
+• server: Contains multiple website variants and the Dockerfile to run the hosting server container.
+• utils: Contains various useful scripts that a developer/attacker would use to finally attach signatures to a website.
+It also contains scripts used to generate websites, which are used for testing.
+
+19
+
+/ Computer And Security 00 (2024) 1–40
+
+20
+
+3.4.1. Signatures
+For generating and validating the signatures and their corresponding key we used python-ecdsa [94] with the
+NIST256p curve [95]. We opted for elliptic curve digital signatures for the reduced signature sizes, with the intuition
+that the reduced size of the signatures (compared to RSA signatures [96]) will ultimately translate into a faster access
+time. The chosen curve was selected for the practical key size (128 bits of security). Moreover, the computational
+performance of this curve is better than other alternatives provided by the library for the equivalent security level. The
+input for the signatures will be the byte string representation of the images stored on the hosting server, which we coin
+as ’internal’ images; while for images stored on external hosting services, we use the links in their respective HTML
+tags as input.
+3.4.2. Stegoimage generation
+To validate that our proposed solution can counter stegoimages generated with state-of-art techniques (RQ5), we
+choose to generate our own stegoimages by using SteganoGAN [97]. SteganoGAN leverages Generative Adversarial
+Networks to embed payloads, a technique which is considered the most difficult to detect [18]. In our testing, we
+include the image format types .png, .jpg and .ico as these are the most commonly used in practice for e-commerce
+platforms. Moreover, as touched upon in 3.4.1, our testing also includes the use of both internally and externally
+loaded images. The payloads accepted by SteganoGAN can be of any size, as it has an internal cutting point of 4
+bits per pixel for embedding data. We tested this limit in the steganogan_threshold branch of our GitHub repository,
+where we embedded payloads of 45 megabytes (MB) into stegoimages, yet the resulting stegoimages would occupy
+an average of 25MB. In comparison, stegoimages using only 11 bytes as payload occupy 24.8MB. Stegoimages will
+finally be displayed in different sizes and places (e.g., as a favicon) on our test websites.
+3.4.3. Website generation
+Multiple variants of websites were created stemming from a single template, using BeautifulSoup [98], a longliving library used for HTML manipulation (i.e., parsing and adding HTML tags to the file). The used template is
+representative of a typical website where e-commerce customers would introduce their credentials. The websites
+contain multiple pictures (attack vectors of stegoimage e-skimmers) of different sizes which are placed in different
+parts of the website. We used a royalty-free icon package [99] to represent payment method icons and LogoAI [100]
+to create a logo for our fictitious e-commerce platform. The images used have the following sizes: 128x80 pixels for
+payment method pictograms, 256x256 for favicons, and 505x446 for the website logo. These sizes were chosen to
+reassemble a payment page where large images of different sizes are scaled down to ensure visual clarity, but also to
+evaluate how large stegoimages would affect the filtering. Figure 7 exemplifies how the website with all its images,
+except the favicon, would appear to a client. Each such website will represent one specific test case, which will be
+automatically accessed and measured for performance.
+3.4.4. Automated testing
+To improve the reproducibility and execution time of our tests, we opted to use Selenium Webdrivers [101] to
+automate the accessing of websites and collect data from those interactions. Additionally, we used selenium-wire
+[102] to be able to inspect the exchanged network requests and responses. To maintain consistency of the results, all
+tests were run on the same MacBook Pro M1 with 8GB of RAM, with no unnecessary applications running in the
+background, connected over 5GHz Wi-Fi, and at a higher than 80% battery remaining.
+4. Results
+In this section, we present the testing variables, the collected data, and the aggregated results. Moreover, we
+showcase how the change of one type of parameter affects the performance or behavior of NAISS.
+4.1. Test parameters
+We aim at creating a comprehensive test through the tuning of many relevant website parameters, such that we
+can retrieve information about the behavior of the NAISS filter under different circumstances. A website variant
+would contain a complete representation of the chosen parameter, with no mixed values, apart from where that was
+technically unfeasible. These tuned parameters are:
+20
+
+/ Computer And Security 00 (2024) 1–40
+
+21
+
+Figure 7. Fictitious e-commerce platform
+
+• The format of the loaded images: PNG or JPG; the ICO format is reserved for the favicon
+• The method of loading images: through internal or externals links (i.e. a file path or an URL)
+• The embedded payload inside images: none (i.e. clean images) or any, up to 4 bits per pixel [97] (stegoimages)
+• The type of signatures attached: none (coined "nosig"), produced with the developer key ("sig") or an attacker’s
+key ("evilsig")
+Additionally, we investigate how the use of different web browsers would impact the interaction with NAISS. To
+this end, we ran our tests using Google Chrome, Mozilla Firefox, and Microsoft Edge, as these are typically the most
+popular desktop browsers [103].
+One last, but essential parameter we tuned was whether the web driver would connect to a website directly (i.e.
+unfiltered by NAISS) or through the filter itself. Hence, in half of the test cases, one would expect NAISS to filter
+everything necessary, while for the other half, no filtering would occur.
+Finally, all the combinations of these parameters yield a number of 54 test cases.
+4.2. Measurements
+For each test case, we are interested in collecting data to evaluate the behavior and performance of the NAISS filter.
+These measurements will also serve as a base for experimentation with specific types of parameters (e.g. encryption
+curve). Through automated scripts, we collect the following interaction data:
+1. The time (in seconds) to access a website.
+2. The transferred data (in kilobytes) when accessing a website.
+3. The percentage of images that reach the client (e.g. 0% if no images are loaded whatsoever).
+The third measurement will be used to determine whether the NAISS filter functions as intended and the former
+measurements are used for performance evaluation. Multiplying by the number of test cases, we take a total of 162
+performance and behavior measurements.
+In order to compile results with a degree of confidence in our measurements, we ran each test case 10 times. In this
+way, we see for each result category how much one can expect the measured values to vary. To this extent, the 96%
+confidence interval and the standard deviation of each result category are computed and displayed (refer to Subsection
+5.1).
+21
+
+/ Computer And Security 00 (2024) 1–40
+
+22
+
+4.3. Baseline results
+The collected measurements were plotted to obtain the final results. In our baseline experiment, we used images
+of certain pixel size (refer to 3.4.3), the NIST256p curve for signatures, and the text "RENAISSANCE" (11 bytes) as
+the payload for stegoimages. Due to the simplicity and relatively small size of these parameters, we name the results
+as baseline. Subsequent experiments in 4.4 explore what effects any of these previously mentioned parameters have
+on the measured performance and behavior.
+The results from the baseline experiment are averages of measurements taken from all the collected data, grouped
+by the parameters in 4.1 (e.g., we collect and average all the measurements of all the website variants that have JPG
+images). The average values are computed from all 10 repetitions of each test case and displayed alongside their
+associated confidence interval and standard deviation. For each measurement in 4.2, a different plot is produced:
+Figure 8 for the access time, Figure 9 for the transferred data, and Figure 10 for the percentage of unfiltered images,
+which is only grouped based on whether the correct signature for the images is present or not.
+
+Figure 8. Baseline experiment - access time per parameter
+
+The most significant result is the one related to the behavior of the NAISS filter, the percentage of unfiltered images.
+We see that for all of our test cases, 100% of images with the correct signatures arrive at the client, compared to 50%
+for the incorrect signatures, which is precisely expected as only half of the test cases involve connections through the
+NAISS filter. These results confirm that the method of filtering images based on the attached signatures is working as
+intended.
+The performance results show a connection between the transferred data and the access time of a website, hence
+we can expect that an increase in transferred data will create a slight increase in access time. The transferred data
+values for each category of parameters are topologically identical to the access time values.
+We observe that the websites with no signatures have the lowest values, while the ones with a correct signature have
+the highest - logically given that verifying and transporting signatures are additional steps to be taken. Although
+the size of websites with stegoimages is close to double that of the websites with clean images, the time difference
+in accessing them is orders of magnitude smaller. The difference between websites with externally and internally
+loaded images follows the same pattern, with the external images yielding higher values. The same is observed for
+the image format category: as expected, the JPG images are more compressed and therefore require less bandwidth to
+22
+
+/ Computer And Security 00 (2024) 1–40
+
+Figure 9. Baseline experiment - transferred data per parameter
+
+Figure 10. Baseline experiment - the percentage of images reaching the client
+
+23
+
+23
+
+/ Computer And Security 00 (2024) 1–40
+
+24
+
+be transferred. Regarding browsers, we see that the Chromium-based browsers are both faster and transfer less data.
+Finally, the websites accessed through the NAISS filter have transferred close to 50% less data and 16% faster than
+those directly accessed by the client. These results are called baseline results due to the simplicity and smaller sizes
+of the parameters used. Experimentation is needed to assess how a value increase in any of these parameters affects
+NAISS.
+4.4. Experiments
+Each experiment is designed to investigate the significant changes of one single parameter compared to the baseline experiment. For this purpose, we chose the following three parameters: image size, stegoimage payload, and
+encryption curve. The image size is interesting because a website is expected to have images of varied sizes, which
+are easily changeable and resized during a webpage’s lifetime; the stegoimage payload is used to observe how would
+the NAISS filter works with stegoimages containing real e-skimmers; and the encryption curve is investigated to probe
+how much of an impact increasing or decreasing the key and signature size has on our solution. Additionally, we
+ran an experiment with all these previously mentioned changes occurring simultaneously (Figure 11, 12 and 13). In
+GitHub, each experiment has its own separate branch, so navigating the results is uniform across all experiments.
+
+Figure 11. All parameter experiment - access time per parameter
+
+4.4.1. Image size
+In this experiment, the pixel size of all the used images is doubled. The results (Figure 14, 15 and 16) show the
+same topology as for the baseline experiment, except a 3% increase for the access time in the stegoimage category. The
+main difference between the baseline experiment is higher values, especially for the transferred data. This experiment
+further contributes to the idea that transferred data insignificantly increases the time taken to load a web page.
+4.4.2. Payload size
+By changing the payload to a realistic one, we emulate how NAISS would react to real e-skimmers hidden in
+images. As a realistic payload, we used an e-skimmer script (4,5 kilobytes) caught in the wild [104]. By increasing
+the size of the payload, we also slightly increase the storage size of the stegoimages. The results (Figure 17, 18 and
+19) are similar to the image size experiment, with all values increasing by up to 11% when compared to the baseline.
+24
+
+/ Computer And Security 00 (2024) 1–40
+
+Figure 12. All parameter experiment - transferred data per parameter
+
+Figure 13. All parameter experiment - the percentage of images reaching the client
+
+25
+
+25
+
+/ Computer And Security 00 (2024) 1–40
+
+Figure 14. Image experiment - access time per parameter
+
+Figure 15. Image experiment - transferred data per parameter
+
+26
+
+26
+
+/ Computer And Security 00 (2024) 1–40
+
+Figure 16. Image experiment - the percentage of images reaching the client
+
+Figure 17. Payload experiment - access time per parameter
+
+27
+
+27
+
+/ Computer And Security 00 (2024) 1–40
+
+Figure 18. Payload experiment - transferred data per parameter
+
+Figure 19. Payload experiment - the percentage of images reaching the client
+
+28
+
+28
+
+/ Computer And Security 00 (2024) 1–40
+
+29
+
+4.4.3. Encryption algorithm
+1. Encryption curve size
+For this experiment, we changed the elliptic curve used to NIST512p, increasing both the storage size of attached signatures and the time to verify a signature. The purpose of this experiment is to evaluate how this
+technical aspect would impact our solution, such that an implementer can find the desired balance between
+security and performance. The results (Figure 20, 21 and 22) are topologically different in the signature and
+connection type categories. The websites signed with an attacker key now have the longest access time, although not the highest transferred data size. The other significant change is observed in the websites that are
+accessed through a NAISS filter, where the access time has more than doubled and transferred data increased by
+approximately 40% compared to the baseline results. These large shifts in measurements are due to the fact that
+by doubling the bit size of the signature and the key (i.e., from NIST256p to NIST512p), one effectively doubles
+the computation time needed to validate a signature. One interesting finding is that the "evilsig" category has
+the largest latency, hinting that verifying an invalid signature is a slower process than verifying a valid one.
+
+Figure 20. Encryption experiment - access time per parameter
+
+2. Speed difference between EC and RSA
+We briefly evaluate the practical implications of using Elliptic Curves or RSA in the context of signing images.
+For this experiment, we performed a number of iterations (i.e. 1000) for each of the following: key generation,
+image signing, and signature verification. The iterations were performed in isolation for each algorithm and
+operation, resulting in averages for each operation type, which were plotted in Figure 23. The same image was
+used as input for signatures and the same security level was selected for each algorithm - 128 bits of security
+corresponding to an elliptic curve of 256 bits and RSA keys of 3072 bits [105]. The experiment was run in the
+same conditions as all the others, from within a Docker container, to enable readers to easily perform the same
+experiment on their own machines. The source code of this experiment can be found on the speed_comprasion
+branch of our GitHub project [93].
+We see that the key and signature generation is a very time-expensive operation for RSA, yet verification time
+for RSA is 4 times faster than for EC. Despite a total average time of 9.21 seconds for RSA, compared to
+29
+
+/ Computer And Security 00 (2024) 1–40
+
+Figure 21. Encryption experiment - transferred data per parameter
+
+Figure 22. Encryption experiment - percentage of images reaching the client
+
+30
+
+30
+
+/ Computer And Security 00 (2024) 1–40
+
+31
+
+EC’s 0.0049 seconds, we would expect signature verification to be the most frequent operation in the context
+of NAISS, where RSA shines. This would recommend RSA as the better choice for long-term use of web pages
+that do not change their code or resources often - which resembles most of the e-commerce checkout pages. The
+downside of RSA would be the large size of signatures, yet as we have observed in the image size experiment,
+increasing the transmitted data insignificantly increases the imposed latency.
+
+Key generation
+
+Signing
+
+9.0423
+
+8
+
+Time (s)
+
+Time (s)
+
+0.10
+0.08
+0.06
+
+EC
+
+RSA
+
+0.00
+
+0.0015
+
+0.0008
+
+0.0005
+
+0.02
+
+0.0008
+
+0.0020
+
+0.0010
+
+0.04
+
+2
+
+Verification
+
+0.0025
+
+0.12
+
+4
+
+0
+
+0.0033
+0.0030
+
+0.14
+
+6
+Time (s)
+
+0.1704
+
+0.16
+
+0.0008
+EC
+
+RSA
+
+0.0000
+
+EC
+
+RSA
+
+Figure 23. Encryption experiment - speed comparison between EC and RSA
+
+For all the performed experiments, the percentage of images reaching the client (measurement 3 from Subsection
+4.2) remained the same as for the baseline experiment, highlighting that the behavior of the NAISS filter is consistent
+and correct under any parameter tuning (refer to Subsection 4.1). The time taken to access websites through the filter
+is maximally double when compared to a direct connection, with the externally-loaded images and the elliptic curve
+size contributing the most to this increase. Further, similar connections are made in Section 5.
+5. Discussion
+In this section, we interpret the results and discuss their implications for the proposed solution. We use the payload experiment as our representative scenario of the real-world context. Our findings indicate that the behavior of
+the NAISS filter is effective in discarding all images that are missing or presenting a malicious signature, regardless of
+any parameter combination used. If malicious signatures are present in a filtered connection, it naturally results in a
+faster access time on the client side by up to 11% compared to valid signatures and 25% in the case of no signatures.
+The difference in access time between "sig" and "nosig" is due to the fact that the filter prevents the loading of
+external images for "nosig" websites, which have been found to contribute the most to the detriment of the loading
+time. The presence of signatures minimally impacts access time, as websites with signatures show access times very
+similar to those with no signatures when using unfiltered connections. Therefore, the differences in the signature type
+category occur solely from the filtering process.
+Our study found that the filtering process will either significantly reduce the load time due to loading less content
+or will add additional time because of the signature verification process. The added time for "evilsig" variants is up to
+50%, while for "sig" variants, it is less than 10% compared to an unfiltered connection. Verifying an invalid signature
+is slower than verifying a valid one, possibly allowing an intruder to degrade the access time by attaching multiple
+incorrect signatures.
+Transferred data is found to be correlated with access time, although it does not highly influence it. The factors
+that most impact the loading time of a website through the NAISS filter are, in order: the use of a slower signature
+scheme, the loading of external images, the use of Mozilla Firefox, and the signature verification process itself. The
+two most significant factors are modifiable on the developer side and do not highly impact the level of security. Hence,
+the performance of using NAISS can be appropriately tuned such that clients can be better protected from MageCart
+attacks without noticing the presence of the filter.
+31
+
+/ Computer And Security 00 (2024) 1–40
+
+32
+
+5.1. Benchmark
+To better compare and evaluate the performance and characteristics of NAISS with the solutions identified in the
+literature, a comparison benchmark has been compiled in Table 4. The comparison criteria are meant to evaluate one
+solution’s performance, behavior, robustness, and ease of adoption:
+• Imposed latency: the delay incurred by a client retrieving the webpage, as reported by the authors of the work
+(i.e. either in percentage or in absolute value)
+• True Positive rate: the percentage of correctly identified malicious elements
+• Flexibility: the capability of functioning correctly with varied inputs and contexts, including novel attacks
+• Adoptability: the ease of adoption and use from the servers’ and, but especially, clients’ side
+• Bypassable by intruder: whether an intruder inside the hosting provider can disable, alter or ignore one
+solution such that e-skimmers can be delivered to clients
+• Can cause indirect DoS: whether the correct functioning of one solution can stop clients from accessing the
+e-commerce service
+In case a criterion is not applicable or assessable from one paper, its corresponding cell is colored grey and marked
+with a ⧸. Flexibility and adaptability were evaluated as strong or weak points. For example, if flexibility is one of the
+strong points of a solution, its corresponding cell will be colored green and marked with a △. Conversely, a solution’s
+weak point is noted with a red cell marked with a ▽ and if a criterion is neither a strong nor weak point, its cell is
+colored yellow and marked with a ♢.
+The imposed latency values reported by the authors, as shown in Table 4, are either in percentages or absolute
+values. We chose to report them as presented by the authors, without attempting to normalize or convert the value from
+one type to the other, so as to provide an incongruent, yet error-free benchmark. We acknowledge the incongruence
+could be problematic for assessing the suitability of the solutions, yet for some, normalizing or converting values
+without adding biases or estimations is not feasible. The most notable biases would arise from the heterogeneity of
+the accessed websites, where some authors used real-world applications for latency measurements, and others, dummy
+websites. The difference between these categories can be explained by the less complex context the dummy websites
+operate in, but also by their inconsistent sizes across found solutions. One could, in some instances translate an
+absolute value to a percentage or vice-versa, yet the large selection of solutions identified hinders the homogenization
+of the latency value types through its diverse approach to reporting the values. Although NAISS ’ value was reported as
+a percentage for the ease of quantifying an easy-to-comprehend value, the average delays are reported within figures
+as absolute values such as in Figure 17.
+Table 4: Comparison between solutions identified in the literature and
+NAISS
+Solution name / work title
+Secure E-commerce Transaction [27]
+WS-Security tokens [28]
+An efficient secure electronic payment system for
+e-commerce [29]
+WebShield [30]
+
+Imposed
+latency
+
+True
+Positive
+rate
+
+Flexibility
+
+Adoptability
+
+Bypassable by
+intruder
+
+Can cause
+indirect
+DoS
+
+⧸
+
+⧸
+
+△
+
+♢
+
+yes
+
+no
+
+⧸
+
+⧸
+
+♢
+
+▽
+
+⧸
+
+⧸
+
+⧸
+
+⧸
+
+♢
+
+♢
+
+yes
+
+⧸
+
+15%
+
+⧸
+
+▽
+
+△
+
+no
+
+no
+
+32
+
+/ Computer And Security 00 (2024) 1–40
+
+Unified Detection and Response Technology for Malicious Script-Based Attack
+[31]
+Verena [32]
+HTML integrity authentication based on fragile digital
+watermarking [33]
+Method and apparatus for
+providing geographically authenticated electronic documents [34]
+Authenticity and revocation
+of web content using signed
+microformats and PKI [35]
+Trusted cloud computing
+with secure resources and
+data colouring [36]
+Why HTTPS Is Not Enough A Signature-Based Architecture for Trusted Content on
+the Social Web [37]
+Ensuring Web Integrity
+through Content Delivery
+Networks [38]
+Subresource Integrity [39]
+Protecting Users from Compromised Browsers and Form
+Grabbers [40]
+Fostering the Uptake of Secure Multiparty Computation
+in E-Commerce [41]
+Towards Secure and Dependable Storage Services in
+Cloud Computing [42]
+Content Threat Removal [62]
+Sanitization
+of
+Images
+Containing
+Stegomalware
+via
+Machine
+Learning
+Approaches [43]
+A robust defense against
+Content-Sniffing XSS attacks
+[76]
+JS-SAN [44]
+A signature-based intrusion
+detection system for web applications based on genetic
+algorithm [45]
+
+33
+
+960 ms
+
+⧸
+
+▽
+
+△
+
+no
+
+no
+
+⧸
+
+100%
+
+♢
+
+▽
+
+no
+
+no
+
+⧸
+
+100%
+
+♢
+
+▽
+
+no
+
+yes
+
+⧸
+
+⧸
+
+♢
+
+▽
+
+no
+
+⧸
+
+⧸
+
+⧸
+
+△
+
+▽
+
+no
+
+no
+
+⧸
+
+⧸
+
+△
+
+♢
+
+no
+
+no
+
+⧸
+
+⧸
+
+▽
+
+♢
+
+⧸
+
+no
+
+10%
+
+100%
+
+△
+
+▽
+
+no
+
+yes
+
+⧸
+
+⧸
+
+△
+
+△
+
+yes
+
+no
+
+⧸
+
+⧸
+
+♢
+
+▽
+
+no
+
+no
+
+⧸
+
+⧸
+
+♢
+
+♢
+
+no
+
+no
+
+⧸
+
+⧸
+
+△
+
+♢
+
+no
+
+no
+
+⧸
+
+100%
+
+♢
+
+△
+
+yes
+
+no
+
+25
+ms/image
+
+80.64%
+
+▽
+
+△
+
+yes
+
+no
+
+⧸
+
+100%
+
+▽
+
+▽
+
+yes
+
+no
+
+⧸
+
+89%
+
+♢
+
+△
+
+yes
+
+no
+
+⧸
+
+100%
+
+▽
+
+♢
+
+no
+
+no
+
+33
+
+/ Computer And Security 00 (2024) 1–40
+
+An effective detection approach for phishing websites
+using URL and HTML features [46]
+A novel approach for analyzing and classifying malicious
+web pages [47]
+Pixastic [48]
+Identifying JavaScript Skimmers on High-Value Websites [7]
+SpyProxy [49]
+Cujo [50]
+JSSSignature [51]
+Content Security Policy [52]
+PHMJ [53]
+Providing a fast, remote security service using hash lists
+of approved web objects [54]
+MageReport [55]
+NAISS [93]
+
+34
+
+2-3 s
+
+94.49%
+
+▽
+
+▽
+
+no
+
+yes
+
+⧸
+
+99%
+
+♢
+
+▽
+
+no
+
+no
+
+⧸
+
+⧸
+
+♢
+
+▽
+
+yes
+
+no
+
+12%
+
+97.5%
+
+▽
+
+▽
+
+no
+
+no
+
+600 ms
+500 ms
+30 ms
+⧸
+2.6%
+
+100%
+94%
+100%
+100%
+100%
+
+♢
+♢
+♢
+♢
+△
+
+▽
+▽
+♢
+△
+△
+
+yes
+yes
+no
+yes
+yes
+
+no
+no
+no
+yes
+no
+
+⧸
+
+100%
+
+△
+
+♢
+
+yes
+
+no
+
+0
+10%
+
+⧸
+100%
+
+▽
+▲
+
+△
+▲
+
+yes
+no
+
+no
+no
+
+According to this benchmark, NAISS situates itself as a relatively low-latency solution, that is efficient in preventing attacks and preserves the core e-commerce service under MageCart attacks. However, we believe NAISS has
+additional improvements over the identified solutions.
+5.2. Strong points
+Let us briefly summarize our findings relating to the improvements brought forward by implementing NAISS:
+1. Logically sound filtering based on the developer’s validation of content. As the results show, the percentage of
+images reaching the client remains correct under any parameter we tested for.
+2. 100% true positive rate, assuming the developer or filter is not compromised. Once an image or web element
+is validated through a provided signature, any alteration or substitution that affects a change in the byte representation of the image will produce a different signature and hence be spotted by the filter as being different.
+Moreover, an image is not allowed to be transmitted if its accompanying valid signature is missing.
+3. Agnostic of the image steganography technique used. Can stop zero-day techniques. Any e-skimmer using a
+(novel) image steganography technique used will be caught as long as it relies on modifying any bits of the
+image (including image metadata).
+4. Does not require any client-side modifications. The design of NAISS is strictly server-side but involves developerside modifications as well. Our testing emulated a simple client connecting to a hosting provider through the
+NAISS filter and showed that no modifications were required on the client side.
+5. Server-side modifications are minimal. It involves the addition and maintenance of a reverse proxy to the
+hosting server. In case one is already present, it would require modifications such as filtering performed on the
+downstream traffic.
+6. The authenticity of received images can be verified on the client side through the PKI. Moreover, using the
+public key of the developer, any party can validate whether a signature is correct by learning the public key
+from a trusted third party.
+7. Does not cause a DoS if the attached signatures are altered or removed. Compared to other solutions in the
+literature, NAISS filters only the elements that fail to be authenticated, as opposed to the whole web page. As
+such, the core e-commerce service can still be available to the customer if an image is denied transmission.
+34
+
+/ Computer And Security 00 (2024) 1–40
+
+35
+
+5.3. Limitations
+When reviewing our work, readers have to be aware of the limitations present within our implementation and
+testing procedure. Addressing these limitations shall yield an improvement in the proposed solution.
+5.3.1. Implementation
+Limitations specific to the implementation process can obscure the usefulness of our proof-of-concept as it might
+not perfectly fit into a real-world e-commerce platform:
+• When accessing a website through NAISS, the favicon is loaded, but not displayed.
+• The communication is done through simple HTTP, although upgrading to HTTPS should not be technically
+unfeasible.
+• An intruder can add multiple incorrect signatures to slow down a website’s loading time.
+• Does not offer a clear method of protecting the filter against the intruder inside the hosting provider.
+• Does not provide a method of safely updating the filter container in the presence of an intruder.
+• Currently supports only images, but the extension to all types of MageCart attack vectors is technically feasible.
+5.3.2. Testing
+These limitations regarding testing might be able to hide or introduce biases into our results:
+• Scalable Vector Graphics (SVG) images could not be included due to SteganoGAN incompatibility.
+• The ICO images are not loaded from external sources due to incompatibility with online hosting services (e.g.
+imgur.com).
+• The Safari browser was not included due to data collection issues.
+• No mobile browsers were tested.
+6. Answered Research Questions
+Let us briefly provide and point out the answers to the research questions in Section 1.2. As mentioned in that
+specific section, RQ1 is answered by the systematic literature review, while RQ2 is complementarily answered in the
+literature review and through the design of NAISS. RQ3 is bluntly answered through a benchmark.
+RQ1 is answered in Section 2.3 and summarized in Table 3 and Table 2.
+RQ2 is answered in Subection 2.4 and Subsection 5.2.
+RQ3 is answered through the benchmark in Table 4 from Subsection 5.1.
+Despite its many advantages, it is important to note that NAISS may still face challenges related to its security and
+deployment, such as the need for additional processes to support its operation. Therefore, further research is needed
+to evaluate the scalability and practicality of NAISS in real-world scenarios and explore possible enhancements to its
+design.
+7. Future directions
+We identify future directions for researchers and developers, based on the assumptions and limitations of the
+literature review and the proof-of-concept implementation.
+35
+
+/ Computer And Security 00 (2024) 1–40
+
+36
+
+7.1. Literature Review
+To enhance the literature review process, we recommend the following improvements for researchers looking to
+continue or take inspiration from our work:
+• The use of a better method to programmatically search more aggregators and follow the chain of citations.
+• The better use of advanced Natural Language Processing AIs such as GPT4 for automatic filtering of a large
+number of search hits.
+• Reading reports from security and forensics labs on the MageCart topic to grasp the state-of-art modus operandi
+and possible defense measures.
+• Consider investigating the MageCart families, their modus operandi, and their impact in the wild to assess which
+family/group presents the highest risk for the e-commerce market. This could yield better research focused on
+one particular type of attack.
+7.2. Proposed solution
+Through critical analysis, we conclude that there is room for improvement to elevate the capabilities of NAISS such
+that it becomes industry-ready. Specifically, we indicate the following directions for future research and development:
+• Extend NAISS and its testing to include more MageCart attack vectors.
+• Propose an integrated Continuous Integration/Continuous Deployment (CI/CD) process for the developers to
+validate and sign web elements.
+• Upgrade the connection type to HTTPS.
+• Address the slowdown attack by adjusting the filtering algorithm.
+• Improve the access time by making use of faster programming languages and algorithms.
+• Study the security posture of the reverse proxy filter and approaches to better protect it from intruders.
+• Improve the testing by running test cases on mobile browsers as well.
+• Conduct tests on real-world platforms to test the scalability and adoption process.
+The authors believe that the above points of improvement will elevate the contribution of this work and will bring
+forward an industry-ready solution able to defend e-commerce customers in a practical manner.
+8. Conclusion
+To fill the gaps identified in the literature, we have designed NAISS based on the recommendation list in Section 2.4. We have devised comprehensive tests and experiments to emulate the effectiveness of NAISS under many
+changing conditions. Despite all these modifications, the filtering process remained sound, while the accompanying
+performance detriment is comparable to or lower than related works. All in all, our proposed solution is found to
+be a simple yet powerful approach for stopping the delivery of stegoimage e-skimmers. In this paper, the significance of the MageCart threat was outlined, especially the challenge of tackling stegoimage e-skimmers to protect
+e-commerce platform customers. We have proposed a server-side middlebox solution, named NAISS, which leverages
+digital signatures to prevent the transmission of unauthorized images to clients. The authorization process is fully in
+the control of the e-commerce platform developer and involves creating a signature for each image on the website,
+which will then be validated by a middlebox residing between the hosting server and the client. Based on the collected
+results in Section 4, our proof-of-concept implementation demonstrates the effectiveness of NAISS, as it is capable of
+granular filtering 100% of injected stegoimages with minimal impact on loading times. As highlighted in Subsection
+5.2, NAISS is a relevant solution due to its simplicity, efficacy, and ease of implementation, making it a promising
+approach for mitigating MageCart attacks based on stegoimages. Moreover, further work will enable our solution to
+36
+
+/ Computer And Security 00 (2024) 1–40
+
+37
+
+guard e-commerce clients against all e-skimmers, contributing to a secure and NAISS future for e-commerce.
+Author contributions:
+Catalin Rus: Conceptualization, Methodology, Validation, Investigation, Formal Analysis, Data Curation, Writing - Original Draft, Visualization.
+Dr. Mohammed Elhajj: Methodology, Writing - Review & Editing, Visualization, Supervision, Project administration
+Dr. Dipti Kapoor Sarmah: Methodology, Writing - Review & Editing, Visualization, Supervision, Project administration
+References
+[1] E. Zenkina, About current trends in global e-commerce, Beneficium (1 (42)) (2022) 68–73.
+[2] H. Alzoubi, M. Alshurideh, B. Kurdi, K. Alhyasat, T. Ghazal, The effect of e-payment and online shopping on sales growth: Evidence from
+banking industry, International Journal of Data and Network Science 6 (4) (2022) 1369–1380.
+[3] G. A. Alghathian, Website hosting contract, The Lawyer Quarterly 11 (4) (2021).
+[4] D. Canali, D. Balzarotti, A. Francillon, The role of web hosting providers in detecting compromised websites, in: Proceedings of the 22nd
+international conference on World Wide Web, 2013, pp. 177–188.
+[5] J. C. Chen, Magecart card skimmers injected into online shops, https://www.trendmicro.com/en_us/research/19/j/
+fin6-compromised-e-commerce-platform-via-magecart-to-inject-credit-card-skimmers-into-thousands-of-online-shops.
+html (Accessed on [March 2023]).
+[6] Sansec, Lockdown: Stores closed, online stores hacked, https://sansec.io/research/magecart-corona-lockdown (Accessed on
+[June 2023]).
+[7] T. Bower, S. Maffeis, S. Demetriou, Identifying javascript skimmers on high-value websites, Imperial College of Science, Technology and
+Medicine, Imperial College London (2019) 1–72.
+[8] D. Mitropoulos, P. Louridas, M. Polychronakis, A. D. Keromytis, Defending against web application attacks: Approaches, challenges and
+implications, IEEE Transactions on Dependable and Secure Computing 16 (2) (2019) 188–203. doi:10.1109/TDSC.2017.2665620.
+[9] K. Clapp, Commodity skimming & magecart trends in first quarter of 2022, https://community.riskiq.com/article/017cf2e6
+(May 2022).
+[10] G. Grant-Muller, 2020 magecart timeline, https://www.rapidspike.com/blog/2020-magecart-timeline/ (Accessed on [June
+2023]).
+[11] T. Whitaker, The ba data breach, Int’l J. Data Protection Officer, Privacy Officer & Privacy Couns. 2 (2018) 15.
+[12] L. Heidelberg, Steganography in the financial sector, Ph.D. thesis, Utica College (2016).
+[13] J. Seaman, J. Seaman, The importance of risk management, PCI DSS: An Integrated Data Security Standard Guide (2020) 113–146.
+[14] C. Hu, The year in web threats: Web skimmers take advantage of cloud hosting and more, https://unit42.paloaltonetworks.com/
+web-threats-trends-web-skimmers/#Web-Skimmer-Detection-Analysis (Mar 2022).
+[15] M. Guarascio, M. Zuppelli, N. Cassavia, L. Caviglione, G. Manco, Revealing magecart-like threats in favicons via artificial intelligence, in:
+Proceedings of the 17th International Conference on Availability, Reliability and Security, ARES ’22, Association for Computing Machinery,
+New York, NY, USA, 2022.
+URL https://doi.org/10.1145/3538969.3544437
+[16] J. C. Taojie Wang, T. Yan, A new web skimmer campaign targets real estate websites through attacking cloud video distribution supply
+chain, https://unit42.paloaltonetworks.com/web-skimmer-video-distribution/ (Accessed on [April 2023]).
+[17] T. Jamil, Steganography: the art of hiding information in plain sight, IEEE potentials 18 (1) (1999) 10–12.
+[18] Muralidharan, Trivikram, Aviad, Cohen, Assaf, Nissim, Nir, The infinite race between steganography and steganalysis in images, Signal
+Processing (2022) 108711.
+[19] K. Björklund, What’s the deal with stegomalware?: The techniques, challenges, defence and landscape (2021).
+[20] M. Elhajj, H. Jradi, M. Chamoun, A. Fadlallah, Lasii:
+Lightweight authentication scheme using iota in iot platforms, in: 2022 20th Mediterranean Communication and Computer Networking Conference (MedComNet), 2022, pp. 74–83.
+doi:10.1109/MedComNet55087.2022.9810397.
+[21] S. Wiseman, Stegware–using steganography for malicious purposes (2017).
+URL https://10.13140/RG.2.2.15283.53289
+[22] M. El-Hajj, A. Fadlallah, M. Chamoun, A. Serhrouchni, Secure puf: Physically unclonable function based on arbiter with enhanced resistance against machine learning (ml) attacks, 2020.
+[23] M. J. Grant, A. Booth, A typology of reviews: an analysis of 14 review types and associated methodologies, Health information & libraries
+journal 26 (2) (2009) 91–108.
+[24] J. Radua, V. Ramella-Cravaro, J. P. Ioannidis, A. Reichenberg, N. Phiphopthatsanee, T. Amir, H. Yenn Thoo, D. Oliver, C. Davies, C. Morgan, et al., What causes psychosis? an umbrella review of risk and protective factors, World psychiatry 17 (1) (2018) 49–66.
+[25] OpenAI, OpenAI API DaVinci — platform.openai.com, https://platform.openai.com/docs/models/davinci, accessed on [March
+2023] (2021).
+
+37
+
+/ Computer And Security 00 (2024) 1–40
+
+38
+
+[26] N. J. Van Eck, L. Waltman, Vos: A new method for visualizing similarities between objects, in: Advances in Data Analysis: Proceedings
+of the 30 th Annual Conference of the Gesellschaft für Klassifikation eV, Freie Universität Berlin, March 8–10, 2006, Springer, 2007, pp.
+299–306.
+[27] Q. Zheng, S. Li, Y. Han, J. Dong, L. Yan, J. Qin, Security technologies in e-commerce, in: Introduction to E-commerce, Springer, 2009, pp.
+135–168.
+[28] B. Atkinson, G. Della-Libera, S. Hada, M. Hondo, P. Hallam-Baker, J. Klein, B. LaMacchia, P. Leach, J. Manferdelli, H. Maruyama, et al.,
+Web services security (ws-security), Specification, Microsoft Corporation (2002).
+URL https://www.academia.edu/download/30238231/ws-security.pdf
+[29] M. A. Hassan, Z. Shukur, M. K. Hasan, An efficient secure electronic payment system for e-commerce, computers 9 (3) (2020) 66.
+[30] Z. Li, Y. Tang, Y. Cao, V. Rastogi, Y. Chen, B. Liu, C. Sbisa, Webshield: Enabling various web defense techniques without client side
+modifications., in: NDSS, 2011.
+[31] S. Yoon, H.-l. Choo, H. Bae, H. Kim, Unified detection and response technology for malicious script-based attack, International Journal of
+Research Studies in Computer Science and Engineering (IJRSCSE) 3 (2016).
+[32] N. Karapanos, A. Filios, R. A. Popa, S. Capkun, Verena: End-to-end integrity protection for web applications, in: 2016 IEEE Symposium
+on Security and Privacy (SP), IEEE, 2016, pp. 895–913.
+[33] B. Li, W. Li, Y.-Y. Chen, D.-D. Jiang, Y.-Z. Cui, Html integrity authentication based on fragile digital watermarking, in: 2009 IEEE
+International Conference on Granular Computing, IEEE, 2009, pp. 322–325.
+[34] T. G. Nye, Method and apparatus for providing geographically authenticated electronic documents, uS Patent 7,233,942 (Jun. 19 2007).
+[35] H. C. Pöhls, Authenticity and revocation of web content using signed microformats and pki (2007).
+URL https://edoc.sub.uni-hamburg.de/informatik/frontdoor.php?source\_opus=16&la=en
+[36] K. Hwang, D. Li, Trusted cloud computing with secure resources and data coloring, IEEE Internet Computing 14 (5) (2010) 14–22.
+[37] M. Quasthoff, H. Sack, C. Meinel, Why https is not enough–a signature-based architecture for trusted content on the social web, in:
+IEEE/WIC/ACM International Conference on Web Intelligence (WI’07), IEEE, 2007, pp. 820–824.
+[38] Z. X. Lim, X. Q. Ho, D. Z. Tan, W. Goh, Ensuring web integrity through content delivery networks, in: 2022 IEEE World AI IoT Congress
+(AIIoT), IEEE, 2022, pp. 494–500.
+[39] W3C, Subresource integrity, https://www.w3.org/TR/SRI/ (Accessed on [February 2023]).
+[40] S. Almasi, W. J. Knottenbelt, Protecting users from compromised browsers and form grabbers (2020).
+URL https://www.ndss-symposium.org/wp-content/uploads/2020/02/23016.pdf
+[41] O. Catrina, F. Kerschbaum, Fostering the uptake of secure multiparty computation in e-commerce, in: 2008 Third International Conference
+on Availability, Reliability and Security, IEEE, 2008, pp. 693–700.
+[42] C. Wang, Q. Wang, K. Ren, N. Cao, W. Lou, Toward secure and dependable storage services in cloud computing, IEEE transactions on
+Services Computing 5 (2) (2011) 220–232.
+[43] M. Zuppelli, G. Manco, L. Caviglione, M. Guarascio, Sanitization of images containing stegomalware via machine learning approaches.,
+in: ITASEC, 2021, pp. 374–386.
+[44] S. Gupta, B. B. Gupta, Js-san: defense mechanism for html5-based web applications against javascript code injection vulnerabilities, Security
+and Communication Networks 9 (11) (2016) 1477–1495.
+[45] R. Bronte, H. Shahriar, H. M. Haddad, A signature-based intrusion detection system for web applications based on genetic algorithm, in:
+Proceedings of the 9th International Conference on Security of Information and Networks, 2016, pp. 32–39.
+[46] A. Aljofey, Q. Jiang, A. Rasool, H. Chen, W. Liu, Q. Qu, Y. Wang, An effective detection approach for phishing websites using url and html
+features, Scientific Reports 12 (1) (2022) 1–19.
+[47] P. N. Hiremath, A novel approach for analyzing and classifying malicious web pages, Ph.D. thesis, University of Dayton (2021).
+[48] P. Thiyagarajan, G. Aghila, V. P. Venkatesan, Pixastic: steganography based anti-phihsing browser plug-in, arXiv preprint arXiv:1206.2445
+(2012).
+[49] A. Moshchuk, T. Bragin, D. Deville, S. D. Gribble, H. M. Levy, Spyproxy: Execution-based detection of malicious web content., in:
+USENIX Security Symposium, 2007, pp. 1–16.
+[50] T. Krueger, K. Rieck, Intelligent defense against malicious javascript code, PIK-Praxis der Informationsverarbeitung und Kommunikation
+35 (1) (2012) 54.
+[51] K. Nakhaei, F. Ansari, E. Ansari, Jssignature: eliminating third-party-hosted javascript infection threats using digital signatures, SN Applied
+Sciences 2 (1) (2020) 1–11.
+[52] S. Roth, L. Gröber, M. Backes, K. Krombholz, B. Stock, 12 angry developers-a qualitative study on developers’ struggles with csp, in:
+Proceedings of the 2021 ACM SIGSAC Conference on Computer and Communications Security, 2021, pp. 3085–3103.
+[53] S. Liu, X. Yan, Q. Wang, X. Zhao, C. Chai, Y. Sun, A protection mechanism against malicious html and javascript code in vulnerable web
+applications, Mathematical Problems in Engineering 2016 (2016).
+[54] J. Cappos, N. Memon, S. T. Peddinti, K. Ross, Providing a fast, remote security service using hashlists of approved web objects, uS Patent
+9,246,929 (Jan. 26 2016).
+[55] Magereport, https://www.magereport.com/ (Accessed on [May 2023]).
+[56] R. Chaganti, V. Ravi, M. Alazab, T. D. Pham, Stegomalware: A systematic survey of malware hiding and detection in images, machine
+learningmodels and research challenges, arXiv preprint arXiv:2110.02504 (2021).
+[57] stego-toolkit: Collection of steganography tools, https://github.com/DominicBreuker/stego-toolkit (Accessed on [January
+2023]).
+[58] Stegspy - steghunter, http://www.spy-hunter.com/stegspy (Accessed on [January 2023]).
+[59] Stegexpose, https://github.com/b3dk7/StegExpose (Accessed on [February 2023]).
+[60] Cuckoo - automated malware analysis, https://cuckoosandbox.org/ (Accessed on [March 2023]).
+[61] C. A. Badami, Jrevealpeg: A semi-blind jpeg steganalysis tool targeting current open-source embedding programs (2021).
+[62] S. Wiseman, Content security through transformation, Computer Fraud & Security 2017 (9) (2017) 5–10.
+
+38
+
+/ Computer And Security 00 (2024) 1–40
+
+39
+
+[63] M. Qasaimeh, N. A. Halemah, R. Rawashdeh, R. S. Al-Qassas, A. Qusef, Systematic review of e-commerce security issues and customer
+satisfaction impact, in: 2022 International Conference on Engineering & MIS (ICEMIS), IEEE, 2022, pp. 1–8.
+[64] D. Box, D. Ehnebuske, G. Kakivaya, A. Layman, N. Mendelsohn, H. F. Nielsen, S. Thatte, D. Winer, Simple object access protocol (soap)
+1.1 (2000).
+[65] G. Lundsgård, V. Nedström, Bypassing modern sandbox technologies (2016).
+URL https://lup.lub.lu.se/student-papers/record/8880576/file/8888804.pdf
+[66] R. A. Popa, E. Stark, S. Valdez, J. Helfer, N. Zeldovich, H. Balakrishnan, Building web applications on top of encrypted data using mylar,
+in: 11th USENIX Symposium on Networked Systems Design and Implementation (NSDI 14), 2014, pp. 157–172.
+[67] B. Chapuis, O. Omolola, M. Cherubini, M. Humbert, K. Huguenin, An empirical study of the use of integrity verification mechanisms for
+web subresources, in: Proceedings of The Web Conference 2020, 2020, pp. 34–45.
+[68] Two
+Leading
+Cybersecurity
+Organizations
+Issue
+Joint
+Bulletin
+on
+Threat
+of
+Account
+Testing
+Attacks
+—
+pcisecuritystandards.org,
+pcisecuritystandards.org/about_us/press_releases/
+two-leading-cybersecurity-organizations-issue-joint-bulletin-on-threat-of-account-testing-attacks/
+(Accessed on [May 2023]).
+[69] S. Nagpure, S. Kurkure, Vulnerability assessment and penetration testing of web application, in: 2017 International Conference on Computing, Communication, Control and Automation (ICCUBEA), IEEE, 2017, pp. 1–6.
+[70] Burpsuite - application security testing software, https://portswigger.net/burp (Accessed on [June 2023]).
+[71] Owasp zap, https://owasp.org/www-project-zap/ (Accessed on [April 2023]).
+[72] M. P. Shah, Comparative analysis of the automated penetration testing tools, Ph.D. thesis, Dublin, National College of Ireland (2020).
+[73] B. Zhang, J. Li, J. Ren, G. Huang, Efficiency and effectiveness of web application vulnerability detection approaches: A review, ACM
+Computing Surveys (CSUR) 54 (9) (2021) 1–35.
+[74] J. Chang, K. K. Venkatasubramanian, A. G. West, I. Lee, Analyzing and defending against web-based malware, ACM Computing Surveys
+(CSUR) 45 (4) (2013) 1–35.
+[75] github/peepw, GitHub - peewpw/Invoke-PSImage: Encodes a PowerShell script in the pixels of a PNG file and generates a oneliner to
+execute — github.com, https://github.com/peewpw/Invoke-PSImage (Accessed on [March 2023]).
+[76] M. T. Gebre, K.-S. Lhee, M. Hong, A robust defense against content-sniffing xss attacks, in: 6th International Conference on Digital Content,
+Multimedia Technology and its Applications, 2010, pp. 315–320.
+[77] D. Mitropoulos, D. Spinellis, Fatal injection: a survey of modern code injection attack countermeasures, PeerJ Computer Science 3 (2017)
+e136.
+[78] S. Gupta, B. B. Gupta, Cross-site scripting (xss) attacks and defense mechanisms: classification and state-of-the-art, International Journal
+of System Assurance Engineering and Management 8 (2017) 512–530.
+[79] N. Nikiforakis, L. Invernizzi, A. Kapravelos, S. Van Acker, W. Joosen, C. Kruegel, F. Piessens, G. Vigna, You are what you include: largescale evaluation of remote javascript inclusions, in: Proceedings of the 2012 ACM conference on Computer and communications security,
+2012, pp. 736–747.
+[80] H. Fryer, S. Stalla-Bourdillon, T. Chown, Malicious web pages: What if hosting providers could actually do something. . . , Computer Law
+& Security Review 31 (4) (2015) 490–505.
+[81] T. Chen, T. He, M. Benesty, V. Khotilovich, Y. Tang, H. Cho, K. Chen, et al., Xgboost: extreme gradient boosting, R package version 0.4-2
+1 (4) (2015) 1–4.
+[82] J. Weinberger, A. Barth, D. Song, Towards client-side {HTML} security policies, in: 6th USENIX Workshop on Hot Topics in Security
+(HotSec 11), 2011.
+[83] P. Rouge, C. Yeung, D. Salsburg, J. A. Calandrino, Checkout checkup: Misuse of payment data from web skimming (2020).
+[84] T. Brown, B. Mann, N. Ryder, M. Subbiah, J. D. Kaplan, P. Dhariwal, A. Neelakantan, P. Shyam, G. Sastry, A. Askell, et al., Language
+models are few-shot learners, Advances in neural information processing systems 33 (2020) 1877–1901.
+[85] J. Katz, Digital signatures, Vol. 1, Springer, 2010.
+URL https://link.springer.com/book/10.1007/978-0-387-27712-7
+[86] S. Rahaman, G. Wang, D. Yao, Security certification in payment card industry: Testbeds, measurements, and recommendations, in: Proceedings of the 2019 ACM SIGSAC Conference on Computer and Communications Security, 2019, pp. 481–498.
+[87] S. Rathore, P. K. Sharma, J. H. Park, Xssclassifier: an efficient xss attack detection approach based on machine learning classifier on snss,
+Journal of Information Processing Systems 13 (4) (2017) 1014–1028.
+[88] N. Jagpal, E. Dingle, J.-P. Gravel, P. Mavrommatis, N. Provos, M. A. Rajab, K. Thomas, Trends and lessons from three years fighting
+malicious extensions, in: 24th USENIX Security Symposium (USENIX Security 15), 2015, pp. 579–593.
+[89] M. Aydos, Ç. Aldan, E. Coşkun, A. Soydan, Security testing of web applications: A systematic mapping of the literature, Journal of King
+Saud University-Computer and Information Sciences (2021).
+[90] Python, Welcome to Python.org — python.org, https://python.org (Accessed on [July 2023]).
+[91] Docker, Home — docker.com, https://docker.com (Accessed on [July 2023]).
+[92] github/pallets, GitHub - pallets/flask: The Python micro framework for building web applications. — github.com, https://github.com/
+pallets/flask/ (Accessed on [May 2023]).
+[93] C. Rus, GitHub - ruscatalin/NAISS: Research Project for NAISS: Network Authentication of Images to Stop e-Skimmers — github.com,
+https://github.com/ruscatalin/NAISS (Accessed on [July 2023]).
+[94] github/tlsfuzzer, GitHub - tlsfuzzer/python-ecdsa: pure-python ECDSA signature/verification and ECDH key agreement — github.com,
+https://github.com/tlsfuzzer/python-ecdsa (Accessed on [March 2023]).
+[95] M. Adalier, A. Teknik, Efficient and secure elliptic curve cryptography implementation of curve p-256, in: Workshop on elliptic curve
+cryptography standards, Vol. 66, 2015, pp. 2014–2017.
+[96] A. R. Terrance, S. Sharma, A. Sharma, K. Tyagi, N. Shokeen, N. Saini, In-depth analysis of the performance of rsa and ecc in digital
+signature application, BLOOMSBURY INDIA 15 (2019).
+
+39
+
+/ Computer And Security 00 (2024) 1–40
+
+40
+
+[97] K. A. Zhang, A. Cuesta-Infante, K. Veeramachaneni, Steganogan: High capacity image steganography with gans, arXiv preprint
+arXiv:1901.03892 (2019).
+URL https://arxiv.org/abs/1901.03892
+[98] L. Richardson, Beautiful Soup: We called him Tortoise because he taught us. — crummy.com, https://www.crummy.com/software/
+BeautifulSoup/, accessed on [July 2023].
+[99] X. Studio, Payment method icons by Xinh Studio — iconfinder.com, https://iconfinder.com/iconsets/payment-method (Accessed on [February 2023]).
+[100] LogoAI, AI Logo Maker - Generate your free logo online in minutes! — logoai.com, https://logoai.com/logo-maker (Accessed on
+[February 2023]).
+[101] Selenium, WebDriver — selenium.dev, https://selenium.dev/documentation/webdriver/ (Accessed on [June 2023]).
+[102] W. Keeling, GitHub - wkeeling/selenium-wire: Extends Selenium’s Python bindings to give you the ability to inspect requests made by the
+browser. — github.com, https://github.com/wkeeling/selenium-wire (Accessed on [June 2023]).
+[103] Similarweb, Top Desktop Browsers Market Share for February 2023, https://www.similarweb.com/browsers/worldwide/
+desktop/ (Accessed on [April 2023]).
+[104] MalwareBazaar,
+Malwarebazaar
+magecart
+sample,
+https://bazaar.abuse.ch/sample/f9274347590156c3e86e\
+\b7015b6dbd3587de034c51cb52e5161cee671c1107e4/ (Accessed on [March 2023]).
+[105] E. Barker, W. Barker, Recommendation for key management, part 2: best practices for key management organization, Tech. rep., National
+Institute of Standards and Technology (2018).
+URL
+https://csrc.nist.gov/CSRC/media/Publications/sp/800-57-part-2/rev-1/draft/documents/
+sp800-57pt2-r1-draft.pdf
+
+40
+
+Declaration of interests
+☐ The authors declare that they have no known competing financial interests or personal relationships
+that could have appeared to influence the work reported in this paper.
+☒ The authors declare the following financial interests/personal relationships which may be considered
+as potential competing interests:
+
+M.Elhajj reports financial support was provided by University of Twente. M.Elhajj reports a relationship
+with University of Twente that includes: employment.
+
+

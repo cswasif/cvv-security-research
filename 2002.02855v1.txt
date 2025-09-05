@@ -1,0 +1,1402 @@
+﻿Security Certification in Payment Card Industry:
+Testbeds, Measurements, and Recommendations
+
+Sazzadur Rahaman1, Gang Wang2, Danfeng (Daphne) Yao1
+1Computer Science, Virginia Tech, Blacksburg, VA
+
+2Computer Science, University of Illinois at Urbana-Champaign, Urbana, IL
+sazzad14@vt.edu,gangw@illinois.edu,danfeng@vt.edu
+
+Abstract ACM Reference Format:
+The massive payment card industry (PCI) involves various entities Sazzadur Rahaman, Gang Wang, Danfeng (Daphne) Yao. 2019. Security
+such as merchants, issuer banks, acquirer banks, and card brands. Certification in Payment Card Industry: Testbeds, Measurements, and Rec-
+Ensuring security for all entities that process payment card infor- ommendations. In 2019 ACM SIGSAC Conference on Computer & Commu-
+
+mation is a challenging task. The PCI Security Standards Council nications Security (CCS’19), November 11–15, 2019, London, UK. ACM, New
+requires all entities to be compliant with the PCI Data Security York, NY, USA, 18 pages. https://doi.org/10.1145/3319535.3363195
+Standard (DSS), which specifies a series of security requirements.
+However, little is known regarding how well PCI DSS is enforced in 1 Introduction
+practice. In this paper, we take a measurement approach to system- Payment systems are critical targets that attract financially driven
+atically evaluate the PCI DSS certification process for e-commerce attacks. Major card brands (including Visa, MasterCard, American
+websites. We develop an e-commerce web application testbed, Bug- Express, Discover, and JCB) formed an alliance named Payment
+gyCart, which can flexibly add or remove 35 PCI DSS related Card Industry Security Standards Council (PCI SSC) to standardize
+vulnerabilities. Then we use the testbed to examine the capability the security requirements of the ecosystem at a global scale. The PCI
+and limitations of PCI scanners and the rigor of the certification Security Standards Council maintains, updates, and promotes Data
+process. We find that there is an alarming gap between the security Security Standard (DSS) [27] that defines a comprehensive set of
+standard and its real-world enforcement. None of the 6 PCI scanners security requirements for payment systems. PCI DSS certification
+we tested are fully compliant with the PCI scanning guidelines, issu- has established itself as a global trademark for secure payment
+ing certificates to merchants that still have major vulnerabilities. To systems. According to PCI DSS [27],
+further examine the compliance status of real-world e-commerce “PCI DSS applies to all entities involved in payment card process-
+websites, we build a new lightweight scanning tool named Pci- ing – including merchants, processors, acquirers, issuers, and service
+CheckerLite and scan 1,203 e-commerce websites across various providers. PCI DSS also applies to all other entities that store, process,
+business sectors. The results confirm that 86% of the websites have or transmit cardholder data and/or sensitive authentication data.”
+at least one PCI DSS violation that should have disqualified them The PCI Security Standards Council plays a major role in eval-
+as non-compliant. Our in-depth accuracy analysis also shows that uating the security and compliance status of the payment card
+PciCheckerLite’s output is more precise than w3af. We reached industry participants and supervises a set of entities that are re-
+out to the PCI Security Council to share our research results to sponsible to perform compliance assessments such as Qualified
+improve the enforcement in practice. security assessors (QSA) and Approved scanning vendors (ASV).
+
+All entities in the PCI ecosystem, including merchants, issuers, and
+CCS Concepts acquirers, need to comply with the standards. PCI standards specify
+
+that entities need to obtain their compliance reports from the PCI
+• Security and privacy → Web application security;Web pro- authorized entities (e.g., QSA and ASV) and periodically submit
+tocol security. the reports in order to maintain their status. For example, a mer-
+
+chant needs to submit its compliance report to the acquirer bank
+Keywords to keep its business account active within the bank. Similarly, card
+Payment Card Industry; Data Security Standard; Internet Measure- issuer and acquirer banks need to submit their compliance reports
+ment; Website Scanning; Data Breach; Web Security; Testbed; E- to the payment brands (e.g., Visa, MasterCard, American Express,
+commerce; Discover, and JCB) to maintain their membership status [27].
+
+However, several recent high-profile data breaches [14, 72] have
+raised concerns about the security of the payment card ecosystem,
+
+Permission to make digital or hard copies of all or part of this work for personal or specially for e-commerce merchants1. A research report from Gem-
+classroom use is granted without fee provided that copies are not made or distributed
+for profit or commercial advantage and that copies bear this notice and the full citation ini Advisory [21] shows that 60 million US payment cards have
+on the first page. Copyrights for components of this work owned by others than ACM been compromised in 2018 alone. Among the merchants that ex-
+must be honored. Abstracting with credit is permitted. To copy otherwise, or republish, perienced data breaches, many were known to be compliant with
+to post on servers or to redistribute to lists, requires prior specific permission and/or a
+fee. Request permissions from permissions@acm.org. the PCI data security standards (PCI DSS). For example, in 2013,
+CCS ’19, November 11–15, 2019, London, United Kingdom Target leaked 40 million payment card information due to insecure
+© 2019 Association for Computing Machinery.
+ACM ISBN 978-1-4503-6747-9/19/11. . . $15.00 1Merchants that allow online payment card transactions for selling products and
+https://doi.org/10.1145/3319535.3363195 services are referred to as “e-commerce merchants”.
+
+arXiv:2002.02855v1  [cs.CR]  7 Feb 2020
+
+
+
+practices within its internal networks [72], despite that Target was detect SQL injection, XSS, and CSRF. 5 out of the 6 scanners are
+marked as PCI DSS compliant. These incidents raise important not compliant with the ASV scanning guidelines (Section 4).
+questions about how PCI DSS is enforced in practice. • We further evaluated 4 generic web scanners (not designed for
+
+In this paper, we ask: how well are the PCI data security standards PCI DSS), including two commercial scanners and two open-
+enforced in practice? Do real-world e-commerce websites live up to the source academic solutions (w3af [4], ZAP [2]). We examine
+PCI data security standards? These questions have not been exper- whether they can detect the web-application vulnerabilities
+imentally addressed before. We first design and develop testbeds missed by PCI scanners. Unfortunately, most of these vulnera-
+and tools to quantitatively measure the degree of PCI DSS compli- bilities still remain undetected. (Section 4).
+ance of PCI scanners and e-commerce merchants. PCI scanners are • We conducted empirical measurements to assess the
+commercial security services that perform external security scans (in)security of real-world e-commerce websites. We carefully
+on merchants’ servers and issue certificates to those who pass the designed and built a lightweight vulnerability scanner
+scan. By setting up our testbed, i.e., an e-commerce website with called PciCheckerLite. Our solution to addressing the non-
+configurable vulnerabilities, we empirically measure the capability intrusiveness challenge is centered at minimizing the number
+of PCI scanners and the rigor of the certification process. of requests that PciCheckerLite issues per test case, while
+
+Our results show that the detection capabilities of PCI scanners maximizing the test case coverage. It also involves a collection
+vary significantly, where even PCI-approved scanners fail to re- of lightweight heuristics that merge multiple security tests
+port serious vulnerabilities in the testbed. For 5 of the 6 scanners into one request. Using PciCheckerLite, we evaluated 1,203
+evaluated, the reports are not compliant with the PCI scanning e-commerce website across various business categories. We
+guidelines [19]. All 6 scanners issued certificates to web servers showed that 94% of the websites have at least one PCI DSS
+that still have major vulnerabilities (e.g., sending sensitive informa- violation, and 86% of them contains violations that should have
+tion over HTTP). Even if major vulnerabilities are detected (e.g., disqualified them as non-compliant (Section 5). Our in-depth
+remotely accessible MySQL), which should warrant an “automatic accuracy analysis also showed that PciCheckerLite’s outputs
+failure” according to the guideline [19], some PCI scanners still have fewer false positives than the w3af counterpart (Table 6).
+proceed with certification regardless.
+
+Given the weak scanner performance, it is possible that real- Based on our results, we further discuss how various PCI stake-
+world e-commerce websites still have major vulnerabilities. For holders, including the PCI council, scanning providers, banks, and
+validation, we build a new lightweight scanning tool and perform merchants, as well as security researchers, can collectively im-
+empirical measurements on 1,203 real-world e-commerce websites. prove the security of the payment card ecosystem (Section 6). We
+
+open-sourced our BuggyCart 2 testbed and PciCheckerLite 3
+Note that for independent researchers or third-parties, scanning in in
+the PCI context imposes a new technical challenge, namely the non- GitHub, which also include a pre-installed docker image. We are in
+intrusive low-interaction constraint. The low interaction constraint, the process of sharing BuggyCart with the PCI security council
+necessary for testing live production sites, makes it difficult to test (Section 3).
+certain vulnerabilities externally. Traditional penetration testing
+(pentest) tools are not suitable to test live websites in production 2 Background on PCI and DSS
+environments. For example, pentest tools such as w3af [4] have We start by describing the background for the security practices,
+brute-force based tests which require intense URL fuzzing (e.g., workflow, and standards of the current PCI ecosystem that involves
+prerequisite for SQL injection, XSS) or sending disruptive payload. banks, store-front and e-commerce vendors, and software providers.
+The feedback from the PCI Security Council during our disclosure Then, we focus on how merchants obtain security certifications
+(Section 6) also confirmed this challenge. and establish trust with the banks. We discuss how the certification
+Our technical contributions and findings are summarized below. process is regulated and executed.
+• We design and develop an e-commerce web application testbed 2.1 Payment Card Ecosystem
+called BuggyCart, where we implant 35 PCI-related vulner- The Payment Card Industry (PCI) has established a working sys-
+abilities such as server misconfiguration (e.g., SSL/TLS and tem that allows merchants to accept user payment via payment
+HTTPS misconfigurations), programming errors (e.g., CSRF, cards, and complete the transactions with the banks in the back-
+XSS, SQL Injection), and noncompliant practices (e.g., storing end. Figure 1 shows the relationships between the key players in
+plaintext passwords, PAN, and CVV). BuggyCart allows us to the ecosystem, including users, merchants, and banks. The user
+flexibly configure vulnerabilities in the testbed for measuring and the merchant may use different banks. The issuer bank issues
+the capabilities and limitations of PCI scanners. payment cards to the user and manages the user’s credit or debit
+
+• Using BuggyCart, we evaluated 6 PCI scanning services, rang- card accounts (step ❶). Users use the payment card at various types
+ing frommore expensive scanners (e.g., $2,995/Year) to low-end of merchants (steps ❷, ❺, and ❼). The acquirer bank manages an
+scanners (e.g., $250/Year). The results showed an alarming gap account for the merchant to receive and route the transaction infor-
+between the specifications of the PCI data security standard mation (steps ❹, ❻, and ❽). The acquirer bank ensures that funds
+and its real-world enforcement. For example, most of the scan- are deposited into the merchant’s account once the transaction is
+ners choose to certify websites with serious SSL/TLS and server complete via the payment network (steps ❾ and ❿). The payment
+misconfigurations. None of the PCI-approved scanning vendors
+
+2Available at https://github.com/sazzad114/buggycart
+3Available at https://github.com/sazzad114/pci-checker
+
+
+
+Merchant Payment Gateway Table 1: PCI Compliance levels and their evaluation criteria.
+2 3
+
+Level Transactions Compliance Requirements
+E-Commerce Per Year Self-report Sec Scans Sec Audits
+
+User with SAQ by ASV by QSA
+Level 1 Over 6M Quarterly Quarterly Required
+
+5 6
+4 Level 2 1M – 6M Quarterly Quarterly Required/Optional
+
+Level 3 20K – 1M Quarterly Quarterly Not Required
+Merchant POS
+
+7 8 Level 4 Less than 20K Quarterly Quarterly Not Required
+1
+
+Acquirer POS their business. For acquirer and issuer banks, they need to prove
+their compliance to the card brands (e.g., Visa, MasterCard) for the
+
+10 9 eligibility of membership.
+Issuer Bank Payment Network Acquirer Bank We use the merchant as an example to illustrate how DSS com-
+
+pliance is assessed. First, the PCI security standard council provides
+Figure 1: Overview of the payment card ecosystem. the specifications and self-assessment questionnaires (SAQ) [11].
+
+network, also known as the card brands (e.g., Visa, MasterCard), Merchants self-assess their DSS compliance and attach the question-
+bridges between the acquirer and the issuer banks. naires in their reports. Second, the merchant must pass the security
+
+There are different types of merchants. For merchants that run tests and audits from external entities such as Approved Scanning
+an e-commerce service (i.e., all transactions are made online), they Vendors (ASV) and the Qualified Security Assessors (QSA). The PCI
+usually interact with the acquirer bank via a payment gateway (e.g., council approves a list of ASV and QSA [20] for the assessment.
+Stripe, Square), which eases the payment processing and integration Security scanning is conducted by certified scanners (Approved
+(❸). For merchants that have a physical storefront, they use point- Scanning Vendors or ASVs) on card processing entities. Security
+of-sale (POS) devices, i.e., payment terminals, to collect and transfer scanning is performed remotely without the need for on-site au-
+user card information to the acquirer bank. They can use either the diting. Not all the requirements can be automatically verified by
+acquirer bank’s POS (❼) or their own POS (❺). The key difference is the remote scanning (see Table 8 in the Appendix). The PCI council
+that acquirer POS directly transfers the card information to the bank provides an ASV scanning guideline [19], which details the respon-
+without storing the information within the merchant. Merchant sibilities of the scanners (see Table 7 in the Appendix).
+POS, however, may store the card information. Self-assessment questionnaires (SAQs) allow an organization
+
+Due to the fact that e-commerce websites and merchant POSes to self-evaluate its security compliance [29]. In SAQs, all the ques-
+need to store card information, the merchants need to prove to tions are close ended. More SAQ analysis is presented in Section 6.
+the bank that they are qualified to securely handle the information Security audit is carried out by Qualified Security Assessors
+processing. The acquirer bank requires these merchants to obtain (QSAs). It requires on-site auditing (e.g., checking network and
+PCI security certifications in order to maintain accounts with the database configurations, examining software patches, and inter-
+bank [11]. Next, we introduce the security certification process. viewing employees). As security scanning cannot verify all of the
+
+DSS properties, on-site audits are to cover those missing aspects.
+2.2 PCI Council and Data Security Standard Level of compliance varies for different organizations. The com-
+Payment Card Industry Security Standards Council manages a num- pliance level is usually determined by the number of annual fi-
+ber of specifications to ensure data security across the extremely nancial transactions handled by the organization. Each acquirer
+complex payment ecosystem. Among all the specifications, only bank (or card brand) has its own program for compliance and val-
+the Data Security Standard (DSS) and Card Production and Pro- idation levels. In Table 1, we show the tentative compliance lev-
+visioning (CPP) are required. All the other specifications (shown els that roughly match most of the payment brands [11, 23]. The
+in Table 8 in the Appendix) are recommended (i.e., optional). CPP self-assessment questionnaires (SAQs) and security scanning are
+is designed to regulate card issuers and manufactures. The Data required quarterly regardless of the compliance levels. Only large
+Security Standard (DSS) is the most important specification that organizations that handle over 1 million transactions a year are
+is required to be complied by issuer banks, acquirer banks, and required to have the on-site audit (by a QSA). The majority of
+all types of merchants and e-commerce sites, i.e., all systems that merchants are small businesses, (e.g., 85% of merchants all over the
+process payment cards. Our work is focused on the DSS compliance. world have less than 1million USDweb sale [15]). Thus, most online
+
+In the PCI Data Security Standard specifications [27], there are merchants rely on ASV scanners and self-reported questionnaires
+12 requirements that an organization must follow to protect user for compliance assessment.
+payment card data. These requirements cover various aspects rang-
+ing from network security to data protection policies, vulnerability 2.3 Our Threat Model and Method Overview
+management, access control, testing, and personnel management. Threat Model. The certification process is designed as an enforce-
+In total, there are 79 more detailed items under the 12 high-level ment mechanism for merchants to hold a high-security standard
+requirements. We summarize them in the Appendix (Table 9). to protect user data from external adversaries. If the certification
+
+DSS applies to all players in the ecosystem, including all mer- process is not well executed, it would allowmerchants with security
+chants and acquirer/issuer banks. For merchants, they need to ap- vulnerabilities to store payment card data and interact with banks.
+prove their compliance to the acquirer bank to open an account for In addition, such security certification may also create a false sense
+
+
+
+of security for merchants. We primarily focus on the automatic the integrity of Javascripts from external sources (i25), revealing
+server screening by PCI scanners given that all merchants need crash reports (i26), XSS (i27) and CSRF (i28).
+to pass the scanning. We also briefly analyze the Self-assessment (4) Secure storage (6 test cases). Secure storage is impossible to
+Questionnaire (SAQs). Our analysis does not cover on-site audits, verify through external scans. Thus, DSS does not require PCI
+because i) on-site audit is not required for the vast majority of the scanners to test these properties, such as storing sensitive user
+merchants and ii) it is impossible to conduct analysis experiments information (i8), storing and showing PAN in plaintext (i9–i11),
+on on-site audits without partnerships with service providers. and insecure ways of storing passwords (i34–i35). In PCI DSS,
+Methodology Overview. To systematically measure and compare merchants need to fill out the self-assessment questionnaire
+the rigor of the compliance assessment process, our methodology about how they handle sensitive data internally. We choose to
+is to build a semi-functional e-commerce website as a testbed and include these vulnerabilities in the testbed for highlighting the
+order commercial PCI scanning services to screen and certify the fundamental limitations of external scans on some important
+website. The testbed allows us to easily configure website instances aspects of server security.
+by adding or removing key security vulnerabilities that PCI DSS Must-fix Vulnerabilities. These test cases are designed following
+specifies. We leverage this testbed to perform controlled measure- the official ASV scanning guideline [19] and the PCI data security
+ments on the certification process of a number of PCI scanners. In standard (DSS) [27]. Among the 35 cases, 29 are within the scope
+addition to the controlled experiments, we also empirically measure (responsibility) of ASV scanners that can be remotely tested. After
+the security compliance of real-world e-commerce websites with a vulnerabilities are detected, website owners are required to fix any
+focus on a selected set of DSS requirements. In the following, we vulnerabilities that have a CVSS score ≥ 4.0, and any vulnerabil-
+describe our detailed measurement methodologies and findings. ities that are marked as mandatory in PCI DSS. CVSS (Common
+
+Vulnerability Scoring System) measures the severity of a vulner-
+3 Measurement Methodology ability (score 0 to 10). The CVSS scores in Table 3 are calculated
+In this section, we describe our measurement methodology for using CVSSv3.0 calculator [1]. Vulnerabilities that have no CVSS
+understanding how PCI scanners perform data security standard score are marked as “N/A”. If the website owner fails to resolve the
+(DSS) compliance assessment and issue certificates to merchants. “must-fix” vulnerabilities, a scanner should not issue the compliance
+The core idea is to build a re-configurable testbed where we can certification. As shown in Table 3, 26 out of the 29 testable cases are
+add or remove key security vulnerabilities related to DSS and gen- required to be fixed. Three cases (vulnerability 3, 4, and 18) are not
+erate testing cases. By ordering PCI scanning services to scan the mandatory to fix. For example, exposing OpenSSH to the Internet
+testbed, we collect incoming network traffic as well as the security (case-3) does not mean immediate danger as long as the access is
+compliance reports from the scanning vendors. In the following, we well protected by strong passwords or SSH keys.
+first describe the list of vulnerabilities that our testbed covers, and Completeness and Excluded Cases.When building our Buggy-
+then introduce the key steps to set up the e-commerce frontend. Cart testbed and the PciCheckerLite prototype, we exclude five
+
+mandatory ASV scanning cases: i) backdoors or malware, ii) DNS
+3.1 Security Test Cases server vulnerabilities, e.g., unrestricted DNS zone transfer, iii) vul-
+The testbed contains a total of 35 test cases, where each test case nerabilities in mail servers, iv) vulnerabilities in hypervisor and
+represents a type of security vulnerabilities. Running a PCI scanner virtualization components, and v) vulnerabilities in wireless access
+to scan the testbed could reveal vulnerabilities that the scanner can points. Most of them (namely, ii, iii, iv, and v) are not relevant, as
+detect, as well as those that the scanner fails to report.We categorize they involve servers or devices outside our testbed or an applica-
+the 35 security test cases i1–i35 into four categories, namely network tion server. In the first category, it is difficult to design a generic
+security, system security, application security, and secure storage. network-based testing case. We also exclude the non-mandatory
+Note that there are 29 test cases in the first three categories are cases (shown in the last 4 rows of Table 7 in the Appendix).
+within the scope of ASV scanners (i.e., ASV testable cases). The Note that ASV testable cases only represent a subset of PCI DSS
+other 6 cases under “secure storage” cannot be remotely verified. specifications [27] because some specifications are not remotely
+We include these cases to illustrate the limits of ASV scanners. verifiable. There are specifications related to organization policies,
+(1) Network security (14 test cases). These testing cases are which are impossible to verify externally, e.g., “restricting physical
+
+related to network security properties, including firewall status, access to cardholder data” (DSS req. 9), and “documenting the key
+(i1), the access to critical software from network (i2–i4), default management process” (DSS req. 3.6). They can only be assessed
+passwords (i5–i6), the usage of HTTP to transmit sensitive data by onsite audits, which unfortunately are not applicable to the
+(e.g., customer or admin login information) (i7), and SSL/TLS majority of e-commerce websites and small businesses (see Table 1).
+misconfigurations (i12–i18). We will discuss this further in Section 6.
+
+(2) System security (7 test cases). These test cases are related to Our PciCheckerLite prototype in Section 5 scans 17 test cases
+system vulnerabilities, including vulnerable software ( in Table 5, which are a subset of the 29 externally scannable rules in
+
+i19–i20),
+server misconfigurations ( Table 3. When scanning live production websites, we have to elimi-
+
+i29–i32), and HTTP security headers
+( nate cases that require intrusive operations such as web crawling,
+i33). URL fuzzing, or port scanning.
+
+(3) WebApplication security (8 test cases). These test cases are
+related to application-level problems including SQL injections
+(i21–i22), not following secure password guidelines (i23–i24),
+
+
+
+3.2 Testbed Architecture and Implementations in particular, we consider X-Frame-Options, X-XSS-Protection, X-
+A key challenge of measuring PCI scanners is to interact with PCI Content-Type-Options, and Strict-Transport-Security.
+scanners like a real e-commerce website does, in order to obtain For the web application security category, we implement test
+reliable results. This requires the testbed to incorporate most (if not cases i21 to i28 by modifying OpenCart source code [26]. Regarding
+all) of the e-commerce functionality to interact with PCI scanners secure password guidelines, we disable password retry restrictions
+and reflect the scanners’ true performance. For this reason, we for both users and administrators (test case i23), disable the length
+choose the OpenCart [26] as the base to build our testbed. OpenCart checking of passwords (test case i24). For SQL injection, we modify
+is a popular open source PHP-based e-commerce solution used the admin login (test case i21) and customer login (test case i22)
+by real-world merchants to build their websites. This allows us code to implement SQL injection vulnerabilities. For admin login,
+to interact with PCI scanners in a realistic manner to ensure the we simply concatenate user inputs without sanitation for the login
+validity of measurement results. query. For the customer login, we leave an SQL injection vulner-
+Testbed Frontend. The frontend of our testbed supports core e- ability at the login form. Given that the user password is stored
+commerce functionality, such as account registration, shopping cart as unsalted MD5 hashes, we run the login query by concatenating
+management, and checkout and making payment with credit cards. the MD5 hash of the user-provided password, which is known to
+The code of the website4 is based on OpenCart. We rewrote the be vulnerable to SQL injection [5]. For XSS and CSRF, we implant
+OpenCart system by integrating all 35 security vulnerabilities and an XSS vulnerability in the page of editing customer profiles, by
+testing cases. We deployed the website using Apache HTTP server allowing HTML content in the “first name” field (test case i27). By
+and MySQL database. Our testbed automatically spawns a website default, Opencart does not have any protection against CSRF (test
+instance following a pre-defined configuration. We used OpenSSH case i28). For test case i26 (displaying errors), we configure Open-
+as the remote access software and Phpmyadmin to remotelymanage Cart to reveal crash reports (an insecure practice, which gives away
+the MySQL database. We hosted our website in Amazon AWS in a sensitive information). Opencart by default does not check the in-
+single t2.medium server instance with Ubuntu 16.04. We obtained a tegrity of Javascript code loaded from external sources (test case
+valid SSL certificate to enable HTTPS from Let’s Encrypt [25]. i25).
+
+We set up the website solely for research experiment purposes. For the secure storage category, we modify the Cardconnect
+Thus, it does not have a real payment gateway. Instead, we set up a extension to store CVV in our database (test case i8) and the full
+dummy payment gateway that imitates the real gateway Cardcon- PAN (instead of the last 4 digits) in the database in plaintext (test
+nect [22]. The website forwarded credit card transactions to this case i10). We add an option to encrypt PANs before storing, but
+dummy payment gateway. The dummy endpoint for Cardconnect the encryption key is hardcoded (test case i11). We also update the
+is implemented using flask-restful framework. We modified the customers’ order history page to show the unmasked PAN for each
+/etc/hosts file of our web server to redirect the request. During transaction (test case i9). Finally, the testbed stores the raw unsalted
+our experiments, our server did not receive any real payment trans- MD5 hash of passwords for customers (test case i34) and plaintext
+action requests. We further discuss research ethics in Section 3.3. passwords for admins (test case i35).
+Implementing Security Test Cases. Next, we describe the im-
+plementation details of the 35 security test cases in Table 3. 3.3 Research Ethics
+
+For the network security category, we implement test cases i1 to We have taken active steps to ensure research ethics for our mea-
+i3 by changing inbound traffic configurations within the Amazon surement on PCI scanners (Section 4). Given that our testbed is
+AWS security group. Test case i4 (administer access over Internet) is hosted on the public Internet, we aim to prevent real users from
+implemented by changing phpmyadmin configuration. For test case accidentally visiting the website (or even putting down credit card
+i5 (default SQL password), we do not set any password for “root” information). First, we only put the website online shortly before
+and enable access from any remote host. Test case i5 is implemented the scanning experiment. After each scanning, we immediately
+by configuring phpmyadmin (no password for user “root”). Test take down the website. Second, the website domain name is freshly
+case i7 is set to keep port 80 (HTTP) open without a redirection to registered. We never advertise the website (other than giving the
+port 443 (HTTPS). Test cases i12, i14, i16, and i17 are implemented address to the scanners). Third, we closely monitor the HTTP log of
+by using default certificates from Apache. Test cases i13 and i18 are the server. Any requests (e.g., for account registration or payment)
+implemented by changing SSLCipherSuite and SSLProtocol of the that are not originated from the scanners are dropped. Network
+Apache server. For test case i15, we configure the Apache server to traffic from PCI scanners are easy to distinguish (based on IP and
+use a valid certificate but with a wrong domain name. User-Agent) from real user visits. We did not observe any real user
+
+For the system security category, we implement test cases i19– requests or payment transactions during our experiments.
+i20 by installing software that are known to be vulnerable. For All PCI scanners run automatically without any human involve-
+test case i19, we use OpenSSL 7.2, which is vulnerable to privilege ment from the companies. We order and use the scanning services
+escalation and timing side channel attacks. For test case i20, we just like regular customers. We never actively generate traffic to
+used phpmyadmin 4.8.2 which is known to be vulnerable to XSS. We the scanning service, and thus our experiments do not cause any
+implemented test cases i29 to i33 by changing the configurations interruptions. Our experiments follow the terms and conditions
+of the Apache server. For test case i33 (HTTP security header) specified by the scanning vendors, which we carefully examined.
+
+We choose to anonymize the PCI scanners’ names since some scan-
+ning vendors strictly forbid publishing any benchmark results. We
+
+4The URL was www.rwycart.com. We took the site offline after the experiment. argue that publishing our work with anonymized scanner names is
+
+
+
+BuggyCart Testbed PCI Scanner Table 2: Prices of PCI scanners and the actual costs.
+Baseline Version
+
+Scanning PCI Scanners Price Spent Amount PCI SSC Approved?
+Scanner1 $2,995/Year $0 (Trial) Yes
+Scanner2 $2,190/Year $0 (Trial) Yes
+Scanner3 $67/Month $335 No
+
+Scannin
+g
+
+Fixing a minimal
+set of vulnerabilities Scanner4 $495/Year $495 Yes
+to get PCI DSS certified Scanner5 $250/Year $250 Yes
+
+Scanner6 $59/Quarter $118 No
+Scanner7 Unknown N/A Yes
+Scanner8 $350/Year N/A Yes
+
+Certified Version
+Scanning Reports Total - $1198 -
+
+Figure 2: Illustration of the baseline scanning and the certi-
+fied version. A PCI scanner iteratively scans the testbed. The somewhat affordable (due to our limited funding), while also cov-
+initial scan (baseline) is on the original testbed with all 35 ering different price ranges. We identified 6 such scanners. For 3
+vulnerabilities. The certified version is the testbed version of them, the prices are publicly available. For the other 3 scanners,
+where the testbed successfully passes the scanning after we we emailed them through our rwycart.com email addresses. 2 of
+iteratively fix a minimal set of vulnerabilities in the testbed. them (Scanner7 and Scanner8) did not provide their price quota-
+In Table 3, we report the scanning results on both versions tions, which forced us to drop them from our evaluation (due to our
+of the testbed for each scanner. organization policies). During our search, we also found that some
+
+website owners used non-ASV scanners. Thus, we also included
+sufficient for the purpose of describing the current security practice 2 non-ASVs that have good self-reported quality. Non-approved
+in the payment card industry, as the security issues reported are scanners offer commercial PCI scanning services, but are not on the
+likely industry-wide, not unique to the individual scanners eval- ASV list [20] of the PCI council6. Because of the legal constraints
+uated. In addition, anonymization would help alleviate the bias imposed by the terms and conditions of scanners, we cannot reveal
+toward individual scanners and potential legal issues [54]. scanners’ names. Researchers who wish to reproduce or extend our
+
+In Section 5, we also carefully design our experiments when work for scientific purposes without publishing scanner names are
+evaluating the compliance of 1,203 websites. The experiment is welcome to contact the authors.
+designed in a way that generates minimal footprints and impact on We conducted experiments successfully with 6 of the scanners
+the servers, in terms of the number of connection requests to the (without Scanner7 and Scanner8 for the reason mentioned above).
+servers. Our client is comparable to a normal client and does not We use the email address (wayne@rwycart.com) associated with
+cause any disruption to the servers. For example, we quickly closed the testbed e-commerce website to register accounts at the scanning
+the connection, after finding out whether or not an important port vendors. Table 2 shows the prices of these 6 vendors. For Scanner2
+is open. More details are be presented in Section 5. and Scanner1, we completed our experiments within the trial period
+
+(60 days for Scanner2 and 30 days for Scanner1). The trial-version
+4 Evaluation of PCI Scanners and the paid-version offer the same features and services.
+
+Iterative Test Design. Given a PCI scanner, we carry out the eval-
+Our first set of experiments is focused on evaluating PCI scanners uation in two high-level steps shown in Figure 2. Every scanner
+to answer the following research questions. Later in Section 5, we first runs on the same baseline testbed with all the vulnerabili-
+will introduce our second set of experiments on measuring the ties built in. Then we remove a minimal set of vulnerabilities to
+security compliance of real-world e-commerce websites. get the testbed certified for PCI DSS compliance. The final certi-
+• How do various PCI scanners compare in terms of their detec- fied instance of the testbed may be different for different scanners,
+tion capabilities? (Section 4.1) as high-quality scanners require more vulnerabilities to be fixed,
+
+• What are the security consequences of inadequate scanning having fewer remaining (undetected) vulnerabilities on the testbed.
+and premature certification? (Section 4.2) (1) Baseline Test. We spawn a website instance where all 35 vul-
+
+• How are web scanners (commercial or open-source ones) com- nerabilities are enabled (29 of them are remotely verifiable).
+pared with PCI scanners in terms of detection capabilities? Then we order a PCI scanning service for this testbed. During
+(Section 4.3) the scanning, we monitor the incoming network traffic. We
+
+We selected 8 U.S. based PCI DSS scanners as shown in Table 2. obtain the security report from the scanner, once the scanning
+The selection process is as follows. From the list of approved ven- is complete.
+dors [20]5, we found 85 of them operate globally. Out of these 85, (2) Certified Instance Test.After the baseline scanning, we mod-
+we aimed to identify a set of ASVs that appear to be of high quality ify the web server instance according to the obtained report.
+(e.g., judging from the company’s reputations and websites) and We perform all the fixes required by the PCI scanner and order
+
+5As of April 30, 2019, 97 companies are approved by the PCI Council as the approved 6To become an ASV, a scanner service needs to pay a fee and go through a testbed-based
+scanning vendors (ASVs) [20]. approval evaluation supervised by the PCI Council.
+
+
+
+Table 3: Testbed scanning results. “Baseline” indicates the scanning results on our testbed when all the 35 vulnerabilities are
+active. “Certified” indicates the scanning results after fixing the minimum number of vulnerabilities in order to be compliant.
+“#”, “G#”, “ ”means severity level of low,medium, and high respectively according to the scanners. “✗”mean “undetected”, “✓”
+means “fixed in the compliant version”, “✓∗” means “fixed as a side-effect of another case”. The “website scanners” represent
+a separate experiment to determine whether website scanners can help to improve coverage. We ran the website scanners
+on test cases that were not detected by the PCI ASV scanners. “N/A” means "not testable by an external scanner". “-” means
+"testable but do not need to tested". The "Must Fix" column shows the vulnerabilities that must be fixed by the e-commerce
+websites in order to be certified as PCI DSS compliant.
+
+Rq. Test Cases Vul. Scanner2 Scanner5 Scanner4 Scanner6 Scanner3 Website
+Location / Scanner1 (not aprvd.) (not aprvd.) Scanners
+
+1.1 1. Firewall detection OS Y N/A Y # # # # # # ✗ ✗ ✗ ✗ - - - -
+2. Mysql port (3306) detection OS Y N/A Y  ✓ G# ✓ # # # # # # - - - -
+
+1.2 3. OpenSSH detected OS Y N/A N G# ✓ # # # # # # # # - - - -
+4. Remote access to Phpmyadmin Apache Y N/A N G# ✓ # # # # # # # # - - - -
+
+2.1 5. Default Mysql user/password Mysql Y 8.8 Y  ✓ # ✓∗  ✓  ✓  ✓ - - - -
+6. Default Phpmyadmin passwords Apache Y 8.8 Y ✗ ✓∗ ✗ ✗ ✗ ✗ # # ✗ ✗ - - - -
+
+2.3 7. Sensitive information over HTTP Apache Y 8.1 Y ✗ ✗ ✗ ✗ ✗ ✗ ✗ ✗ ✗ ✗ ✗ ✗ ✓ ✗
+3.2 8. Store CVV in DB Webapp N N/A N/A N/A N/A N/A N/A N/A N/A N/A N/A N/A N/A N/A N/A N/A N/A
+3.3 9. Show unmasked PAN Webapp N N/A N/A N/A N/A N/A N/A N/A N/A N/A N/A N/A N/A N/A N/A N/A N/A
+3.4 10. Store plaintext PAN Webapp N N/A N/A N/A N/A N/A N/A N/A N/A N/A N/A N/A N/A N/A N/A N/A N/A
+3.5 11. Hardcoded key for encrypting PAN Webapp N N/A N/A N/A N/A N/A N/A N/A N/A N/A N/A N/A N/A N/A N/A N/A N/A
+
+12. Use untrusted selfsigned cert. Apache Y 9.8 Y G# ✓ G# ✓ G# ✓ G# ✓ ✗ ✗ - - - -
+13. Insecure block cipher (Sweet32) Apache Y 7.5 Y G# ✓ G# ✓ # # G# ✓ ✗ ✗ - - - -
+14. Expired SSL cert. Apache Y 5.3 Y G# ✓ G# ✓  ✓ G# ✓ ✗ ✗ - - - -
+
+4.1 15. Wrong domain names in cert. Apache Y 5.3 Y G# ✓ ✗ ✗ # # # # ✗ ✗ - - - -
+16. DH modulus <= 1024 Bits Apache Y 5.3 Y # ✓∗ G# ✓ G# ✓ G# ✓ ✗ ✗ - - - -
+17. Weak Hashing in SSL cert. Apache Y 5.3 Y G# ✓ ✗ ✓∗ ✗ ✓∗ G# ✓ ✗ ✗ - - - -
+18. TLS 1.0 supported Apache Y 3.7 N  ✓  ✓ G# ✓ ✗ ✗ ✗ ✗ - - - -
+
+6.1 19. Vulnerable OpenSSH (7.2) OS Y 7.8 Y  ✓  ✓  ✓ ✗ ✗ ✗ ✗ - - - -
+20. Vulnerable Phpmyadmin (4.8.3) Apache Y 6.5 Y G# ✓ ✗ ✗ ✗ ✗ ✗ ✗ ✗ ✗ - - - -
+21. Sql inject in admin login Webapp Y 9.8 Y ✗ ✗ ✗ ✗ ✗ ✗ ✗ ✗ ✗ ✗ ✗ ✗ ✗ ✗
+22. Sql inject in customer login Webapp Y 9.8 Y ✗ ✗ ✗ ✗ ✗ ✗ ✗ ✗ ✗ ✗ ✗ ✗ ✗ ✓
+23. Disable password retry limit Webapp Y 5.3 Y ✗ ✗ ✗ ✗ ✗ ✗ ✗ ✗ ✗ ✗ ✗ ✗ ✗ ✗
+
+6.5 24. Allow passwords with len <8 Webapp Y 5.3 Y ✗ ✗ ✗ ✗ ✗ ✗ ✗ ✗ ✗ ✗ ✗ ✗ ✗ ✗
+25. Javascript source integrity check Webapp Y 9.8 Y  ✓ ✗ ✗ ✗ ✗ ✗ ✗ ✗ ✗ - - - -
+26. Don’t hide program crashes Webapp Y 6.5 Y ✗ ✗ ✗ ✗ ✗ ✗ ✗ ✗ ✗ ✗ ✗ ✗ ✗ ✗
+27. Implant XSS Webapp Y 6.1 Y ✗ ✗ ✗ ✗ ✗ ✗ ✗ ✗ ✗ ✗ ✗ ✗ ✗ ✗
+28. Implant CSRF Webapp Y 8.8 Y G# ✓ ✗ ✗ ✗ ✗ ✗ ✗ ✗ ✗ - - - -
+29. Extraction of server info. Apache Y 5.3 Y G# ✓ # # # # # # # # - - - -
+30. Browsable web directories Apache Y 7.5 Y G# ✓ G# ✓ G# ✓ G# ✓ G# ✓ - - - -
+
+6.6 31. HTTP TRACE/TRACK enabled Apache Y 4.3 Y G# ✓ G# ✓  ✓ G# ✓  ✓ - - - -
+32. phpinfo() statement is enabled Apache Y 5.3 Y G# ✓ G# ✓ # #  ✓ ✗ ✗ - - - -
+33. Missing security headers in HTTP Apache Y 6.1 Y G# ✓ G# ✓ G# ✓ # # ✗ ✗ - - - -
+
+8.4 34. Store unsalted customer passwords Webapp N N/A N/A N/A N/A N/A N/A N/A N/A N/A N/A N/A N/A N/A N/A N/A N/A
+35. Store plaintext passwords Webapp N N/A N/A N/A N/A N/A N/A N/A N/A N/A N/A N/A N/A N/A N/A N/A N/A
+
+Baseline: #Vul. Detected (Total detectable: 29) 21 - 16 - 17 - 16 - 7 - - - - -
+Certified: #Vul. Remaining (#Vul. detected, but no need to fix) - 7(0) - 15(3) - 18(7) - 20(7) - 25(4) - - - -
+
+another round of scanning. The purpose of this round of scan- 4.1 Comparison of Scanner Performance
+ning is to identify theminimal set of vulnerabilities that need to
+be fixed in order to pass the PCI DSS compliance certification. We found that the security scanning capabilities vary significantly
+
+across scanners, in terms of i) the vulnerabilities they can detect
+In summary, we perform the following steps for each scanner: i) and ii) the vulnerabilities they require one to fix in order to pass
+implant vulnerabilities under each test case in the testbed, ii) run the certification process. Once passed, the website becomes PCI
+the PCI scanning, iii) fix all the vulnerabilities that the scanner man- DSS compliant. The experimental results are presented in Table 3.
+dates to fix in order to be PCI DSS compliant, iv) run the scanning Scanner2. Scanner2 is the most effective PCI scanner in our evalua-
+again, and v) record the certified version of the testbed. tion, and successfully detected 21 out of the 29 externally detectable
+
+In ASV Scope?
+
+CVSS Score
+
+Must Fix?
+
+Baseline
+
+Certified
+
+Baseline
+
+Certified
+
+Baseline
+
+Certified
+
+Baseline
+
+Certified
+
+Baseline
+
+Certified
+
+Scanner2W
+
+Scanner5W
+
+W3af
+
+ZAP
+
+
+
+cases. The most important case that Scanner2 missed is the use of OpenCart allows users to select the currency for a product. If a
+HTTP protocol to transmit sensitive information (test case 7). We currency is clicked, it updates the currency of the current page. The
+fixed 21 vulnerabilities in our testbed to become PCI compliant in server records all the parameters of the current page under a hid-
+Scanner2. Most of the fixes are intuitive, except fixing Javascript den field so that it can recreate the page later (Listing 1). Note that
+source integrity checking (Case 25) and CSRF (Case 28). We added Scanner2’s specially-crafted parameters are also recorded, which
+Javascript integrity checking for scripts that are loaded from exter- makes Scanner2 believe that there exists a difference in the output
+nal sources (Case 25). We used a dynamic instrumentation based under different values of the parameter, which is actually a false
+plugin to protect OpenCart against CSRF attacks (Case 28). This plu- positive. Nevertheless, we fixed it by changing the BuggyCart
+gin instruments code for generating and checking of CSRF tokens code to be certified by Scanner2.
+in OpenCart forms. Sometimes, fixing one vulnerability effectively Listing 1: The difference in the output after injecting a pa-
+eliminates another vulnerability that Scanner2 fails to detect. For rameter named name with an empty value “” vs. “yy”.
+example, Scanner2 did not detect default usernames and passwords < input type= " hidden " name= " r e d i r e c t "
+for Phpmyadmin (Case 6); however, this vulnerability no longer value= " h t t p : / /www. rwycar t . com / up load
+exists after we disable the remote access to Phpmyadmin (Case 4). / index . php ? . . . & amp ; p r odu c t _ i d =49&amp ; name= " / >
+Scanner5. In the baseline test (i.e., when all the vulnerabilities
+were in place), Scanner5 detected 16 out of the 29 cases. To obtain −−−−−−−− vs −−−−−−−−
+
+a Scanner5 compliant version, we had to fix 13 vulnerabilities. Two < input type= " hidden " name= " r e d i r e c t "
+of the vulnerabilities (Test cases 5 and 17) are fixed as a side effect value= " h t t p : / /www. rwycar t . com / up load
+of fixing other vulnerabilities (Test cases 2 and 12). Scanner5 failed / index . php ? . . . & amp ; p r odu c t _ i d =49&amp ; name=yy " / >
+to report the use of a certificate with the wrong hostname, which Network Traffic Analysis. We collected the incoming network
+is a serious vulnerability exploitable by hackers to launch man- requests from each of the scanners using the access log of our
+in-the-middle attacks. Scanner5 did not report the use of HTTP testbed. During the baseline experiment, Scanner5, Scanner6 and
+to transmit sensitive information (i.e., login and register forms in Scanner3 sent 23,912, 39,836, and 31,583 requests, respectively and
+rwycart). Interestingly, Scanner5 detected the use of HTTP to log finished within an hour. Scanner4 and Scanner1 sent 147,038 re-
+on to PhpMyAdmin. In addition, Scanner5 did not report the use of quests and took more than 3 hours to finish. Scanner2 sent 64,033
+scripts from external sources (Case 25). requests within 2.5 hours. The reason why we received such a
+Scanner1 and Scanner4. Scanner4 uses Scanner1’s scanning in- high traffic volume is that the PCI scanners were attempting to
+frastructure for ASV scanning. So we present the experimental detect vulnerabilities such as XSS, SQL injection that require in-
+results of both scanners under the same column. Scanner1 detects tensive URL fuzzing, crawling and parameter manipulations. This
+17 vulnerabilities. However, it only requires fixing 10 of them to be confirms that the PCI scanners have at least attempted to detect
+PCI DSS compliant. Some of the high and medium severity vulnera- such vulnerabilities but were just unsuccessful.
+bilities are not required to fix, including remotely accessible Mysql
+(Case 2), certificates with wrong hostnames (Case 15), and missing 4.2 Impacts of Premature Certification
+security headers (Case 33). The vulnerability of weak hashing in Some scanners choose to simply report vulnerabilities without
+SSL/TLS certificates (Case 17) was fixed as a side effect of using a marking the e-commerce website as non-compliant. Below, we
+real certificate from Let’s Encrypt (Case 12). discuss the security consequences of premature certifications. Some
+Scanner6 and Scanner3. Scanner6 and Scanner3 are not on the of the incomplete scanning and premature certification issues can
+approved scanning vendors (ASVs) list [20] provided by the PCI be prevented, if the scanners follow the ASV guidelines [19].
+council. Compared with other approved scanners, they detected a Network Security Threats.According to the ASV scanning guide-
+fewer number of vulnerabilities. Scanner6 detected 16 vulnerabili- line, SSL/TLS vulnerabilities (Test cases 12–17) should lead to auto-
+ties, whereas Scanner3 detected 7. We fixed 9 of the vulnerabilities matic failure of certification, which is clearly necessary due to the
+for Scanner6 and 3 for Scanner3 in order to be compliant. Both Scan- man-in-the-middle threats. Only Scanner2 detected all these cases.
+ner6 and Scanner3 detected remotely accessible Mysql (Case 2), but Scanner3 does not detect any of these SSL/TLS vulnerabilities. In
+do not require us to fix them. Scanner3 missed all the SSL/TLS and addition, a website should be marked as non-compliant if sensitive
+certificate related vulnerabilities (Test cases 12-18), while Scanner6 information is communicated over HTTP (Test case 7). However,
+detected most of them. However, Scanner6 did not require us to none of the ASV scanners detected this issue in our testbed. This
+fix certificates with wrong hostnames (Test case 15). We cannot vulnerability can be avoided by configuring the server to automati-
+conclude that unapproved scanners perform worse than approved cally redirect all the HTTP traffic to HTTPS. Because none of the 6
+scanners, due to the small sample size. scanners detected this vulnerability, it is likely that this HTTP issue
+ACase Study of False Positives. During our experiment, we find exists on real-world e-commerce websites. Our later evaluation on
+Scanner2 produced a false positive under the SQL injection test. 1,203 websites that process online payment shows 169 of them do
+Scanner2 recently incorporated an experimental module to find not redirect their HTTP traffic to HTTPS (Section 5).
+blind SQL detection, by sending specially crafted parameters to Our Test case 2 embeds a database access vulnerability, allowing
+the web server. If the server returns different responses, then it the database to be accessible from the Internet. All the scanners
+determines that the server has accepted and processed the parame- detected this vulnerability. However, only Scanner2 and Scanner5
+ter (a.k.a vulnerable). However, this detection procedure fails on mark this issue as an automatic failure (i.e., non-compliant). The
+a common e-commerce scenario: supporting multiple currencies. other scanners report it as “low/information”, not as a required
+
+
+
+fix, despite the ASV scanning guideline [19] recommends that to ii) that detection heuristics are limited or easily bypassed. In our
+be marked as non-compliant. Our evaluation later on websites testbed, SQL injection vulnerabilities (21, 22) are placed in the login
+that accept payment card transactions shows that 59 out of 1,203 pages. CSRF vulnerabilities are present in all forms. The scanners
+websites opened the Mysql port (3306) to the Internet (Section 5). we tested used web crawling with URL fuzzing to detect hidden
+System Security Threats. The ASV scanning guideline [19] sug- pages, URLs, and functions. Often, we are unable to pinpoint the
+gests to test and report vulnerable remote access software. 4 out of exact reasons why the tools fail in these cases. Novel detection
+the 6 scanners detected vulnerable OpenSSH software (Test case 19). techniques, such as guided fuzzing [49] and taint tracking [73],
+Under Test case 20, only Scanner2 detected vulnerable phpmyad- have been proposed by the research community. Future work is
+min, while others failed. Although all scanners noticed the Test needed to evaluate their applicability in the specific PCI context.
+case 29 (extracted server information), only Scanner2 required a fix
+for compliance. The ASV scanning guideline [19] also recommends
+reporting automatic failure if browsable web directories are found 5 Measurement of Compliant Websites
+(Test case 30). All scanners detected this vulnerability. Scanner6
+detected missing security headers (Test case 33), but did not ask us The alarming security deficiencies in how PCI scanners conduct the
+to fix it, while Scanner3 failed to detect it. compliance certification motivate us to ask the following questions:
+Web Application Threats. The scanners’ performance is partic- How secure are e-commerce websites? What are the main measurable
+ularly weak for this category. Out of the 8 test cases, only 2 were vulnerabilities in e-commerce websites?As such we designed another
+detected by Scanner2 (tampered Javascript and CSRF). None of the set of real-world experiments where we aim to measure the security
+cases was detected by other PCI scanners. of e-commerce websites with respect to the PCI DSS guideline. To
+
+do so, we need to address several technical questions.
+4.3 Evaluation of Website Scanners What Tools to Use? The key enabler of this measurement is a new
+The above results suggest that some web application vulnerabilities tool we developed named PciCheckerLite. We use basic Linux
+are difficult to detect. The follow-up question is, can specialized tools (e.g., nc, openssl) and Java net URL APIs to implement the
+website scanners detect these vulnerabilities? To answer this ques- system. Below, we focus on the key design concepts of PciCheck-
+tion, we ran four website scanners on our BuggyCart testbed, erLite in order to work with live websites.
+including two commercial ones (from Scanner2 and Scanner5) and What Security Properties to Check? A key requirement of this
+two open source scanners (w3af [4] and ZAP [2]). w3af and ZAP experiment tomake sure that we do not disrupt or negatively impact
+are state-of-the-art open source web scanners, are actively being websites being tested. Out of the 29 externally verifiable cases in Ta-
+maintained and are often used in academic research [49, 50, 67]. ble 3, we choose a subset of 17 cases for this experiment, as shown
+The two commercial web scanners are from reputable companies. in Table 5. The sole reason of selecting these cases for PciCheck-
+Scanner2W and Scanner2 are from the same company, where the erLite is that we could implement these tests in a non-intrusive
+website scanner is marketed as a different product from PCI scanner. manner, leaving a minimum footprint, i.e., having a minimum im-
+It is the same for Scanner5W and Scanner5. pact on the servers. We categorize these cases to high, medium
+
+We conducted the baseline test for the four website scanners. and low severity based on i) the attacker’s gain and ii) the attack
+Note that these web scanners do not produce certificates. The re- difficulty. Cases that are immediately exploitable by any arbitrary
+sults are shown in the last four columns of Table 3. Since they are attacker to cause large damages are highly severe, for example, the
+website scanners, we only expect them to cover web application vul- use of default passwords (Test case 5), insecure communications
+nerabilities (Test case 7, 21, 22, 23, 24, 26, 27). Unfortunately, none (Test cases 7, 12, 13, 16, 17), vulnerable remote access software (Test
+of the commercial scanners detect these web application vulnera- case 19), browsable web directories (Test case 22), and supporting
+bilities. W3af reported the use of HTTP protocol to communicate HTTP TRACE method (Test case 23). Cases that substantially ben-
+sensitive information (case 7), but missed other web application efit any arbitrary attacker but require some efforts to exploit are
+vulnerabilities. ZAP detected the SQL injection vulnerability in marked as medium severity, e.g., test cases 2, 14, 15, 25, 29, and 33.
+the customer login page (case 22), but missed the SQL injection For example, scripts loaded from external sources can steal payment
+vulnerability in the admin login page (case 21). Noticeably, ZAP card data (Test case 25), but attackers need to craft the malicious
+also missed the XSS vulnerability we implanted (case 27). scripts [32]. Low-risk issues are marked as low severity (Test case 3,
+Summary of Testbed Findings. The detection capabilities vary 18). The categories are consistent with Table 3 as high and medium
+significantly across scanners. Our experiments show that 5 out of severity cases correspond to “must-fix” vulnerabilities. The two
+6 PCI scanners are not compliant with the ASV scanning guide- low-severity cases are not required to be fixed to be PCI-compliant.
+lines [19] by ignoring detected vulnerabilities and not making them Implementing PciCheckerLite.Our goal is to minimize the num-
+“automatic failures”. Most of the common web application vulnera- ber of requests that PciCheckerLite issues per test case, while
+bilities (e.g., SQL injection, XSS, CSRF) are not detected by the 6 PCI maximizing the test case coverage. It involves a collection of light-
+scanners (only Scanner2 detected CSRF), despite the requirements weight heuristics that merge multiple tests into a single request.
+of the PCI guidelines. Out of the 4 website scanners, only ZAP For example, for most of the HTTP-related tests, we reuse a single
+detected one of the two SQL injection cases. response from the server. Test cases 25, 29, and 33 are covered and
+
+Admittedly, black-box detection of vulnerabilities such as XSS resolved by one single HTTP request to retrieve the main page and
+and SQL injection is difficult. Typical reasons for missed detection analyzing the response header. Test cases 12–18 are covered by
+are i) failure to locate the page due to incomplete discovery and/or one certificate fetching. For case 30 (browsable directories enabled)
+
+
+
+Table 4: Number of e-commerce websites that have at least vulnerability. More importantly, 1,031 (86%) sites have at least one
+one vulnerability and those that have at least one “must-fix” vulnerability that belong to the “must-fix” vulnerabilities which
+vulnerability. In total, 1,203 sites are tested including 810 should have disqualified them as non-compliant. Among them, 520
+sites chosen from different web categories, and 393 sites cho- (43%) sites even have two or more must-fix vulnerabilities.
+sen from different Alexa ranking ranges. Then as shown in Table 5, the shopping category has the lowest
+
+E-commerce Websites # of Vulnerable Websites percentage (87%) of vulnerable websites, while all other categories
+have a percentage of over 90%. We found several types of high-
+
+Must-fix Vul. All Vul. risk and medium-risk vulnerabilities, including leaving the Mysql
+Business (122) 106 113 port (3306) open, using self-signed or expired certificates, wrong
+Shopping (163) 135 143 hostnames in the certificate, enabling HTTP TRACE method, and
+Arts (78) 66 76 using vulnerable OpenSSH (7.5 or earlier). Supporting TLS v1.0
+Adults (65) 61 65 (low-risk level) is another most common vulnerability we detected
+
+Category (810) Recreation (84) 70 75 (Test case 18), likely due to the need for backward compatibility.
+Computer (57) 53 56 SSLv3.0 and TLSv1.0 are known to havemultiple man-in-the-middle
+Games (42) 38 42
+Health (60) 54 55 vulnerabilities [40] and the PCI standard recommends that all web
+Home (102) 82 93 servers and clients must transition to TLSv1.1 or above.
+Kids & Teens (37) 31 36 The vulnerabilities in these websites suggest the PCI scanners
+
+used by the websites are inadequate and failed to detect the vulner-
+Ranking (393) Top (288) 235 277
+
+Bottom (105) 100 104 abilities during the certification scans. Another possibility is that
+the acquiring banks did not sufficiently examine the merchants’
+
+Total (1,203) 1,031 (86%) 1,135 (94%) quarterly security reports, allowing merchants to operate without
+sending adequate security reports to banks as required.
+
+PciCheckerLite conducts a code-guided probe and avoids crawl- Vulnerable Websites. Below, we highlight some interesting find-
+ing web pages. It discovers file paths in the code of the landing ings without explicitly mentioning the names of vulnerable sites.
+page and then probes the server with requests for accessing path Mysql open ports. 59 websites expose the MySql service for remote
+prefixes. The implementation details are given in the Appendix. access. For example, two Slovenian websites that sell healthcare
+How to Determine Whether a Website is PCI Compliant? It products and car components and a Russian website that sells fur-
+is not easy to directly confirm whether a website is DSS compli- naces and stoves all have this vulnerability. We did not detect any
+ant or not, unless the website actively advertises this information. use of default user (root) or no password.
+While some cloud and service providers (e.g., Google Cloud [39], Insecure certificates (self-signed, expired, and insecure modulus). The
+Amazon Connect [12], Shopify [38], and Akamai [37]) advertise use of certificates with wrong hostnames (Figure 3 in Appendix) is
+their PCI compliance status, not all of them disclose such informa- an issue that appears in 3% of the websites. For some websites, the
+tion. However, as e-commerce websites need to show their DSS root cause is not properly configuring HTTPS. For example, one
+compliance in order to work with acquirer banks (described in Sec- website accepts payment for donations. Since it does not correctly
+tion 2), it is reasonable to assume that most websites we evaluated set up HTTPS, it uses a default certificate7 for HTTPS (Figure 4 in
+have successfully passed the external scanning. Appendix). In some cases, the websites use HTTPS for payment
+Website Selection.We use two different ways to select websites only while other sensitive content (i.e., items and the cart) are
+to increase diversity. First, we downloaded 2,000 Alexa top websites still sent over HTTP. Because the original domain is not properly
+under 10 categories (200 websites per category) to observe security configured to use HTTPS, it presents the default expired certificate
+compliance differences based on categories. In Table 4, we show the (Figure 5 in Appendix).
+category-wise breakdown. Among them, we manually identified Comparisonwith ExistingTool. Finally, we experimentally com-
+810 websites that make payment card transactions. This step is time- pared PciCheckerLite with the state-of-the-art web scanner. Note
+consuming and usually requires manually visiting multiple pages that existing scanners typically have aggressive pentesting com-
+(e.g., one needs to visit multiple pages to get to the payment page ponents that are not suitable to test live websites. For this experi-
+on nytimes.com). Second, to cover websites of different popularity ment, we choose w3af and have to adapt it to a “non-intrusive low-
+levels, we further select the top 500 and bottom 500 websites (1,000 interactive" version. More specifically, we modify w3af to 1) block
+in total) fromAlexa top 1millionwebsite list.We found 288websites intrusive tests (e.g., XSS, SQL injections), 2) disable URL fuzzing,
+from the top list and 105 websites from the bottom list that accept and 3) disable the liveliness testing. For scalability, we also utilized
+payment card information (and do not overlap with the previous w3af’s programmable APIs (w3af_console) to discard the graphic
+811 websites). In total, 1,203 payment-cards-taking websites are user interface. We call this version as customized w3af. For com-
+selected for scanning by PciCheckerLite. parison, we ran PciCheckerLite and the customized w3af on 100
+Findings of E-commerce Website Compliance. 68 websites websites random from the 1203 sites (in Table 5). For reference, we
+fully passed our PciCheckerLite test, including the aforemen- also ran both tools on our BuggyCart.
+tioned cloud providers (Google Cloud, Amazon Connect, Shopify).
+Our results also confirm that a number of actively operating web-
+sites do not comply with the PCI Data Security Standard. As shown
+in Table 4, out of the 1,203 websites, 1,135 (94%) have at least one 7A self-signed certificate comes with the webserver installation.
+
+
+
+Table 5: Testing results on 1,203 real-world websites that accept payment card transactions as of May 3, 2019. We reuse the
+index numbers of the test cases from Table 3.
+
+Reqs. Test Cases Severity Category (810) Ranking (393) Total (1,203)
+Biz. Shop. Arts Adlt. Recr. Comp. Game. Hlth. Home. Kids. Top Btm.
+(122) (163) (78) (65) (84) (57) (42) (60) (102) (37) (288) (105)
+
+1.2 2. Mysql port (3306) detection Medium 3 6 4 2 6 2 3 2 4 0 0 27 59 (5%)
+3. OpenSSH available Low 6 15 11 4 13 6 7 8 12 1 6 27 116 (10%)
+
+2.1 5. Default Mysql user/passwd High 0 0 0 0 0 0 0 0 0 0 0 0 0 (0%)
+2.3 7. Sensitive info over HTTP High 12 10 12 10 17 10 8 6 10 5 47 22 169 (14%)
+
+12. Selfsigned cert presented High 0 0 3 0 1 0 0 1 1 0 0 3 9 (1%)
+13. Weak Cipher Supported High 0 0 0 0 0 0 0 0 0 0 0 0 0 (0%)
+14. Expired cert presented Medium 0 0 2 0 2 0 0 1 0 0 0 2 7 (1%)
+
+4.1 15. Wrong hostname in cert Medium 3 1 3 0 6 2 0 2 4 1 0 10 32 (3%)
+16. Insecure Modulus High 0 0 0 0 0 0 0 0 0 0 0 1 1 (0.1%)
+17. Weak hash in cert High 0 0 0 0 0 0 0 0 0 0 0 0 0 (0%)
+18. TLSv1.0 Supported Low 67 73 53 42 41 40 28 30 67 16 216 71 744 (62%)
+
+6.1 19. OpenSSH vulnerable High 6 14 11 4 13 6 6 8 11 1 6 26 112 (9%)
+6.5 25. Missing script integrity check Medium 92 109 54 44 44 32 27 42 66 21 154 75 760 (63%)
+
+29. Server Info available Medium 26 34 17 17 22 15 17 17 25 11 33 22 256 (21%)
+6.6 30. Browsable Dir Enabled High 0 0 0 0 0 0 0 0 0 0 0 0 0 (0%)
+
+31. HTTP TRACE supported High 6 4 3 3 2 5 2 2 6 0 4 6 43 (4%)
+33. Security Headers missing Medium 18 38 9 12 14 21 9 7 14 7 114 13 276 (23%)
+
+Table 6: Comparison between PciCheckerLite and the case 29, w3af flags websites that expose non-critical information
+customized w3af on 100 randomly chosen websites and the whereas we only flag the exposure of exploitable information (e.g.,
+Buggycart testbed.We report the number of vulnerable web- server and framework version numbers). Note that among all vul-
+sites detected and the false positives (FP) among them. nerabilities, we only have one FP under Test case 25. This website
+
+is flagged by PciCheckerLite for loading Javascript from a third-
+Vulnerabilities 100 Random websites Buggycart party domain without an integrity check. Manually analysis shows
+
+Ours (FP) w3af (FP) Ours w3af that the third-party domain and the original website are actually
+2. Mysql port (3306) detection 5 (0) 0 (0) owned by the same organization. Technically, such information is
+
+✓ ✗
+3. OpenSSH available 10 (0) 0 (0) ✓ ✗ beyond what PciCheckerLite can collect.
+5. Default Mysql user/pass 0 (0) 0 (0) ✓ ✗
+7. Sensitive info over HTTP 12 (0) 27 (17) ✓ ✓ 6 Disclosure and Discussion
+12. Selfsigned cert presented 2 (0) 2 (0) ✓ ✓ Responsible Disclosure. We have fully disclosed our findings to
+13. Weak Cipher Supported 0 (0) 0 (0) ✓ ✗
+14. Expired cert presented 0 (0) 3 (3) the PCI Security Standard Council. In May 2019, we shared our
+
+✓ ✓
+15. Wrong hostname in cert 3 (0) 2 (1) ✓ ✓ paper with the PCI SSC, and successfully got in touch with an ex-
+16. Insecure Modulus 0 (0) 0 (0) ✓ ✗ perienced member of the Security Council. Through productive
+17. Weak hash in cert 0 (0) 0 (0) ✓ ✗ exchanges with them, we gained useful insights. i) The Security
+18. TLSv1.0 Supported 63 (0) 0 (0) ✓ ✗ Council shared a copy of our paper to the dedicated companies
+19. OpenSSH vulnerable 10 (0) 0 (0) ✓ ✗ that host the PCI certification testbeds, who are now aware of our
+25. Missing script integrity check 72 (1) 55 (10) ✓ ✓ findings; ii) Preventing scanners from gaming the test is one of their
+29. Server Info available 19 (0) 81 (62) ✓ ✓ priorities, for example, by constantly updating their testbeds and
+30. Browsable Dir Enabled 0 (0) 0 (0) ✓ ✗ changing the tests; iii) Low interaction constraints make it difficult
+31. HTTP TRACE supported 6 (0) 6 (6) ✓ ✓ to test some vulnerabilities externally (which we also experienced
+33. Security Headers missing 30 (0) 0 (0) ✓ ✗ and aimed to address in our work); iv) The Security Council rou-
+
+tinely removes scanners from the ASV list or warns scanners based
+The results are shown in Table 6. First, we observe that our on the feedback sent by ASV consumers; v) Their testbeds exclude
+
+system outperforms w3af on Buggycart by detecting all the vulner- vulnerabilities whose CVSS scores are lower than 4; vi) Payment
+abilities. Second, on the 100 real-world websites, our system also brands and acquirer banks need efficient (and automatic) solutions
+detected more truly vulnerable websites. Even though w3af flagged to inspect PCI DSS compliance reports. Insights ii), iii), and vi)
+more websites (e.g., Test case 7, 29), manually analysis shows that present interesting research opportunities. In addition, we are in
+a large portion of the alerts are false positives. For example, under the process of contacting vulnerable websites. Some notifications
+Test case 7, w3af flags a website if Port 80 is open, while PciCheck- have been sent out to those that failed test case 2 (open Mysql port)
+erLite reports a website only if the request is not automatically or 19 (vulnerable OpenSSH). Incidentally, we found a few websites
+redirected to Port 443 (HTTPS). This design of w3af produces 17 have already fixed their problems, for example Netflix upgraded
+false positives. Under Test case 15, w3af flags a website that uses the vulnerable SSH-2.0-OpenSSH_7.2p2 (current Netflix.com server
+the certificate for its subdomains (which is not a violation). For Test does not show a version number).
+
+
+
+Is Improving PCI Certification a Practical Task? From the eco- Legal Consequences of Cheating in PCI Certification. The
+nomics point of view, the concept of for-profit security certification PCI DSS standard is not required by the U.S. federal law. Some state
+companies may seem like an oxymoron. Intuitively, a scanning ven- laws do refer to PCI DSS (e.g., Nevada, Minnesota,Washington) [58],
+dor might make more money if its scanner is less strict, allowing stating that merchants must be PCI compliant. However, there is
+websites to easily pass the DSS certification test. On the contrary, a no mentioning about any legal consequences of cheating in the PCI
+company offering rigorous certification scanning might lose cus- DSS certification process. Thus, it appears that being untruthful
+tomers when they become frustrated from failing the certification when filling out the self-assessment questionnaire would not have
+test. Phenomena with misaligned incentives widely exist in many any direct legal consequences. The only potential penalty would
+security domains (e.g., ATM security, network security) [41]. Fortu- be an “after effect”. For example, a merchant may be fined by the
+nately, unlike the decentralized Internet, PCI security is centrally card brand if a data breach happens due to its non-compliance [3].
+supervised by the PCI Security Council. Thus, the Council, govern- Limitations. Our work has a few limitations. First, we only tested
+ing the process of screening and approving scanner vendors, is a 6 PCI scanners and 4 web scanners. Given the high expense to
+strong point of quality control. The enforcement can be strength- order PCI and web scanning, it is unlikely that such an experiment
+ened through technical means. Thus, improving the PCI security can truly scale up. For PCI scanning, we have tried to increase
+certification, unlike deploying Internet security protocols [69], is a the diversity of scanner selection by selecting from different price
+practical goal that is very reachable in the near future. ranges. The website scanners are added to further increase diver-
+Gaming-resistant Self-evolving Testbeds and Open-Source PCI Scan- sity. Second, our paper primarily focuses on the PCI compliance
+ners. A testbed needs to constantly evolve, incorporating new types certification of e-commerce websites. Although we did not evaluate
+of vulnerabilities and relocating existing vulnerabilities over time. A the compliance of banks (which report to card brands), we argue
+fixed testbed is undesirable, as scanners may gradually learn about that it is the same set of the approved PCI scanners that provide
+the test cases and trivially pass the test without conducting a thor- the compliance reports for both merchants and banks. The problem
+ough analysis. Automating this process and creating self-evolving revealed in our study should be generally applicable. Third, we
+testbeds are interesting open research problems. did not test vulnerabilities that are not yet covered by the current
+
+Competitive open-source PCI/web scanners from non-profit or- Data Security Standards (DSS). Future work can further study the
+ganizations could drive up the quality of commercial vendors, forc- comprehensiveness of DSS. Finally, in Section 5, we only tested
+ing the entire scanner industry to catch up, and providing alterna- 1,203 e-commerce websites because it requires manual efforts to
+tive solutions for merchants to run sanity check on their services. verify whether a website accepts payment card information. It is
+Currently, there are not many high-quality, open-source and deploy- difficult to automate the verification process since one often needs
+able web scanners; w3af and ZAP are among the very few available. to register an account and visit many pages before finding the pay-
+Automate the Workload at Payment Brands and Acquirer Banks. ment page. We argue that our experiment already covers websites
+Payment brands and acquirer banks are the ultimate gatekeepers from various categories and ranking ranges, which is sufficient to
+in the PCI DSS enforcement chain. Manually screening millions of demonstrate the prevalence of the problem.
+scanning reports and questionnaires every quarter is not efficient
+(and is likely not being done well in practice). Indeed, our real-world
+experiments suggest that the gatekeeping at the acquirer banks 7 Related Work
+and payment brands appears weak. Thus, automating the report Website Scanning. The detection of web application vulnerabili-
+processing for scalable enforcement is urgently needed. ties has been well studied by researchers [45, 49, 73]. In [45, 74], au-
+Scanning vs. Self-assessment Questionnaires. There are four thors measured the performance of several black-box web scanners
+major types of Self-assessment Questionnaires or SAQs (A toD) [29]. and reported a low detection rate for XSS and SQL injection attacks.
+The different SAQs are designed for different types of merchants, The main challenge is to exhaustively discover various web-app
+as illustrated in Figure 6 in the Appendix. In SAQs, all the questions states by observing the input/output patterns. Duchene et al. [53]
+are close ended, i.e., multiple choices. For a vast majority of the proposed an input fuzzer to detect XSS vulnerabilities. Doupé et
+merchants, the current compliance checking largely relies on the al. [49] proposed to guide fuzzing based on the website’s internal
+trust of a merchant’s honesty and capability of maintaining a secure states. In [64], authors proposed a black-box method to detect logi-
+system. This observation is derived from our analysis of the 340 cal flaws using network traffic. In [73], authors used a taint-tracking
+questions in the self-assessment questionnaire (SAQ) D-Mer, which based detection of XSS vulnerabilities at the client-side. In [65], au-
+is an SAQ designed for merchants that process or store cardholder thors used dynamic execution trace-based behavioral models to de-
+data. Consequently, it is the most comprehensive questionnaire. tect CSRF vulnerabilities. Although most defenses against XSS and
+
+We manually went through all the questions the in Self- SQL inject attacks prescribe input sanitization [44, 57, 59], in [51],
+Assessment Questionnaire (SAQ) D-Mer and categorized them into authors proposed an application-agnostic rewrite technique to dif-
+the five major groups, network security, system security, applica- ferentiate scripts from other HTML inputs. We argue that similar
+tion security, application capability, and company policies. 271 of research efforts could make a positive impact to the PCI community
+the 340 questions fall under the category of company policies and by (1) producing and releasing high-quality open-sourced tools;
+application capability, where none of them can be automatically and (2) customizing a non-intrusive version of the tool for testing
+verifiable by an external entity (e.g., ASV/web scanners). Only 31 production websites in the PCI DSS context.
+out of the 69 questions on network, system and application security Proactive Threat Measurements. Honeypots [62, 66] are useful
+are automatically verifiable by a PCI scanner. to collect empirical data on attackers (or defenders). In [56], authors
+
+
+
+measure attack behaviors by deploying vulnerable web servers wait- [6] Payment Card Industry (PCI) Point-to-Point Encryption: Solution Requirements
+ing to compromised. In [63], authors deployed phishing websites to and Testing Procedures. https://www.pcisecuritystandards.org/documents/P2PE_
+measure the timeliness of browsers’ blacklist mechanisms. In [48], v2_r1-1.pdf, 2015.
+
+[7] Payment Card Industry (PCI) Token Service Providers: Additional Security
+authors measure the capability of the web hosting providers to Requirements and Assessment Procedures for Token Service Providers (EMV
+detect compromised websites by deploying vulnerable websites Payment Tokens). https://www.pcisecuritystandards.org/documents/PCI_TSP_
+
+Requirements_v1.pdf, 2015.
+within those web hosting services. Our testbed can be regarded as [8] All About Fraud: How Crooks Get the CVV. https://krebsonsecurity.com/2016/04/
+a specialized honeypot to assess the capability of PCI scanners. all-about-fraud-how-crooks-get-the-cvv/, 2016. [Online; accessed 8-Jan-2019].
+Physical Card Frauds. Payment card frauds at ATM or point-of- [9] Payment Card Industry (PCI) Payment Application Data Security Stan-
+
+dard: Requirements and Security Assessment Procedures. https://www.
+sale (POS) machines have been studied for decades [42, 43, 47, 52, pcisecuritystandards.org/documents/PA-DSS_v3-2.pdf, 2016.
+61, 70, 71]. Most of these frauds occur due to stealing payment [10] Payment Card Industry (PCI) PIN Transaction Security (PTS) Hard-
+card information during physical transactions [35, 42], and cloning ware Security Module (HSM): Modular Security Requirements.
+
+https://www.pcisecuritystandards.org/documents/PCI_HSM_Security_
+magnetic stripe cards [70, 71]. EMV cards are known to be resistant Requirements_v3_2016_final.pdf, 2016.
+to card cloning, but are vulnerable to tempered terminals [52], [11] PCI Self-Assessment Questionnaire Instructions and Guidelines. version
+
+3.2. https://www.pcisecuritystandards.org/documents/SAQ-InstrGuidelines-v3_
+or due to protocol-level vulnerabilities [61] and implementation 2.pdf, 2016.
+flaws [47]. Recently, researchers proposed mechanisms to detect [12] Amazon Connect is Now PCI DSS Compliant. https://aws.amazon.com/
+magnetic card skimmers [46, 70]. about-aws/whats-new/2017/07/amazon-connect-is-now-pci-dss-compliant/,
+
+2017.
+Digital Card Frauds. In the online setting, the danger of using [13] EMV Payment Tokenisation Specification: Technical Framework.
+magnetic-stripe-like transactions is known for years [8, 21]. Various https://www.emvco.com/terms-of-use/?u=/wp-content/uploads/documents/
+methods ( EMVCo-Payment-Tokenisation-Specification-Technical-Framework-v2.0-1.
+
+e.g., 3D-Secure [24], Tokenization framework [13]) have pdf, 2017.
+been proposed to fix it. Unfortunately, 3D-Secure is found to be [14] Giant equifax data breach: 143 million people could be affected. https://money.
+inconvenient and easy to break [60]. Tokenization framework offers cnn.com/2017/09/07/technology/business/equifax-data-breach/index.html, 2017.
+
+[15] How many e-commerce companies are there? What’s the global e-commerce
+a great alternative by replacing original card information with tem- market size? http://blog.pipecandy.com/e-commerce-companies-market-size/,
+porary tokens during a transaction. However, card information can 2017.
+still be stolen during account setup phase at a poorly secured mer- [16] Payment Card Industry 3-D Secure (PCI 3DS): Security Requirements
+
+and Assessment Procedures for EMV 3-D Secure Core Components: ACS,
+chant. Other unregulated digital financial services are also reported DS, and 3DS Server. https://www.pcisecuritystandards.org/documents/
+to be insecure [68]. In [68], the authors showed that branchless PCI-3DS-Core-Security-Standard-v1.pdf, 2017.
+
+[17] Payment Card Industry (PCI) Card Production and Provisioning: Logical Secu-
+banking apps that leverage cellular networks to send/receive cashes rity Requirements. https://www.pcisecuritystandards.org/documents/PCI_Card_
+are also vulnerable due to flaws such as skipping SSL/TLS certificate Production_Logical_Security_Requirements_v2.pdf, 2017.
+validation, and using insecure cryptographic primitives. [18] Payment Card Industry (PCI) Card Production and Provisioning: Physical Secu-
+
+rity Requirements. https://www.pcisecuritystandards.org/documents/PCI_Card_
+Production_Physical_Security_Requirements_v2.pdf, 2017.
+
+8 Conclusion [19] Payment Card Industry (PCI) Data Security Standard Approved Scanning Vendor.
+program guide. version 3.1. https://www.pcisecuritystandards.org/documents/
+
+Our study shows that the PCI data security standard (PCI DSS) is ASV_Program_Guide_v3.1.pdf, 2017.
+[20] Approved scanning vendors. https://www.pcisecuritystandards.org/assessors_
+
+comprehensive, but there is a big gap between the specifications and and_solutions/approved_scanning_vendors, 2018.
+their real-world enforcement. Our testbed experiments revealed [21] Card Fraud on the Rise, Despite National EMV Adoption. https://geminiadvisory.
+that the vulnerability screening capabilities of some approved scan- io/card-fraud-on-the-rise/, 2018. [Online; accessed 8-Jan-2019].
+
+[22] Cardconnect: A new wave of payment processing. https://cardconnect.com/,
+ning vendors (ASV) are inadequate. 5 of the 6 PCI scanners are not 2018.
+compliant with the ASV scanning guidelines. All 6 PCI scanners [23] A Comprehensive Guide to PCI DSS Merchant Levels. https://semafone.com/
+
+blog/a-comprehensive-guide-to-pci-dss-merchant-levels/, 2018.
+would certify e-commerce websites that remain vulnerable. Our [24] EMV 3-D Secure: Protocol and Core Functions Specification. https://www.emvco.
+measurement on 1,203 e-commerce websites shows that 86% of com/wp-content/uploads/documents/EMVCo_3DS_Spec_v220_122018.pdf, 2018.
+the websites have at least one type of vulnerability that should [25] Let’s Encrypt. https://letsencrypt.org/, 2018.
+
+[26] Opencart. https://www.opencart.com/, 2018.
+disqualify them as non-compliant. Our future work is to a design [27] Payment Card Industry (PCI) Data Security Standard: Requirements and security
+minimum-footprint black-box scanning method. assessment procedures. https://www.pcisecuritystandards.org/documents/PCI_
+
+DSS_v3-2-1.pdf, 2018.
+[28] Payment Card Industry (PCI) Data Security Standard Self-Assessment Question-
+
+9 Acknowledgment naire D and Attestation of Compliance for Merchants: All other SAQ-Eligible
+Merchants. https://www.pcisecuritystandards.org/documents/PCI-DSS-v3_2_
+
+This project was supported in part by NSF grants CNS-1717028, 1-SAQ-D_Merchant.pdf?agreement=true&time=1557603304233, 2018.
+[29] Payment Card Industry (PCI) Data Security Standard Self-Assessment Question-
+
+CNS-1750101 and OAC-1541105, ONR Grant ONR-N00014-17-1- naire: Instructions and Guidelines. https://finance.ubc.ca/sites/finserv.ubc.ca/
+2498. files/banking-leases/PCI_DSS_SAQ_Instructions_Guidelines.pdf, 2018.
+
+[30] Payment Card Industry (PCI) PIN Transaction Security (PTS) Point of Interaction
+(POI): Modular Security Requirements. https://www.pcisecuritystandards.org/
+
+References documents/PCI_PTS_POI_SRs_v5-1.pdf, 2018.
+[31] Payment Card Industry (PCI) Software-based PIN Entry on COTS: Security Re-
+
+[1] Common Vulnerability Scoring System Calculator Version 3. https://nvd.nist. quirements. https://www.pcisecuritystandards.org/documents/SPoC_Security_
+gov/vuln-metrics/cvss/v3-calculator. [Online; accessed 28-Aug-2019]. _Requirements_v1.0.pdf, 2018.
+
+[2] The owasp zed attack proxy (zap). https://www.zaproxy.org/. [32] Who’s In Your Online Shopping Cart? https://krebsonsecurity.com/2018/11/
+[3] Q15: What are the penalties for non-compliance? https://www. whos-in-your-online-shopping-cart/, 2018.
+
+pcicomplianceguide.org/faq/#15. [33] BlueCrypt: Cryptographic Key Length Recommendation. https://www.keylength.
+[4] W3af. http://w3af.org/. com/en/4/, 2019.
+[5] SQL injection with raw MD5 hashes (leet more ctf 2010 injection 300). http: [34] DB-Engines Ranking. https://db-engines.com/en/ranking, 2019.
+
+//cvk.posthaven.com/sql-injection-with-raw-md5-hashes, 2010.
+
+
+
+[35] Insert Skimmer + Camera Cover PIN Stealer. https://krebsonsecurity.com/2019/ [62] Nazario, J. PhoneyC: A virtual client honeypot. In Proceedings of the USENIX
+03/insert-skimmer-camera-cover-pin-stealer/, 2019. [Online; accessed 20-Mar- Workshop on Large-Scale Exploits and Emergent Threats (LEET) (2009).
+2019]. [63] Oest, A., Safaei, Y., Doupé, A., Ahn, G.-J., Wardman, B., and Tyers, K. Phish-
+
+[36] netcat. https://en.wikipedia.org/wiki/Netcat, 2019. farm: A scalable framework for measuring the effectiveness of evasion techniques
+[37] PCI DSS Compliance. https://www.akamai.com/us/en/resources/ against browser phishing blacklists. In Proceedings of the IEEE Symposium on
+
+pci-dss-compliance.jsp, 2019. Security and Privacy (S&P) (2019).
+[38] Shopify meets all 6 categories of PCI standards. https://www.shopify.ca/security/ [64] Pellegrino, G., and Balzarotti, D. Toward black-box detection of logic flaws
+
+pci-compliant, 2019. in web applications. In Proceedings of the Network and Distributed System Security
+[39] Standards, Regulations & Certifications. https://cloud.google.com/security/ Symposium (NDSS) (2014).
+
+compliance/pci-dss/, 2019. [65] Pellegrino, G., Johns, M., Koch, S., Backes, M., and Rossow, C. Deemon:
+[40] Adrian, D., Bhargavan, K., Durumeric, Z., Gaudry, P., Green, M., Halder- Detecting CSRF with dynamic analysis and property graphs. In Proceedings of
+
+man, J. A., Heninger, N., Springall, D., Thomé, E., Valenta, L., VanderSloot, the ACM SIGSAC Conference on Computer and Communications Security (CCS)
+B., Wustrow, E., Béguelin, S. Z., and Zimmermann, P. Imperfect Forward (2017).
+Secrecy: How Diffie-Hellman Fails in Practice. In Proceedings of the ACM SIGSAC [66] Provos, N. A virtual honeypot framework. In Proceedings of the 13th USENIX
+Conference on Computer and Communications Security (CCS) (2015). Security Symposium (USENIX SEC) (2004).
+
+[41] Anderson, R., and Moore, T. The economics of information security. Science [67] Ramos, S. H., Villalba, M. T., and Lacuesta, R. MQTT Security: A Novel
+314, 5799 (2006), 610–613. Fuzzing Approach. Wireless Communications and Mobile Computing 2018 (2018).
+
+[42] Anderson, R. J. Why cryptosystems fail. In Proceedings of the ACM Conference [68] Reaves, B., Scaife, N., Bates, A., Traynor, P., and Butler, K. R. B. Mo(bile)
+on Computer and Communications Security (CCS) (1993). money, mo(bile) problems: Analysis of branchless banking applications in the
+
+[43] Anderson, R. J., and Murdoch, S. J. EMV: why payment systems fail. Commun. developing world. In Proceedings of the USENIX Security Symposium (USENIX
+ACM 57, 6 (2014), 24–28. SEC) (2015).
+
+[44] Balzarotti, D., Cova, M., Felmetsger, V., Jovanovic, N., Kirda, E., Kruegel, [69] Routing security for policymakers: An Internet society white paper, October
+C., and Vigna, G. Saner: Composing static and dynamic analysis to validate 2018. Internet Society. https://www.manrs.org/wp-content/uploads/2018/10/
+sanitization in web applications. In Proceedings of the IEEE Symposium on Security Routing-Security-for-Policymakers-EN.pdf.
+and Privacy (S&P) (2008). [70] Scaife, N., Peeters, C., and Traynor, P. Fear the Reaper: Characterization
+
+[45] Bau, J., Bursztein, E., Gupta, D., and Mitchell, J. C. State of the art: Auto- and Fast Detection of Card Skimmers. In Proceedings of the USENIX Security
+mated black-box web application vulnerability testing. In Proceedings of the IEEE Symposium (USENIX SEC) (2018).
+Symposium on Security and Privacy (S&P) (2010). [71] Scaife, N., Peeters, C., Velez, C., Zhao, H., Traynor, P., and Arnold, D. P.
+
+[46] Bhaskar, N., Bland, M., Levchenko, K., and Schulman, A. Please pay inside: The cards aren’t alright: Detecting counterfeit gift cards using encoding jitter. In
+Evaluating bluetooth-based detection of gas pump skimmers. In Proceedings of Proceedings of the IEEE Symposium on Security and Privacy, (S&P) (2018).
+the 28th USENIX Security Symposium (USENIX SEC) (2019). [72] Shu, X., Tian, K., Ciambrone, A., and Yao, D. Breaking the target: An analysis
+
+[47] Bond, M., Choudary, O., Murdoch, S. J., Skorobogatov, S. P., and Anderson, of target data breach and lessons learned. CoRR abs/1701.04940 (2017).
+R. J. Chip and skim: Cloning EMV cards with the pre-play attack. In Proceedings [73] Steffens, M., Rossow, C., Johns, M., and Stock, B. Don’t trust the locals:
+of the IEEE Symposium on Security and Privacy (S&P) (2014). Investigating the prevalence of persistent client-side cross-site scripting in the
+
+[48] Canali, D., Balzarotti, D., and Francillon, A. The role of web hosting wild. In 26th Annual Network and Distributed System Security Symposium, NDSS
+providers in detecting compromised websites. In Proceedings of the International 2019, San Diego, California, USA, February 24-27, 2019 (2019).
+World Wide Web Conference (WWW) (2013). [74] Vieira, M., Antunes, N., and Madeira, H. Using web security scanners to
+
+[49] Doupé, A., Cavedon, L., Kruegel, C., and Vigna, G. Enemy of the State: A detect vulnerabilities in web services. In Proceedings of the IEEE/IFIP International
+State-Aware Black-Box Web Vulnerability Scanner. In Proceedings of the USENIX Conference on Dependable Systems and Networks (DSN) (2009).
+Security Symposium (USENIX SEC) (2012).
+
+[50] Doupé, A., Cova, M., and Vigna, G. Why Johnny Can’t Pentest: An Analysis
+of Black-Box Web Vulnerability Scanners. In Proceedings of the Detection of Appendix
+Intrusions and Malware, and Vulnerability Assessment (DIMVA) (2010).
+
+[51] Doupé, A., Cui, W., Jakubowski, M. H., Peinado, M., Kruegel, C., and Vigna,
+G. dedacota: toward preventing server-side XSS via automatic code and data
+separation. In Proceedings of the ACM SIGSAC Conference on Computer and
+Communications Security (CCS) (2013).
+
+[52] Drimer, S., and Murdoch, S. J. Keep your enemies close: Distance bounding
+against smartcard relay attacks. In Proceedings of the USENIX Security Symposium
+(USENIX SEC) (2007).
+
+[53] Duchene, F., Rawat, S., Richier, J., and Groz, R. Kameleonfuzz: evolutionary
+fuzzing for black-box XSS detection. In Proceedings of the ACM Conference on
+Data and Application Security and Privacy (CODASPY) (2014).
+
+[54] Gamero-Garrido, A., Savage, S., Levchenko, K., and Snoeren, A. C. Quantify-
+ing the pressure of legal risks on third-party vulnerability research. In Proceedings
+of the ACM SIGSAC Conference on Computer and Communications Security (CCS)
+(2017). Figure 3: An example of wrong hostname in the certificate.
+
+[55] Grossman, J. Cross site tracing (xst). https://www.cgisecurity.com/ The domain (a*****.***) uses a certificate that is issued for a
+whitehat-mirror/WH-WhitePaper_XST_ebook.pdf. different domain name (*.n*****.***).
+
+[56] Han, X., Kheir, N., and Balzarotti, D. Phisheye: Live monitoring of sandboxed
+phishing kits. In Proceedings of the ACM SIGSAC Conference on Computer and
+Communications Security (CCS) (2016).
+
+[57] Hooimeijer, P., Livshits, B., Molnar, D., Saxena, P., and Veanes, M. Fast
+and precise sanitizer analysis with BEK. In Proceedings of the USENIX Security
+Symposium (USENIX SEC) (2011).
+
+[58] Kemp, T. Buckle up with Cybersecurity ... It’s the law. https://www.forbes.
+com/sites/tomkemp/2012/02/01/buckle-up-with-cybersecurity-its-the-law/
+#5d83d3a31d72, 2012.
+
+[59] Livshits, B., and Chong, S. Towards fully automatic placement of security sani-
+tizers and declassifiers. In Proceedings of the ACM SIGPLAN-SIGACT Symposium
+on Principles of Programming Languages (POPL) (2013).
+
+[60] Murdoch, S. J., and Anderson, R. J. Verified by visa and mastercard securecode:
+Or, hownot to design authentication. In Proceedings of the International Conference
+on Financial Cryptography and Data Security (FC) (2010).
+
+[61] Murdoch, S. J., Drimer, S., Anderson, R. J., and Bond, M. Chip and PIN is Figure 4: Self-signed certificate used by (r*****.***), a website
+broken. In Proceedings of the IEEE Symposium on Security and Privacy (S&P) that accepts payment cards for donations.
+(2010).
+
+
+
+OpenSSH runs on port 22, then it will return the server informa-
+tion (e.g., OpenSSH version, OS type, OS version). We parse the
+returned information to determine the version of the OpenSSH
+server. We consider any installation versions before OpenSSH_7.6
+as vulnerable.
+Rules 29 & 33. Checking HTTP header information. Extracting
+HTTP information does not require the rich browser functionality.
+
+Figure 5: (u*****.***) uses expired certificates by default and We use Java net URL APIs to open HTTP connections for
+redirects users to a secure sub-domain with proper certifi- extracting HTTP headers. For case 29, we raise a warning only
+cate during payment. if we detect that the “Server” header contains server name
+
+and version. For case 33, we raise a warning if any of the four
+security header (i.e., X-Frame-Options, X-XSS-Protection,
+
+Doesn't Touch Self-assessment questionaire A Strict-Transport-Security, X-Content-Type-Options) is
+Cardholder Data (SAQ A) missing.
+
+Rule 7. Sensitive information over HTTP.We tested whether all the
+Doesn't Store Self-assessment questionaire A-EP
+
+Cardholder Data (SAQ A-EP) HTTP traffic is redirected to HTTPS by default. We open an HTTP
+connection with the server and follow the redirection chain. If the
+
+Process or Store Self-assessment questionaire D-Mer server doesn’t redirect to HTTPS, we raise an alert. We use Java
+Cardholder Data (SAQ D-Mer) net URL APIs to implement this test case.
+E-commerce Type Relevant SAQ Rules 18 & 13. TLSv1.0 and weak cipher negotiation. We use
+
+OpenSSL’s s_client tool to establish a SSL/TLS connection using
+Figure 6: Self-Assessment Questionnaires (SAQs) for differ- TLSv1.0 protocol. PciCheckerLite raises a warning if the connec-
+ent types of e-commerce merchants. tion is successful. We also use s_client to negotiate the ciphersuite
+
+with the remote server. PciCheckerLite raises a warning if we suc-
+cessfully negotiate with a ciphersuite that contains a weak cipher
+
+Implementation Details of PciCheckerLite (i.e., IDEA, DES, MD5).
+PciCheckerLite follows a series of rules for vulnerability testing. Rules 12, 14, 15, 16 & 17. Retrieving and examining the certificate.We
+The index of the rules matches with the testing cases discussed in use OpenSSL’s s_client tool to retrieve the SSL certificate of a remote
+the paper. As described in the paper, we only focus on a subset of server. To parse the certificate, we use APIs from java.security.cert
+test cases that do not disrupt or cause any negative impact to the package. To check whether a certificate is self-signed (Case 12), we
+remote servers (for ethical considerations). The implementation used the public key of the certificate to verify the certificate itself. To
+details are as follows. check whether the certificate is expired, we use the checkValidity()
+Rule 2. Database port detection. For database port detection, we method of X509Certificate API (Case 14). If the subject domainname
+choose to probe for Mysql port8. The reason for choosing Mysql (DN) or any alternate DN of a certificate doesn’t match with the
+port are i) Mysql is among the top three (Mysql, Oracle, Microsoft server domainname, then PciCheckerLite raises an alert (Case
+SQL Server) most popular databases in the world [34]; ii)Mysql is 15). Regarding the public key sizes for factoring modulus (e.g., RSA,
+free; and iii) it supports a wide range of programming languages. DSA), the discrete logarithm (e.g., Diffie-Hellman), and the elliptic
+The access to Mysql port (e.g., 3306) is disabled by default. It is curve (e.g., ECDSA) based algorithms, NIST recommends them to
+very dangerous to enable remote access to Mysql database for an be 2048, 224 and 224 bits, respectively [33]. PciCheckerLite raises
+arbitrary client. We check the Mysql port using nc [36], which alert if the key size is smaller than what is recommended (Case 16).
+is a Unix utility tool that reads and writes data across network If the signing algorithm uses any of the weak hashing algorithms
+connections using the TCP or UDP protocol. (e.g., MD5, SHA, SHA1, SHA-1), PciCheckerLite raises warnings
+Rule 5. Default Mysql user/password detection. If the Mysql database (Case 17).
+of a website is remotely accessible, we further check for the default Rule 25. Script source integrity check. A website is expected to check
+username and password. A typical Mysql installation has a user the integrity of any JavaScript code that is loaded externally to
+“root” with an empty password, unless it is otherwise customized or the browser. To enable script source integrity check, a server can
+disabled. As such, we run a Mysql client to connect to the remote use the “integrity” attribute of the script tag. In the “integrity” at-
+host using the default username and password. PciCheckerLite tribute, the server should mention the hashing algorithm and the
+terminates the connection immediately and raises an alert if the hash value of the script that should be used to check the integrity.
+attempt is successful. PciCheckerLite downloads the index page of a website. After that,
+Rules 3 & 19. Checking OpenSSH’s availability and version.We use it collects all the script tags, and checks if the script tags contain any
+nc [36] to connect with port 22 of the remote OpenSSH server. If external URL (excluding the website’s CDN URLs). Then it looks
+
+for the integrity attribute for the scripts loaded from external URLs,
+8We do not probe for multiple ports to avoid suspicions for possible port scanning. and raises alert if the integrity attribute is missing. We only perform
+However, a similar technique can be used to probe for other databases. this test for the index page (instead of all the pages) of a website
+
+
+
+The card verification code or value (three digit or four- Yes
+with Not
+
+digit number printed on the front or back of a payment Yes CCW No N/A Tested
+card) is not stored after authorization? 2 2 2 2 2
+
+Figure 7: A sample question from the Self-Assessment Questionnaire D (SAQ D) [28]. “Yes with CCW” means “the expected
+testing has been performed, the requirement has beenmet with the assistance of a compensating control, and a Compensating
+Control Worksheet (CCW) is required to be submitted along with the questionnaire” .
+
+to keep the test lightweight. The number of vulnerable websites determines if a directory is browsable. We never store any of the
+detected by this test can only be interpreted as a lower bound. returned pages during the test.
+Rule 30. Checking for browsable directories.We check whether the Rule 31. HTTP TRACE supported. HTTP TRACE method is used for
+directories are browsable in a website. To avoid redundant traffic, diagnostic purposes. If it is enabled, the web server will respond
+we reuse the collected JavaScript script URLs for case 25. We then to a request by echoing in its response the exact request that it
+examine the common parent directory of all the internal URLs. Fi- has received. In [55], the author has shown that HTTP TRACE can
+nally, we send a GET request to fetch the content of the directory. be used to steal sensitive information (e.g., cookie, credentials). To
+If directory browsing is enabled, the server will return a response examine the HTTP TRACE configuration, we send a HTTP request
+with code 200 with a page containing the listing of files and direc- by setting the method to TRACE. If the TRACE method is enabled
+tories of the specified path. Otherwise, it should return an error by the server, the server will echo the request in the response with
+response code (e.g., 404 - not found, 403 - Forbidden). This test only a code 200.
+
+
+
+Table 7: A summary of the guidelines for ASV scanners [19]. In the fourth column, we show the categories that are required
+to be fixed. “∗" means that in the SSL/TLS category, all the vulnerabilities are required to be fixed, except case 18.
+
+Target Component Expectation Test-cases Must fix?
+
+Firewalls and Routers 1. Must scan all network devices such as firewalls and external routers.
+2. Must test for known vulnerabilities and patches. 1 Yes
+
+Operating Systems 1. Must scan to determine the OS type and version.
+2. An unsupported OS must be marked as an automatic failure. - Yes
+
+Database Servers 1. Must test for open access to databases from the Internet.
+2. If found - must be marked as an automatic failure (Req. 1.3.6) 2 Yes
+
+Web Servers 1. Must be able to test for all known vulnerabilities and configuration issues.
+2. Report if directory browsing is observed. 30 Yes
+
+Application Servers 1. Must be able to test for all known vulnerabilities and configuration issues. 29, 33 Yes
+Common Web Scripts 1. Must be able to find common web scripts (e.g., CGI, e-commerce, etc.). - Yes
+Built-in Accounts 1. Look for default username/passwords in routers, firewalls, OS and web or DB servers.
+
+2. Such vulnerability must be marked as an automatic failure. (Req 2.1) 5, 6 Yes
+1. Must be able to detect the presence
+
+DNS and Mail Servers 2. Must test for known vulnerabilities and configuration issues - Yes
+3. Report if a vulnerability is observed (automatic failure for DNS server vulnerabilities).
+
+Virtualization components 1. Must be able to test for all known vulnerabilities - Yes
+Must find common vulnerabilities (automatically/manually) including the following:
+1. Unvalidated parameters that might lead to SQL injection.
+2. Cross-site scripting (XSS) flaws 21, 22, 23,
+
+Web Applications 3. Directory traversal vulnerabilities 24, 25, 26, 27, Yes
+4. HTTP response splitting/header injection 28, 31, 32
+5. Information leakage: phpinfo(), Insecure HTTP methods, detailed error msg
+6. If found any of the above must be marked as an automatic failure
+
+Other Applications 1. Must test for known vulnerabilities and configuration issues 20 Yes
+Common Services 1. Must test for known vulnerabilities and configuration issues 19 Yes
+Wireless Access Points 1. Must be able to detect wireless access points
+
+2. Must test and report known vulnerabilities and configuration issues - Yes
+
+Backdoors/Malware 1. Must test for remotely detectable backdoors/malware
+2. Report automatic failure if found one - Yes
+Must find:
+1. Various version of crypto protocols
+2. Detect the encryption algorithms and encryption key strengths
+
+SSL/TLS 3. Detect signing algorithms used for all server certificates 12-18 Yes∗
+4. Detect and report on certificate validity
+5. Detect and report on whether CN matches the hostname
+6. Mark as failure if supports SSL or early versions of TLS.
+
+Anonymous Key agreement 1. Must identify protocols allowing anonymous/non-authenticated cipher suites
+Protocol 2. Report if found one - Yes
+
+1. Must be able to detect remote access software
+Remote Access 2. Must report if one is detected. 3, 4
+
+19, 20 Yes
+3. Must test and report known vulnerabilities and configuration issues
+
+Point-of-sale (POS) Software 1. Should look for POS software
+2. If found - ask for justification - No
+
+Embedded links or code 1. Should look for out-of-scope links/code
+from out-of-scope domains 2. If found - ask for justification - No
+Insecure Services/
+industry-deprecated protocols 1. If found one - ask for justification - No
+Unknown services 1. Should look for unknown services and report if found - No
+
+Table 8: Specifications defined by the PCI Security Standard Council (SSC) along with their targets, evaluators, assessors and
+whether it is enforced by SSC. “COTS" stands for Commercial Off-The-Shelf.
+
+PCI Specifications Target(s) Evaluator(s) Assessor(s): Type Required?
+Merchant, Acquirer Bank, Issuer Bank,
+
+Data Security Standard (DSS) [27] Token Service Provider, Acquirer, QSA: Manual
+Service Provider Payment Brand ASV: Automated Yes
+
+Card Issuer,
+Card Production and Provisioning (CPP) [17, 18] Card Manufacturer, Payment Brand CPP-QSA: Manual Yes
+
+Token Service Provider
+Payment Application DSS (PA DSS) [9] PA Vendors PA-QSA PA-QSA: Manual Optional
+Point-to-Point Encryption (P2PE) [6] POS Device Vendors P2PE-QSA P2PE-QSA: Manual Optional
+PIN Transaction Security (PTS) [10, 30] PIN Pad Vendors PTS Labs PTS Labs: Manual Optional
+
+3DS Server,
+3-D Secure (3DS) [16] 3DS Directory Server, Payment Brand 3DS-QSA: Manual Optional
+
+3DS Access Control Server
+Software-Based PIN Entry on COTS (SPoC) [31] PIN-based Cardholder verification method (CVM) Apps SPoC Labs SPoC Labs: Manual Optional
+Token Service Provider (TSP) [7] Token Service Providers P2PE-QSA P2PE-QSA: Manual Optional
+
+
+
+Table 9: PCI DSS requirements are presented with expected testing (from SAQ D-Mer) and the potential test-cases that can be
+used to evaluate the ASV scanning.
+
+No. Requirement Expected Testing Testcase
+1.1 Formalize testing when firewall configurations change 1. Review current network diagram
+
+2. Examine network configuration N/A
+
+1.2 Build a firewall to restrict "untrusted" traffic 1. Review firewall and router config
+to cardholder data environment 2. Examine firewall and router config 1. Enable/disable firewall.
+
+1.3 Prohibit direct public access between Internet 2. Expose Mysql to the Internet
+and cardholder data environment 1. Examine firewall and router config 3. SSH over public Internet
+
+4. Remote access to PhpMyadmin
+1.4 Install a firewall on computers that have connectivity
+
+to the Internet and organization’s network 1. Examine employee owned-devices N/A
+
+2.1 Always change vendor-supplied defaults before 1. Examine vendor documentations 5. Use default DB user/password
+installing a System on the network 2. Observe system configurations 6. Use default Phpmyadmin user/password
+
+2.2 Develop a configuration standards for all system 1. Examine vendor documentations
+components that address all known security vulnerabilities. 2. Observe system configurations N/A
+Encrypt using Strong cryptography all non-console 1. Examine system components
+
+2.3 administrative access such as browser/web-based 2. Examine system configurations 7. Sensitive information over HTTP
+management tools 3. Observe an administrator log on
+
+2.4 Shared hosting providers must also comply
+with PCI DSS requirements 1. Examine system inventory N/A
+
+3.1 Establish cardholder data retention and disposal policies 1. Review data retention and disposal policies N/A
+3.2 Do not store sensitive authentication data 1. Examine system configurations
+
+(even it is encrypted) 2. Examine deletion processes 8. Store CVV in DB
+
+3.3 Mask PAN when displayed 1. Examine system configurations
+2. Observe displays of PAN 9. Show unmask PAN
+1. Examine data repositories
+
+3.4 Render PAN unreadable anywhere it is stored 2. Examine removable media 10. Store plain-text PAN (OpenCart)
+3. Examine audit logs
+
+3.5 Secure keys that are used to encrypt stored 1. Examine system configurations
+cardholder data or other keys 2. Examine key storage locations 11. Use hardcoded key for encrypting PAN
+
+3.6 Document all key-management process 1. Review key-management procedures N/A
+12. Use self-signed certificate
+13. Use insecure block cipher
+
+4.1 Use strong cryptography and security protocols 14. Use Expired certificate
+during transmission of cardholder data. 1. Review system configurations 15. Use cert. with wrong hostname
+
+16. Use 1024 bit DH modulus.
+17. Use weak hash in SSL certificate
+18. Use TLSv1.0
+
+4.2 Never send PAN over unprotected user
+messaging technologies. 1. Review policies and procedures N/A
+
+5.1 Deploy anti-virus software on all systems 1. Examine system configurations 2. Interview personnel N/A
+ti-virus configurations
+
+5.2 Ensure all anti-virus mechanisms are current, 1. Examine an
+running and generating audit log 2. Review log retention process N/A
+
+3. Examine system configurations
+6.1 Ensure that all system components are protected 1. Examine system components 19. Use vulnerable of OpenSSH
+
+from known vulnerabilities 2. Compare the list of security patches 20. Use vulnerable PhpMyadmin
+6.2 Establish a process to identify and assign risk
+
+to newly discovered security vulnerabilities 1. Review policies and procedures N/A
+
+6.3 Develop software applications in accordance
+with PCI DSS and industry best practices 1. Review software development process N/A
+
+6.4 Follow change control processes and procedures
+for all changes to system components 1. Review change control process N/A
+
+21. Implant SQL injection in admin login
+22. Implant SQL injection in customer login
+23. Disable password retry limit
+
+6.5 Develop applications based on secure coding
+guidelines and review custom application code 1. Review software-development policies 24. Disable restriction on password length.
+
+25. Use JS from external source insecurely
+26. Do not hide program crashes
+27. Implant XSS
+28. Implant CSRF
+29. Present server info in security Headers.
+30. Browsable web directories.
+
+6.6 Ensure all public-facing applications are
+protected against known attacks 1. Examine system configuration 31. Enable HTTP Trace/Track
+
+32. Enable phpinfo()
+33. Disable security headers
+
+1. Examine access control policy
+7 Restrict access to cardholder data 2. Review vendor documentation
+
+based on roles 3. Examine system configuration N/A
+4. Interview personnel
+
+8.49 Render all passwords unreadable during storage swords
+and transmission for all system components 1. Examine system configuration 34. Store unsalted customer pas
+
+35. Store plaintext passwords
+1. Observe process
+
+9 Restrict physical access to cardholder data 2. Review policies and procedures N/A
+3. Interview personnel
+
+el
+10 Track and monitor all access to network 1. Interview personn
+
+resource and cardholder data 2. Observe audit logs N/A
+3. Examine audit log settings
+1. Interview personnel
+
+11 Regularly test security systems and processes 2. Examine scope of testing N/A
+3. Review results of ASV scans
+
+ew formal risk assessment
+12 Maintain a policy that addresses information 1. Revi
+
+security for all personnel 2. Review security policy N/A
+3. Interview personnel.
+
+9 Other requirements under 8 are not testable.

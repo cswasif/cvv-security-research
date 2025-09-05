@@ -1,0 +1,260 @@
+International Conference on Information Society (i-Society 2016)
+
+Cloud Payment Processing without Ritualistic
+Sacrifices
+Reducing PCI-DSS Risk Surface with Thin Clients
+Matt Piazza, Joshua Fernandes, John Anderson, Aspen Olmsted
+Department of Computer Science
+College of Charleston
+Charleston, SC, 29401
+{piazzamp, jkfernan, andersonjd}@g.cofc.edu, olmsteda@cofc.edu
+
+Abstract—The Payment Card Industry Data Security Standard
+(PCI-DSS, or simply PCI) governs the many security standards
+associated with payment card transactions. Point of sale systems
+in today’s brick-and-mortar storefronts fall woefully short of these
+standards at every step of the work flow. They commonly use
+outdated desktop computers and store card data locally,
+oftentimes in plaintext. Backups of these systems, if kept at all, are
+often stored on unsecured, removable media. If we can move some
+of the payment infrastructure away from the merchant to a central
+web service, then we can reduce the responsibility of the merchant
+and provide a more secure environment for the consumer.
+Keywords-ecommerce; point of sale; Payment Card Industry
+Data Security Standard
+
+I.
+
+INTRODUCTION
+
+This paper works to investigate the use of fat clients in retail
+environments and the Payment Card Industry Data Security
+Standard (PCI DSS) overhead these clients incur. We
+hypothesize that this overhead can be reduced significantly by
+moving to a browser-based solution. The main technical
+challenge in a thin-client solution is communicating with
+industry standard card readers. Readers of this sort communicate
+primarily over a traditional serial port. Once we solved that, we
+also had to consider which components of PCI we could whisk
+away from the retailer.
+By moving to the browser, the retail storefronts need not
+worry about backups, encryption, and safe handling of the PCI
+DSS data at rest. It is the ideal problem for a Software as a
+Service (SaaS) solution. Since the technical challenges
+associated with PCI DSS compliance will be offloaded to a piece
+of software, the consumer can be confident that their data is safe
+when compared to the common practices employed by retail
+store managers and companies today. Each step of the
+transaction, as well as storage requirements after the transaction
+has completed, was analyzed in order to determine how best we
+could move the handling of that step out of the hands of the
+retailer.
+Generally, the fewer pieces of sensitive data a system stores
+to disk, the safer it will be. In Chrome, each browser tab is a
+single process, and when that process ends the memory
+associated with it is freed. Memory can also be freed when
+
+978-1-908320/61/2/$31.00 © 2016 IEEE
+
+garbage collection routines run and liberate any dangling
+pointers. However, freed memory can still be recovered to its
+original state. This means that both freed and unfree (still active)
+memory segments are subject to attack. If malware on the POS
+machine is viewed as a valid attack vector, then we should also
+try to limit the amount of sensitive information we have in
+memory. The most sensitive piece of information as far as the
+Payment Card Industry Data Security Standard is concerned is
+the card number. Luckily, after the VeriFone card reader verifies
+the card, it only returns a masked card number (like xxxx-xxxxxxxx-1234) on its serial port. The card reader itself is the only
+part of our system that sees the raw card data. But there may be
+other sensitive data that passes through memory, like transaction
+identifiers, PINs, and payment statuses.
+This paper will be structured as follows. First, we will show
+some related works and the limitations they have faced while
+solving similar problems. In section 3, we will give a motivating
+example to show why we are solving this problem and what
+value it presents to the public. Section 4 describes our
+methodologies and solution in depth. Section 5 will discuss
+limitations with our solution if any. Section 6 compares our thinclient solution to the traditional fat-client solution. Lastly,
+section 7 will explore the future of this work
+II.
+
+MOTIVATING EXAMPLE
+
+A. Pain Point
+Storing payment card data locally is a treacherous endeavor
+involving encryption, backups, and physical security. The retail
+locations responsible for these critical security measures are not
+subject-matter experts – it is unlikely that they have any formal
+PCI training at all. They are swamped by their primary
+responsibilities and, like most people outside of the security
+industry, really don’t care about information security because,
+often times, they fail to see how they could be a target. Swaths
+of this responsibility can be simply ignored when a retailer does
+not save payment data at all.
+The potential fallout of carelessness, lackluster (or absent)
+training, or ineptitude could damage a small company beyond
+repair. Massive fines from the cohort of major credit card
+schemes that oversees PCI-DSS will certainly hurt, but could
+
+166
+
+International Conference on Information Society (i-Society 2016)
+
+any twenty-first-century company survive if all major credit card
+vendors refused to process their transactions?
+B. How We Can Help
+Offloading these responsibilities to a third party is the spirit
+of cloud services: let organizations specialize in fewer areas by
+outsourcing aspects of their business processes that require a
+fine-grained understanding of tangential technologies. For
+example, a footwear retailer need not know about 802.11x
+authentication and its role in preventing man in the middle
+attacks that could expose sensitive payment card data.
+By allowing retailers to use a simple web interface for
+inventory coupled with a browser extension to communicate
+with a physical card reader, we can prevent everything but the
+card reader from seeing unobscured payment card data. Of
+course, there are physical attacks that are out of scope for this
+paper, like card skimmers. That means that the onus of PCI–DSS
+compliance onto the cloud-based payment processor using only
+the tokenized card data returned by the card reader.
+III.
+
+RELATED WORK
+
+Sachdeva, et al. [1], proposed and implemented a system by
+which Smart Cards can be used for authentication to web
+applications. Our work is incredibly similar, but in a different
+domain and with drastically different implementation.
+Sachdeva’s integration between browser technology and
+physical card readers relied upon JavaScript and ActiveX
+plugins. Anyone with even the slightest security background
+knows that ActiveX controls are infamously rife with
+vulnerabilities. In all fairness, they have also used the equivalent
+Mozilla technology, the Cross Platform Component Object
+Model, for their Firefox plugin. Supporting Internet Explorer in
+a security-sensitive product is like building a wooden boat to raft
+down lava flows. They have noble intentions, and it makes
+sense, from a usability standpoint, to support an Internet
+Explorer Smart Card plugin since many government web assets
+are only accessible via Internet Explorer and the United States
+Government often uses Smart Cards for authentication.
+The point-of-sale system of choice for small retailers,
+Square, takes a similar approach. They explicitly prohibit the
+storage of PCI data on disk – their webpage describing their
+security practices has a full section called “Data never touches
+your device” [1] and another bullet point enumerates the specific
+data that they refuse to store on client devices (card number,
+security code, and magnetic stripe data) [2]. They run a fantastic
+organization with a hacker-lauded bug bounty program and are
+strong proponents of strong encryption. The significant
+limitation in their implementation is the platforms on which it’s
+available: iOS and android devices only. These devices cannot
+interact with a retailer’s existing card readers or PC-based POS
+system. The entry cost is high as a result of Square’s limited
+number of supported platforms and card readers. Our solution,
+in contrast, will run on the retailer’s existing hardware (wherever
+Chrome will run our solution should also run).
+Square says that they encrypt data using “industry-leading
+methods” for data at rest and data in transit. Their documentation
+makes no mention of data in use (i.e., data in memory). Very few
+pieces of software bother to encrypt data in memory. But
+unencrypted data in use is vulnerable to malware running on the
+
+978-1-908320/61/2/$31.00 © 2016 IEEE
+
+client machine. If a piece of malware can dump the memory of
+Square’s app, then they may have access to full credit card
+numbers and other PCI-governed data (Square has not released
+details of their applications, so this is a theoretical claim).
+Throughout the moving parts of our solution, only the card
+reader sees the actual card number and magnetic stripe data; it is
+rather difficult to execute payment card transactions without that
+data. The client machine only sees a masked credit card number
+and a tokenized representation of the credit card details. If there
+is malware present on the client computer, the card data itself
+will not be vulnerable. A possible, but unlikely, attack could be
+a man-in-the-middle whereby the transaction response from the
+card reader or the cloud payment processing service. If this
+transaction data is intercepted, it could also be used to void
+payments after the fact, granting attackers free goods and
+services. Harder yet would be malware on the card reader
+– which would obviously affect every POS system using the
+targeted card reader – that sends card data to attack-controlled
+infrastructure while also completing the transactions as
+expected. Granted, these devices store their operating system on
+read-only memory.
+Adida et al. [3], explored the possibilities of browser-based
+attacks on the JavaScript runtime environment. There are many
+sensitive browser extensions, plugins, and bookmarlets that rely
+on exclusively interacting with the native, unmolested
+JavaScript runtime environment – that is: the one that is built
+into the browser like Chromium’s V8 JavaScript Engine. But the
+fact is that the current webpage can manipulate this environment
+and alter the expected behavior of the JavaScript. It is a scary
+thought any time you’re developing code that is going to run in
+thousands of unique environments if it’s going to run at all. We
+work around this by interacting with web pages that are out of
+our control minimally. The only times our solution touches other
+web pages is to grab form input field values describing the nature
+of the purchase and the price. The extension just does something
+like a getElementById() to find & read the input tag. In an
+extreme circumstance, the JavaScript runtime the extension is
+executing within could become compromised in such a way that
+would cause the dollar amounts of transactions to be altered.
+Such an attack is highly likely to be either 1) obvious to the
+cashier who can see price changes or other odd behavior, and 2)
+break the existing inventory management system with which our
+extension is designed to interact with.
+IV.
+
+FUTURE WORK
+
+We have stretched to the ends of our capabilities with
+Chrome Apps, Chrome extensions, and VeriSign card readers.
+There is still prodding to be done, but it is likely that our original
+aspirations for a browser extension may not pan out – the full
+solution may require a small middleman running
+communications between the browser and the card reader. This
+middleman will be a Chrome App to handle the serial port
+communications to the card reader.
+V.
+
+CONCLUSIONS
+
+Vulnerability-free computer systems simply do not exist, and
+we have to accept that as information security professionals. We
+can avoid some risk, but the main focus of our work is to transfer
+the risk from non-specialized retailers to a trusted third party
+who can take care of the intricate security details of a payment
+
+167
+
+International Conference on Information Society (i-Society 2016)
+
+processing entity. On the other hand, the possible centralization
+of card data from myriad retailers could facilitate a much larger
+breach, but DNSSEC, a widely lauded system, is very
+centralized. Perhaps moving from a software as a service
+solution to a platform as a service that would allow retailers data
+to be fully segregated could mitigate this possibility. We may be
+able to to fully partition user data and remain a SaaS solution,
+but that work has yet to be sorted out.
+REFERENCES
+
+[1] K. Sachdeva, H. K. Lou and K. Krishna, "A BrowserBased Approach to Smart Card Connectivity," Web 2.0
+Security & Privacy, 2009.
+[2] Square, Inc, "Square Security," [Online]. Available:
+https://squareup.com/security. (Accessed 27 March
+2016).
+[3] B. Adida, A. Barth and C. Jackson, "Rootkits for
+JavaScript Environments," WOOT'09 Proceedings of the
+3rd USENIX conference on Offensive technologies,
+2009.
+
+978-1-908320/61/2/$31.00 © 2016 IEEE
+
+168
+
+

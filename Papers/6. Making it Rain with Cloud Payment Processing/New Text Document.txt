@@ -1,0 +1,248 @@
+International Conference on Information Society (i-Society 2016)
+
+Making it Rain with Cloud Payment Processing
+Vulnerabilities
+
+Matt Piazza
+Department of Computer Science
+College of Charleston
+Charleston, SC 29401
+piazzamp@g.cofc.edu
+
+Abstract— In this paper, we investigate the value of Payment Card
+Industry Data Security Standard (PCI DSS) by examining popular
+implementations of hosted payment processing solutions. First, we
+will dive into CardConnect, a registered ISO of Wells Fargo Bank,
+and see how their client-side-dependent model allows for trivial
+manipulation. Then we look at CardConnect plugins for more
+widespread vulnerabilities. Lastly, we propose a sort of leaky-
+bucket solution wherein the e-commerce platform must validate
+all of the assumptions previously made; albeit, tokenized credit
+card transactions are a technology that should be leveraged when
+resources allow. However, hiring a skilled software developer to
+implement a secure credit card processing system is out of reach
+for many small retail shops.
+
+Keywords- payment processing; cloud; cyber-security; APT
+
+I. INTRODUCTION
+
+Security-sensitive computer systems attract two groups of
+people — the red team and the blue team; the bad guys and the
+good guys. For your pleasure, we will be playing both parts.
+We'll hack and slash our way through poor implementations of
+the CardConnect Representational State Transfer (REST) API.
+Then we'll go over how to reduce this attack surface. We will
+do the same for your favorite click-to-install, open-source
+shopping cart: Magento. The crux of the vulnerability is control.
+In a similar vein to poor session management, we see how
+pieces of data coming from outside the network cannot then be
+entirely trusted by the system (the storefront in this case).
+Sensitive data like amount paid, payment errors, and
+confirmation code are passed from the payment processor
+through the client back to the storefront.
+
+On the other side, we propose an easy solution to our threat.
+Simply, the server will make another HTTP request once a
+client requests the page that should be visited directly after
+leaving the payment processor back to the payment processor
+to confirm the values passed in by the client. While our proposal
+will increase the integrity of a given transaction, it will also
+reduce the availability of the store. Ifa miscreant, for example,
+wanted to launch an HTTP-based DDoS (distributed denial of
+service) attack against a storefront they would have twice the
+effect that they would have had before the store implemented
+our solution since their application server makes its own
+requests to the payment processor for each request to the post-
+payment landing page.
+
+We will also investigate the way that CardConnect-
+developed shopping cart plugins handle these spoofed
+
+978-1 -908320/61/2/$31.00 © 2016 IEEE
+
+Aspen Olmsted
+Department of Computer Science
+College of Charleston
+Charleston, SC 29401
+olmsteda@cofc.edu
+
+transactions and compare that behavior with the behavior of a
+web store that has integrated with a CardConnect hosted
+payment page according to the CardConnect documentation.
+Any discrepancies therein have to raise serious concerns - if
+CardConnect is doing something that their documentation does
+not describe we have to question why and consider the impacts
+of this to organizations using a cart plugin verse a homemade
+integration.
+
+II. RELATED WORKS
+
+Ivan Widjaya mentions the path to compliance on his
+business-oriented website [4] and describes how hosted
+payment pages reduce the area in which a seller has to be aware
+of PCI DSS. However, he does not consider the attack presented
+in this paper and the other costs associated with hosted payment
+pages like brand trust, user experience, reliance on client-side
+integrity, etc. Obviously, a business can be entirely PCI DSS
+compliant with a hosted payment page, but the weaknesses in
+the standard still allow many vulnerabilities to exist. In short,
+being compliant is not the same as being secure.
+
+PricewaterhouseCoopers (PwC), one of the ‘big four’
+auditors in the world, investigates many card-fraud related
+incidents. They posit that IT solutions tend to be myopic and
+inextensible when it comes to security enhancements [3]. Their
+point of view, from the financial-crime and auditing domains,
+leaves a clear knowledge gap. PwC certainly notices all of the
+shortcomings in PCI-related mistakes, but they may lack the
+technical expertise to architect a system that is free of their
+identified weaknesses.
+
+Cybersecurity in the Payment Card Industry [2| examines
+the legal and regulatory challenges associated with credit card
+transaction processing. Like — PriceaterhouseCoopers’
+assessment, they see many great issues in the common practices
+in industry but lack the technical skill necessary to understand
+the limitations that are the wellspring of regulatory challenges.
+By their words, the vulnerability —that is, the bug in the
+vendor’s code— presented here should not be allowed to exist,
+by law. There are no lawyers on this paper-writing team, but it
+does seem that vulnerabilities of this class should be carefully
+guarded against to protect both merchants and customers as
+thoroughly as possible.
+
+The most important related work is the CardConnect
+application programming interface (API) documentation [1]. It
+provides a full-scope overview of how to integrate your existing
+
+69
+International Conference on Information Society (i-Society 2016)
+
+web store with CardConnect and will be the focus of later
+sections. Any missing information in CardConnect’s
+documentation has the potential to trickle down into thousands
+of web stores. CardConnect’s documentation can be directly
+contrasted with their own implementation via a Magento plugin
+that consumes the CardConnect API. Magento is an open-
+source e-commerce platform. These docs are the crux of this
+vulnerability, we hypothesize.
+
+IH. EXAMPLE EXPLOIT
+
+This vulnerability can be reproduced on any free-to-use,
+multi-tenant hosting provider. We use siteground to host a
+standard Magento install with CardConnect’s Magento plugin
+configured to point at their test environment. During the
+checkout process, a user can grok the different form items that
+are sent to CardConnect and craft a request to mimic a
+successful transaction. The merchant will continue processing
+the order while the payment settles, and by the time they settle
+up their books, the miscreant has already made off with the
+goods. We hypothesise that many smaller stores never bother to
+double check the results of their credit card transactions and
+simply assume that they all go through without issue. Though
+CardConnect does provide an admin console that allows
+merchants to see the status of all of their transactions as well as
+cancel, refund, or authorize them.
+
+When using a CardConnect plugin, such as the one freely
+available for Magento, the order status updates to CardComnect
+processing after a spoofed transaction. It will never change to a
+final paid state because the plugin updates all of the current
+orders against the CardConnect web services using their
+transaction IDs to retrieve up-to-date information. Of course,
+these spoofed transactions will have bogus transaction IDs or
+transaction IDs that have mismatched information like payment
+amount (which is compared to the order amount before
+updating the order’s status). On any failure like this, the order
+status remains unchanged; it does not fall into an error state. A
+naive store owner may render services while the order is in a
+processing state and then never actually receive the payment.
+
+IV. MITIGATION
+
+We propose a simple verification check to mitigate this
+particular vulnerability. If the typical flow goes something
+along the lines of 1. accept CardConnect payment, 2. process
+order; we would insert another step between them: 1. accept
+CardConnect payment, 2. verify payment details with
+CardConnect, 3. process order. Our strategy allows for all facets
+of the transaction (i.e., amount, status) to be verified against
+their expected values. If any of the actual values do not match
+the expected values, then the merchant can reject the order and
+pursue further action be it a bug fix or a call to the internet
+police.
+
+This verification step must take place on the server side. The
+entire vulnerability stems from a blind trust placed in client
+machines — they relay the results of their own CardConnect
+transaction back to the merchant.
+
+The way the CardConnect-produced shopping cart plugins
+handle this is not so much a security measure as it is a part of
+
+978-1 -908320/61/2/$31.00 © 2016 IEEE
+
+typical administrative workflow for an e-commerce shop. The
+CardConnect module for Magento updates that status of each
+order via CardConnect web services when a store admin views
+all of the orders in their store. When a bogus transaction is
+submitted, it will remain in the state CardConnect Processing
+and never fall through to the final confirmed state.
+
+However, the vulnerability persists when tech-savvy, but
+security ignorant, users roll their own CardConnect
+integrations. The CardConnect API and _ integration
+documentation does not mention the value of double checking
+and confirming the integrity of every transaction. And their
+integration guide does not suggest that you check with
+CardConnect web services to verify any assumptions made
+about the status or validity of a particular transaction. Thus, a
+company could send out products, expend resources, or
+otherwise act as if they had received a payment when, in fact,
+they have not.
+
+V. THE VALUE OF PCI-DSS
+
+Plastered across CardConnect’s marketing materials are
+these claims of point-to-point encryption and transactional
+safety. More importantly, though, are the countless mentions of
+PCI-DSS and the ways that moving your payment processing to
+the cloud transfers risk off of the merchant’s back and onto
+CardConnect. Perhaps PCI is the reason CardConnect has to
+blindly trust the client request to confirm the transaction — so
+that payment details don’t pass through the merchant’s
+infrastructure, thus avoiding PCI issues.
+
+VI. CONCLUSION
+
+The value of a piece of software is is determined, in large
+part, by the completeness of its documentation. Having
+incomplete, incorrect, or misleading documentation can lead to
+misuse and abuse of the product. In this case that means that
+following CardConnect’s guides will lead a security-naive
+developer to introduce severe security vulnerabilities into their
+organization’s webstore. In this case that means a company
+delivering goods or rendering services without ever receiving
+payment. It is easy to say, then, that a poor implementation of a
+payment processing service like CardConnect could single-
+handedly bankrupt a small business.
+
+VI. REFERENCES
+
+[1] CardConnect. "CardConnect API." CardConnect
+Developer Center. Access Date: 8 February 2016.
+
+[2] Epstein, Richard A. and Thomas P. Brown. "Cybersecurity
+in the Payment Card Industry ." The University of Chicago
+Law Review 75.1 (2008): 203-223.
+
+[3] PricewaterhouseCoopers. Digital Fraud. Access Date: 8
+February 2016.
+
+[4] Widjaya, Ivan. Merchant Payment Processing: What You
+Really Need to Know About PCI DSS. 9 October 2014.
+Access Date: 8 February 2016.
+
+70

@@ -1,0 +1,711 @@
+﻿Ali MA, Arief B, Emms M, van Moorsel A.  
+Does The Online Card Payment Landscape Unwittingly Facilitate Fraud? 
+
+IEEE Security & Privacy 2017. In Press. 
+
+ 
+
+ 
+
+Copyright: 
+
+© 2017 IEEE. Personal use of this material is permitted. 
+
+Permission from IEEE must be obtained for all other uses, in any current or future media, including 
+reprinting/republishing this material for advertising or promotional purposes, creating new collective 
+works, for resale or redistribution to servers or lists, or reuse of any copyrighted component of this work 
+in other works. 
+
+DOI link to article: 
+
+http://ieeexplore.ieee.org/xpl/RecentIssue.jsp?punumber=8013  
+
+Date deposited:   
+
+01/12/2016 
+
+ 
+
+ 
+
+ 
+
+Newcastle University ePrints - eprint.ncl.ac.uk 
+
+ 
+
+
+
+Does The Online Card Payment Landscape 
+Unwittingly Facilitate Fraud? 
+
+Mohammed Aamir Ali, Budi Arief, Martin Emms, and Aad van Moorsel 
+
+ 
+
+Abstract—This article provides an extensive study of the We came to an important observation that the difference in 
+current practice of online payment using credit and debit cards, security solutions of various websites introduces a practically 
+and the intrinsic security challenges caused by the differences in exploitable vulnerability in the overall payment system. An 
+how payment sites operate. We investigated the Alexa top-400 attacker can exploit these differences to build a distributed 
+online merchants’ payment sites, and realised that the current guessing attack which generates usable card payment details 
+landscape facilitates a distributed guessing attack. This attack (card number, expiry date, card verification value, and postal 
+subverts the payment functionality from its intended purpose of address) one field at a time. Each generated field can be used in 
+validating card details, into helping the attackers to generate all succession to generate the next field by using a different 
+security data fields required to make online transactions. We will 
+
+merchant’s website. Moreover, if individual merchants were 
+show that this attack would not be practical if all payment sites 
+
+trying to improve their security by adding more payment fields 
+performed the same security checks. As part of our responsible 
+
+to be verified on their site, they potentially inadvertently weaken 
+disclosure measure, we notified a selection of payment sites about 
+our findings, and we report on their responses. We will discuss the whole system by creating an opportunity to guess the value 
+
+potential solutions to the problem and the practical difficulty to of another field, as explained later in the article. 
+implement these, given the varying technical and business We demonstrate the practicability of exploiting the 
+concerns of the involved parties. vulnerabilities with software that implements the distributed 
+
+guessing attack.  We will show that the potential impact of these 
+Keywords—security; online payment; distributed attack; 
+
+vulnerabilities is substantial because the card details generated 
+fraudulent transactions; survey; ethical disclosure. 
+
+by this distributed attack can be used to transfer money from a 
+I. INTRODUCTION victim’s bank account to an anonymous recipient overseas using 
+
+a financial services company such as the Western Union as a 
+
+Ca rds are the de facto means of paying for online purchases. 
+conduit. 
+
+However, as the value of online sales has increased, so has 
+the amount of online fraud. As an example, UK1 online The vulnerabilities described in this article apply to cards 
+
+sales in 2014 was worth £45 billion, which represents a 16% that do not enforce centralised checks across transactions from 
+growth between 2013 and 2014 [1]. In the same time period, the different sites. Our experiments were conducted using Visa and 
+value of online fraud in the UK has increased by 33% to £217 MasterCard only. Whereas MasterCard’s centralised network 
+million [1]. Online fraud is now the single largest category of detects the guessing attack after fewer than 10 attempts (even 
+card fraud in the UK, representing 45% of the total value of the when those attempts were distributed across multiple websites), 
+fraud committed against UK credit and debit cards [2].  Visa’s payment ecosystem does not prevent the attack (see 
+
+Section VI.D). Because Visa is the most popular payment 
+In this article, we present the online payment landscape in 
+
+network in the world, the discovered vulnerabilities greatly 
+detail. In particular, we aim to highlight the different manners in 
+
+affect the entire global online payments system. 
+which online payment is performed, and the varying security 
+measures put in place by online merchants – from checking only We also carried out a responsible disclosure exercise with 
+the card number and the expiry date, to fully-fledged centralised the payment sites affected by these vulnerabilities. Of the 342 
+bank security mechanisms such as 3D Secure [3][4][5]. There is vulnerable websites, we presented our findings to the top-36 of 
+a number of questions we would like to address: does the these sites (in terms of the severity of the vulnerabilities and the 
+difference cause a security problem? if it does, how common is size of their customer base), monitored their responses, and 
+the problem and can it be exploited? how much damage can be analysed the changes these websites have implemented to deal 
+done? and how could it be resolved in the future? To determine with our disclosure. Several websites, including some of the 
+the extent of the problem, we survey the ‘online payment largest and most popular websites in the world, changed their 
+landscape’, creating a mapping of various merchant payment approach to online payment processing after our disclosure, as 
+implementations. we will report later in this article. To protect the affected sites, 
+
+                                                 
+1 Sales and fraud statistics from regions other than the UK are less reliable but 
+indicate the same pattern. 
+
+
+
+we refrain from specifically revealing their names and their payment page of the online merchant’s website (action A in Fig. 
+vulnerabilities.  1).  The merchant controls which data fields are used to authorise 
+
+the payment. 
+Finally, we discuss potential solutions to the problem. We 
+
+will see that the vulnerabilities are systemic and cannot be The merchant then passes the card details to their chosen 
+protected against in isolation by any individual online merchant payment gateway, which provides a service of authorising and 
+or by the issuing bank through improving their own security processing the merchant’s payment request (action B). The 
+policies.  But first, let us look into how current online payment payment gateway, on behalf of the merchant, can also 
+system operates. implement additional security filters at this point (further details 
+
+can be found in Section VI.C). The payment gateway then 
+II. OVERVIEW OF THE ONLINE PAYMENT SYSTEM connects the merchant to the card payment network to request 
+
+An online payment site uses a customer’s existing credit or payment from the customer’s bank account held at the card 
+debit card to transfer funds from the customer’s bank account issuing bank. The payment networks (such as Visa and 
+into the merchant’s bank account. For this to happen, the MasterCard) provide the link between payment gateways and 
+customer needs to provide their card information during the thousands of card issuing banks (actions C and D).  
+checkout. These pieces of information are then passed to the The card-issuer holds the customer’s bank account and 
+card issuing bank, who will process the information further makes the approval of the payment (action E). The issuer 
+before authorising or rejecting the payment request. This process maintains customer’s card record file, which contains 
+involves a number of parties, each with different information such as account balance, customer name, full 
+responsibilities. address, and other card details not visible to the rest of the 
+
+payment network. In the final step, called a settlement, the card-
+issuing bank subsequently deposits the customer’s money to the 
+merchant’s bank account (actions F, G and H).  
+
+B. Payment Card Data Fields 
+
+An online payment is a “card-not-present” credit or debit 
+card transaction [6]. This implies the merchant cannot physically 
+verify that the customer actually has the card. The security of 
+online payment is therefore dependent upon the customer 
+providing data that only the owner of the card could know.  
+
+The payment card industry has developed a Payment Card 
+Industry Data Security Standard (PCI DSS) [7], which provides 
+a comprehensive set of rules and controls for the secure handling 
+and storage of sensitive card data. However, there is no 
+requirement for the merchant to request all of the data fields 
+during an online payment authorisation, nor is there a mandatory 
+requirement for the merchant to implement any of the optional 
+security filters. Five pieces of information are typically used 
+when making an online payment: 
+
+ Cardholder Name: the account holder’s name as printed on 
+the card. We found that no website checks that a name 
+entered is correct. 
+
+ 16-digit Card Number: a unique identifier printed on the 
+front of the card by the issuing bank.  Referred to as the 
+Primary Account Number (PAN), it links the card to the 
+customer’s bank account. 
+
+ Card Expiry Date: printed or embossed on the front of the 
+card. The expiry date and the PAN constitute the minimum 
+set of card authentication data. 
+
+ Card Verification Value (CVV2): a 3-digit number printed 
+ on the reverse side of the card. It is meant to be known only 
+
+Fig. 1. Actions and parties in online payment. to the person possessing the card. It should not be stored 
+electronically anywhere in the payment ecosystem [7]. 
+
+A. Online Payment Process and Parties Involved 
+ Cardholder Address: not visible on the card but sometimes 
+
+ Fig. 1 illustrates the actions and parties involved in used for payment authorisation purposes. Address 
+processing online payments. The process involves the verification is performed only on the numerical values of the 
+customer/cardholder entering their payment card details on the street/house and postcode fields; any alphabetical characters 
+
+
+
+are ignored. Different websites perform varying levels of digits) is not as straightforward as getting the expiry date or 
+verification on the address field’s numerical digits, ranging CVV2 because first, the attacker will need to narrow down the 
+from verifying just the numerical digits in the postcode possible postcodes of the cardholder’s address. This can be done 
+(partial match), to the complete numerical digits in postcode by querying the first six digits of a PAN through well-known 
+plus the door number (full match) [8]. online databases such as BinDb [10] and ExactBins [11], which 
+
+will reveal the card’s brand, issuing bank name, and card type. 
+III. DISTRIBUTED GUESSING ATTACK Once the issuing bank is known, the attacker can increase the 
+
+ To obtain card details, one can use a web merchant’s probability of guessing the right postcode by assuming that the 
+payment page to guess the data: the merchant’s reply to a victim is likely to be registered with one of the branches nearby 
+transaction attempt will state whether the guess was correct or – this is particularly relevant if the attacker uses NFC skimming 
+not. The reason this attack works in practice is due to two to obtain the PAN and expiry date in the first place (see Section 
+weaknesses, each not too severe on its own, but when used IV.B). Now, the attacker just needs to start brute force guesses 
+together present a serious risk to the global payment system. from a list of issuing bank postcodes for a particular city where 
+
+the card details have been skimmed from. 
+The first weakness is that in many settings, the current online 
+
+payment system does not detect multiple invalid payment IV. EXPERIMENTS 
+requests on the same card from different websites. Effectively, 
+
+We implemented a set of software tools to carry out the 
+this implies that practically unlimited guesses can be made by 
+
+distributed guessing attack, using the research team’s own cards 
+distributing the guesses over many websites, even if individual 
+
+to verify that it is indeed possible and practical to obtain all the 
+websites limit the number of attempts. 
+
+information of the card. Included are seven Visa cards with a 
+Secondly, the attack scales well because different web spread of PAN, expiry date, and CVV2 values. We selected 400 
+
+merchants provide different fields, and therefore allow the Alexa [12] top rated commercial websites for our investigation. 
+guessing attack to obtain the desired card information one field These include many global websites such as iTunes, Google, 
+at a time. To understand how essential the scaling issue is, we PayPal, and Amazon.  
+look at the differences in websites in some more detail. The data 
+
+A. Software Tools 
+fields that web merchants use can be divided into three 
+categories: The software tools implemented for the experiments consist 
+
+of a website bot and automated scripts written in Java Selenium 
+ 2 fields: PAN + Expiry date (the absolute minimum) browser automation framework [13]. All the experiments were 
+
+run on Mozilla Firefox web browser. Fig. 2 shows a screenshot 
+ 3 fields: PAN + Expiry date + CVV2 
+
+of the website bot, which was used to automate the process of 
+ 4 fields: PAN + Expiry date + CVV2 + Address guessing relevant card information. The bot cycles through the 
+
+possible values for each field to find the correct information.  
+ Starting with a valid card number (PAN), to guess the expiry 
+
+date an attacker can utilise several merchants’ websites that 
+check only two fields: the card number and the expiry date. Once 
+the expiry date is known, the attacker can use it along with the 
+card number to guess the CVV2 information using another set 
+of websites that check 3 fields (the card number, the expiry date, 
+and the CVV2). 
+
+Guessing an expiry date takes at most 60 attempts (banks 
+typically issue cards that are valid for up to 60 months), and 
+subsequently, guessing the 3-digit CVV2 takes fewer than 1,000 
+attempts. Hence, expiry date and CVV2 are guaranteed to be 
+obtained within 60 + 1,000 = 1,060 guesses. If all merchants 
+would use three fields and ask for expiry date as well as CVV2, 
+then it may take as many as 60 x 1,000 = 60,000 attempts. The 
+difference between 1,060 and 60,000 is the difference between 
+a quick and practical attack, and a tedious, close to impractical  
+attack. Fig. 2. Screenshot of the website bot, farming CVV2 from multiple sites. 
+
+ For many purposes, knowing the PAN, expiry date and 
+B. Obtaining Card Data 
+
+CVV2 is sufficient to use a card online, but for some purchases, 
+an attacker would also need to obtain address information. To The PAN is the starting point for the generation of all of the 
+guess address information, the attacker needs to use websites other card data fields. There are at least two known methods of 
+that ask for 4 fields. The address field is used in a variety of obtaining valid PANs. Criminals sell bulk lists of card details 
+manners, based on the Address Verification System (AVS), online. These lists are considered less valuable when they do not 
+which validates the billing address provided by the customer contain the CVV2; nevertheless, such a list could be used as a 
+against the address information stored by the card-issuing bank source of PANs from which the expiry date, CVV2 and address 
+[6][8][9]. The process of getting cardholder’s address for the information can be generated. Another method is by exploiting 
+countries that have a long postcode (more than 3 numerical the contactless feature common in recently issued payment 
+
+
+
+cards. NFC skimming [14] provides an attacker with the PAN, these sites to guess the expiry date. 291 sites use three fields, 
+the expiry date and in some cases, the cardholder’s name. It is which one can use for guessing the CVV2, and 25 sites use four 
+also possible to generate PAN using the first six digits of a PAN fields, which allows one to guess the postcode of the address. 
+and the Luhn’s algorithm [15] and getting it verified. However, Finally, of the 389 sites, 47 merchants (i.e. 12%) had 
+we did not take this approach because it is crossing the boundary implemented 3D Secure payments (these sites are impervious to 
+of ethical research—we only used our own cards. the distributed guessing attack, see Section VI.B). 
+
+Once the PAN is known, an attempt to obtain the expiry date There is also a variation in the number of attempts allowed 
+can commence. We note that sometimes the expiry date can be at each of these sites, ranging from 4, 5, 10, 20, 25, 50, or even 
+obtained at the same time as the PAN, for example by using the unlimited. In Table I, the number of sites that allow certain 
+NFC skimming method described above. But if that is not number of guesses is shown in the rows, for each type of site (as 
+possible, the bot can be used to systematically guess the expiry represented in the columns). We see that most sites (276) allow 
+date of a given PAN on the websites that do not require CVV2 between 6 and 10 attempts, but 6 sites set no limit to the number 
+to be entered. The next step in card data generation involves of attempts. There were two notable outliers to this observation 
+getting the card’s CVV2. To find the correct CVV2, the bot will in the top-10 highly popular websites, one of which allowed 
+simply need to cycle through the possible values starting from unlimited attempts to guess the CVV2, while the other required 
+001 until the payment website blocks further attempts. A only the 16-digit card number plus the expiry date. 
+handful of payment sites allowed unlimited attempts while most 
+
+Our experiments successfully obtained the valid expiry date 
+of the other payment sites allowed 5, 10 or even 50 attempts to 
+
+for each of our Visa test cards, without exception. We also 
+enter a correct CVV2. In our scenario, we “farm out” the brute 
+
+managed to find valid CVV2 information for our Visa test cards, 
+force guessing attack to tens or even hundreds of payment 
+
+again without exception. We performed more than 11,000 
+systems, which practically means we can carry out unlimited 
+
+CVV2 iterations using our bot and scripts, and our experiments 
+guesses. The final step generates the cardholder’s address. An 
+
+confirmed that there is no centrally imposed limit on the number 
+attacker can exploit the different variants of address verification 
+
+of CVV2 attempts when distributing guesses over multiple 
+system (discussed in Section III) to find the full address of the 
+
+websites. The final step is to obtain the address information. Our 
+cardholder.  
+
+tests performed more than 3,000 iterations on the group of 
+C. Transferring the Money websites that verify partial address (only postcode digits), to get 
+
+Once either two, three, or four fields of the card data have numerical digits of the postcode. We extended our experiments 
+
+been obtained, the attacker can use them to purchase goods on a and run instances of our bot on another set of payment sites 
+
+website. This is damaging enough for the owner of the card, but (which verify the door number and the postcode digits) in order 
+
+we looked at even more impactful attacks. Rather than buying to get the full address of all our Visa test cards. 
+
+online goods from an e-commerce website, we created an attack 
+TABLE I.  VARIATION IN PAYMENT SECURITY SETTINGS OF ONLINE 
+
+scenario that uses the card details to open a money transfer PAYMENTS WEBSITES 
+account, sends the money to an anonymous recipient abroad, 
+where the money is picked up within minutes of issuing the Number Sites Sites Sites Sites Total 
+transfer.  The attacker needs to be able to clear the funds before of with 2 with 3 with 4 with 3D 
+
+the issuing bank reverses the payment and thwarts the attack. It attempts fields fields fields Secure 
+allowed (guess (guess (guess (safe 
+
+is therefore desirable from the attacker’s point of view that the 
+expiry CVV2) address from 
+
+funds are transferred to an account outside the country (because date) postcode) attack) 
+it is more time consuming and costly to reverse payment across 
+countries) or be conducted through a wire transfer to an 0 to 5 2 23 2 - 27 
+
+anonymous cash recipient by using services such as the Western 6 to 10 20 238 18 - 276 
+Union. 
+
+11 to 50 2 28 3 - 33 
+
+In our experiment, the card information extracted using our 
+Unlimited 2 2 2 - 6 
+
+bot was used to create a bogus account from which we 
+transferred money to a recipient in India. Within minutes, we 3D 
+
+- - - 47 47 
+received a confirmation email for the order made, and our Secure  
+
+contact confirmed the pick-up of the money. The time it took Total 26 291 25 47 389 
+from the process of creating an account to collecting the money 
+
+ 
+at the destination was only 27 minutes, which is short enough to 
+avoid the bank reversing the payment. These experiments have also shown that it is possible to run 
+
+multiple bots at the same time on hundreds of payment sites 
+D. Results 
+
+without triggering any alarms in the payment system. 
+Our results (detailed in Table I) show that the distributed Combining that knowledge with the fact that an online payment 
+
+guessing attack described in Section III is indeed practical and request typically gets authorised within 2 seconds makes the 
+so a credible threat. We studied and tested the payment website attack viable and scalable in real time. As an illustration, with 
+of 389 of Alexa’s most visited sites (we looked at the Alexa top- the website bot configured cleverly to run on 30 sites, an attacker 
+400 sites, but 11 of them did not reveal sufficient useful can obtain the correct information within 4 seconds.  
+information for our experiment). As shown in Table I, 26 sites 
+use only two fields for card payment and an attacker would use 
+
+
+
+V. RESPONSIBLE DISCLOSURE websites that modified their approach (labelled A to H), four 
+used two fields (labelled ‘Exp. Date’ in the ‘Information Leak’ 
+
+Two weeks after we completed the distributed guessing 
+column) and four used three fields (labelled ‘CVV2’).   
+
+attack experiments, we initiated an ethical/responsible 
+disclosure exercise, notifying Visa and a selection of affected In most cases, we learned about the patching behaviour 
+sites. Based on the number of fields that a website checks, we through manual observations, but in two cases (Website B and 
+categorised them into three groups: expiry date, CVV2 and Website G), the affected websites notified us about the changes 
+postcode. Since the total number of vulnerable websites was they made. Website A and Website B patched their checkout 
+very high, we selected the 12 biggest players from each system by adding an address verification field. However, this 
+category (in terms of the highest number of users), taking the was not a good idea because it did not provide additional 
+total number of notified websites to 36.  security, but instead opened up a new avenue for guessing as 
+
+will be discussed at the end of this section. 
+Once a suitable contact person or team for each website was 
+
+found, we presented them with the disclosure information that Typically, an online payment request is authorised almost 
+featured the experiments we performed and the type of instantly (within 2 seconds). From our observation, we noticed 
+vulnerabilities on their site. We used our official work/university that Website C and Website D (both with expiry date leak) had 
+email address and this served as a means for these merchants to introduced additional delays to the payment authorisation 
+trace us back, so that they can verify our authenticity. This processing times. They did it in a staggered manner: few 
+would also allow them to request more detailed and technical attempts were processed instantly but after certain incorrect 
+information about our experiments should they wish to find out attempts had taken place, the time taken for payment 
+more. confirmation were increased. In this manner, fewer attempts 
+
+were available (at least practically speaking) to enter the right 
+We recorded the responses received from these websites 
+
+expiry date without setting a hard upper bound to the number of 
+over the duration of four weeks after we disclosed the 
+
+attempts.   
+vulnerabilities to them. Altogether, we received 20 human 
+responses from 10 websites and 18 websites came back to us We found that Website E (one of the Alexa top-10 websites 
+with machine generated response mostly confirming the receipt in terms of the number of visitors) patched their checkout system 
+of our notification. All of the human responses requested more by adding PAN velocity filters, reducing the number of attempts 
+technical details while some asked us to suggest solutions. Out allowed (based on the PAN) from unlimited to 100 attempts 
+of the 36 websites we contacted, eight never responded. When a within 24 hours. Website F followed a similar approach and 
+web merchant requested more information, we offered them an added IP-based velocity filter to limit the number of attempts to 
+initial draft of this article, which explained the experiments and get CVV2 from 50 to 10 in 24 hours. Initially, Website G and 
+the attack to help them understand the actual problem. We Website H added CAPTCHA on their checkout page, thus 
+followed the disclosure policy requested by the websites and disrupting our bot from carrying out the attack. Our experiment 
+anonymised the affected sites in our article.  protocol limited the interaction with the administrators of 
+
+notified websites. Due to complex trade-offs that payment 
+TABLE II.  NATURE OF PATCHING ON THE NOTIFIED WEBSITES websites need to consider when deciding which fields and filters 
+
+to use, our ethical disclosure protocol did not volunteer advice 
+  Patching Behaviour 
+
+about what actions to take to deal with the vulnerabilities. 
+Web Informa Adding Adding Adding Adding Adding However, in one situation we felt we needed to depart from the 
+site tion Addr. Delay velocity velocity CAPTC protocol, namely in the case of Websites G and H, who added a 
+
+Leak field filter filter filter (IP HA CAPTCHA. CAPTCHAs prevent automated attempts in getting 
+(PAN based) 
+based) the sensitive card information but may adversely affect the 
+
+usability of those websites [16]. To help Websites G and H to 
+A Exp. date √     better understand the implications of adding a CAPTCHA, we 
+B Exp. date √     provided these two websites with more detailed information 
+
+about the attacks. This resulted in the CAPTCHA being replaced 
+C Exp. date  √    with IP address velocity filters, which allowed five attempts per 
+D Exp. date  √    IP address in 24 hours (hence a mark in two cells in Table II for 
+
+these websites). 
+E CVV2   √   
+
+ The overall result of our study on the nature of patching on 
+F CVV2    √  
+
+the notified websites revealed that the vast majority (78%) did 
+G CVV2    √ √ not make a change. We do not know the reason behind this and 
+H CVV2    √ √ further research will be needed to find the explanation. Of the 
+
+eight that patched, the general approach taken by merchants is 
+ either to add a filter to make it more cumbersome to try many 
+As a result of our disclosure process, eight of the 36 websites times (6 of 8 sites that patched added delay or velocity filters), 
+
+changed their online security settings but the other 28 websites or to add a field (Website A and Website B). Perhaps 
+remained unchanged four weeks after the disclosure. We call surprisingly, none of the sites reacted by simply putting a hard 
+such changes ‘patches’ in what follows, and Table II illustrates limit on the number of allowed attempts. The effect of these 
+the nature of the patching of the notified websites. Of the eight patching behaviours is not so obvious. As we already pointed 
+
+
+
+out, the sensible measure of limiting the number of attempts will attack described in this article since the issuing bank has 
+not stop the guessing attack if it is not done on all websites. visibility of all transaction requests directed at a single card, 
+Furthermore, adding a card validation field may be a reasonable even if those requests are distributed across many websites.  
+idea for a site for various reasons, but inadvertently may even 
+
+From the perspective of the merchant, 3D Secure has several 
+weaken the protection against the guessing attack of the payment 
+
+drawbacks, and these are reflected in that only 47 merchants in 
+system as a whole. After all, the added field may be a welcome 
+
+the Alexa top-400 have elected to implement 3D Secure. First, 
+opportunity to attempt guesses on this added card detail.  
+
+the proportion of the customers who do not complete the 
+VI. THE CHALLENGES IN SOLVING THE PROBLEM transaction can be high when the customer encounters the 3D 
+
+Secure login screen: up to 43% in the United States and 55% in 
+Improving the security of the online payment system is a China [17]. Second, there are additional costs associated with 
+
+complicated challenge for a variety of reasons. One could argue implementing 3D Secure. 
+that payment card security mechanisms are bound to remain 
+unsatisfactory since they have not been designed for distributed We reiterate that from the whole payment system’s 
+operation over the distributed Internet. Many of the solutions, perspective, we would need a very high adoption rate of 3D 
+such as 3D Secure can be seen as afterthoughts, and they Secure technology to prevent the distributed attack, because the 
+struggle to gain widespread adoption. Any suggested attack would still work as long as there are sufficient vulnerable 
+improvement or solution faces the challenge that the online websites not using 3D Secure. 
+landscape contains many players that all have their own – at 
+
+C. Payment Gateway 
+times competing – incentives for or reasons against change. Any 
+solution would have to combine technical concerns with There are many payment gateways, which charge web 
+financial and business operational concerns, and its adoption merchants different rates depending on the number of fields and 
+will depend on legal and economic dynamics. We explore and filters they ask to check and utilise. One cannot expect all of 
+discuss these issues from the perspectives of the five parties these gateways to be able to coordinate sufficiently to prevent 
+shown in Fig. 1. the distributed guessing attack. Nevertheless, payment gateways 
+
+can provide advanced features to their merchants, and these 
+A. Customer / Cardholder features should at least make it more difficult to exploit a 
+
+Since the distributed guessing attack described in this article website for the attack. Most importantly, gateways may use IP 
+uses merchant websites and card payment network to get all the address velocity filters [6][8][9], which are implemented to 
+card details, there is not much a cardholder can do to prevent it. detect repeated invalid attempts made within a certain time span 
+At the same time, the cardholder is severely impacted by the from the same IP address. But with no coordination between 
+attack: money may be lost, cards may have to be blocked, and different gateways, these velocity filters can easily be 
+the result is a waste of time and effort and a decreased sense of circumvented just by switching to a website that uses a different 
+security. Arguably, it would be beneficial for cardholders if they payment gateway.  
+could get organised as a group, or would have representatives in 
+
+D. Card Payment Network 
+various bodies, to put pressure on the other stakeholders. As an 
+individual, cardholders could ‘vote with their feet’ and select Responsibility for authorising online payment requests 
+cards from card payment networks that are not exposed to the ultimately resides with the bank which issued the credit / debit 
+distributed guessing attack. At the moment, the payment system card.  However, our experiments have shown that distributed 
+is too complex and non-transparent to expect customers to be guessing attack described in the paper only works on Visa cards, 
+able to make such choices.       independent of which bank issued the card.  When the attack is 
+
+applied to a MasterCard, the distributed attack is detected.  This 
+B. Online Merchant suggests that the payment networks have the capability to detect 
+
+On their own, a merchant can do very little to prevent and prevent a distributed attack where the network is globally 
+distributed guessing attacks. All merchants would have to agree integrated [18]. 
+or be forced to use the same number of fields so that the guessing 
+
+The most obvious defence against the distributed guessing 
+attack cannot be staged as explained in Section III. 
+
+attack would be at the level of the card payment network. 
+At the same time, a merchant can avoid being exploited in However, we are not in a position to know whether payment 
+
+the attack either by only using cards that use a payment network network providers could modify their network infrastructure to 
+that is not vulnerable from the attack, or by using 3D Secure detect payment requests from multiple, globally spread payment 
+technologies recommended by the payment card industries [7], gateways, looking for suspicious activities on a single card 
+such as the American Express ‘SafeKey’ [3], ‘Verified by Visa’ distributed across multiple merchant websites.  
+[4] and MasterCard ‘SecureCode’ [5]. If 3D Secure is 
+
+E. Card Issuing Banks 
+implemented, the card issuing bank is responsible for 
+authenticating a cardholder before authorising the payment and The bank comes into play at the final stage of the payment 
+it monitors the frequency of transactions and the total value of process, to approve the transfer of funds, but it would not be 
+purchases for each card or bank account. The system will initiate party to each individual guess (unless 3D Secure is used). Banks 
+additional security checks such as IP address and/or request an play an important role in limiting the damage that can be done if 
+additional password if the frequency or value of the transactions attackers get hold of card information. Many issuing banks are 
+appears to be unusual. Our experiments confirmed that 3D now running intelligent fraud detection systems which detect 
+Secure payments are protected from the distributed guessing transactions which are outside their customer’s normal spending 
+
+
+
+habits [6]. The issuing bank then has the option to block the [3] American Express SafeKey, “Product Capability Guide,” 
+
+payment, or ask the customer for confirmation, or accept the https://network.americanexpress.com/en/globalnetwork/Images/SafeKey
+ProductCapabilityGuide_2014.pdf, Accessed: 04 Mar 2016. 
+
+payment taking a calculated risk that a transaction may be found 
+[4] Visa, “3D Secure System Overview,” 
+
+to be fraudulent later. A complicated set of considerations comes 
+http://www.visanet.com.pe/verified/demovisanet-
+
+to the fore in the bank’s decisions, from ease of use to financial web/resources/3DS_70015-01_System_Overview_external_v1.0.3.pdf, 
+risks. However, one would expect that if they so desire, banks 2001, Accessed: 12 May 2016. 
+could have considerable influence on the payment gateways and [5] MasterCard, “MasterCard Secure Code, “Merchant Implementation 
+card payment networks in protecting against the distributed Guide,” https://www.mastercard.us/content/dam/mccom/en-
+
+guessing attack.  us/documents/SMI_Manual.pdf, 2014, Accessed: 13 May 2016. 
+
+[6] Visa, “Card Acceptance Guidelines for Visa Merchants,” 
+VII. CONCLUSION http://usa.visa.com/download/merchants/card-acceptance-guidelines-for-
+
+visa-merchants.pdf, 2014, Accessed: 13 May 2016 
+In this paper, we studied 400 of the most popular e-
+
+[7] Payment Card Industry, “PCI DSS Applicability in an EMV 
+commerce websites and surveyed their web payment interface, Environment,” 
+identifying that different websites present different sets of fields https://www.pcisecuritystandards.org/documents/pci_dss_emv.pdf, 
+
+to identify the cardholder. It turns out that this disparity between 2010, Accessed: 13 May 2016. 
+
+different websites inadvertently creates conditions for a scalable [8] PayPal, “Gateway Developer Guide and Reference,” 
+
+distributed guessing attack. By conducting a guessing attack one https://www.paypalobjects.com/webstatic/en_US/developer/docs/pdf/pa
+yflowgateway_guide.pdf, 2014, Accessed: 11 Mar 2016. 
+
+field at the time – using a set of appropriate websites at each 
+[9] MasterCard, “Transaction Processing Rules,” 
+
+stage – the attack becomes practical. With the obtained data, the 
+http://www.mastercard.com/us/merchant/pdf/TPR-
+
+attacker can make purchases or transfer funds, as we have Entire_Manual_public.pdf, 2014, Accessed: 13 May 2016. 
+demonstrated.  [10] BinDb, “Bank Identification Numbers Database - Credit Card Bin 
+
+Lookup,” https://www.bindb.com/structure.html, Accessed: 13 May 
+We showed that the attack works if the card payment 
+
+2016. 
+network is not able to relate card activities from different 
+
+[11] ExactBins, “Exact BIN Database,” https://www.exactbins.com/features, 
+websites.  Fundamentally, much of the problem with card Accessed: 13 May 2016. 
+payment stems from the fact that the identity of the payer needs [12] Alexa, “Alexa Top Shopping Sites,” 
+to be established in the ‘card-not-present’ mode. This is http://www.alexa.com/topsites/category/Top/Shopping, Accessed: 13 
+inherently problematic since it is at odds with the original use of May 2016. 
+
+cards (where the card and cardholder are present at the moment [13] SeleniumHQ, "Selenium framework documentation. 
+
+of purchase). It also implies that, for instance, Chip-and-PIN is http://docs.seleniumhq.org/docs/, Accessed: 17 May 2016. 
+
+not available to establish the identity of the payer. This is [14] M. Emms, B. Arief, L. Freitas, J. Hannon, and A. van Moorsel, 
+
+exacerbated by the fact that the Internet facilitates distribution “Harvesting High-Value Foreign Currency Transactions from EMV 
+Contactless Credit Cards Without the PIN,” In Proceedings of the 2014 
+
+of guesses for data fields over many merchant sites. 
+ACM SIGSAC Conference on Computer and Communications Security 
+
+To prevent the attack, either standardisation or centralisation (CCS’14), ACM, 2014, pp. 716-726. 
+
+can be pursued (some card payment networks already provide [15] Symantec, “Validating a Credit Card Number using Luhn’s Algorithm. 
+https://support.symantec.com/en_US/article.TECH221769.html 
+
+this). Standardisation would imply that all merchants need to [Accessed: 09 May 2016] 
+offer the same payment interface, that is, the same number of 
+
+[16] A. El Ahmad, J. Yan and W. Ng, "CAPTCHA Design: Color, Usability, 
+fields. Then the attack does not scale anymore. Centralisation and Security", IEEE Internet Computing, vol. 16, no. 2, pp. 44-51, 2012. 
+can be achieved by payment gateways or card payment networks [17] Adyen, "Analysis Reveals Worldwide Impact of 3D Secure on 
+possessing a full view over all payment attempts associated with Transaction Conversion Rates,” https://www.adyen.com/home/about-
+its network. Neither standardisation nor centralisation naturally adyen/press-releases/2014/3d-secure-worldwide-impact-conversion, 
+
+fit the flexibility and freedom of choice one associates with the 2014, Accessed: 13 May 2016. 
+
+Internet or successful commercial activity, but they will provide [18] MasterCard, “The MasterCard Network Advantage,” 
+
+the required protection. It is up to the various stakeholders to http://newsroom.mastercard.com/wp-
+content/uploads/2011/09/MasterCard-Network-Advantage.pdf, 
+
+determine the case for and timing of such solutions. Accessed: 12 May 2016 
+
+ACKNOWLEDGEMENTS  
+
+This material is based in part on research supported by the Mohammed Aamir Ali is currently a Ph.D. research student at 
+UK EPSRC EP/K006568 Research Institute for Science of the centre of cybercrime and computer security at Newcastle 
+Security—Choice Architecture for Information Security. University, UK. His research centres around exploiting the 
+
+potential vulnerabilities in the payment eco-system (i.e. NFC 
+REFERENCES mobile payments, payment applications and online payments). 
+
+[1] UK Office for National Statistics, “Retail Sales, February 2015,” Understanding the insidious tactics targeting the world of cyber 
+http://www.ons.gov.uk/ons/dcp171778_399119.pdf, 26 March 2015, systems gives Mohammed an in-depth insight into the methods 
+Accessed: 13 May 2016. and psychology of attackers. He has ongoing research which 
+
+[2] Financial Fraud Action UK, “Fraud the Facts 2015: The definitive involves landscaping the developments and security challenges 
+overview of payment industry fraud and measures to prevent it,” London: in the ecommerce payment systems. Contact him at 
+UK Cards Association, 2015, 
+
+m.a.ali2@ncl.ac.uk 
+www.financialfraudaction.org.uk/download.asp?file=2979, Accessed: 13 
+May 2016. Budi Arief is a Lecturer in the School of Computing at the 
+
+University of Kent, England. His research interests are in 
+
+
+
+cybercrime, the security and dependability of computer-based experience; working as a solutions architect in payments and as 
+systems, cyber security education, and the Internet of Things, a systems designer of safety critical embedded control systems 
+with a strong overarching element of interdisciplinary research. for MoD, satellite comms, nuclear power and transport. 
+He obtained his B.Sc. in Computing Science (First Class) and 
+
+Aad van Moorsel is Professor and Head of School at the School 
+Ph.D. in Computing Science, both from Newcastle University, 
+
+of Computing Science in Newcastle University.  His research 
+England. Prior to joining the University of Kent, Budi was a 
+
+interests are in cyber security and cybercrime, with an emphasis 
+Senior Research Associate in the School of Computing Science 
+
+on decision making, quantification and risk management.  He 
+at Newcastle University, England. Contact him at 
+
+received a PhD in computer science from the University of 
+b.arief@kent.ac.uk 
+
+Twente, The Netherlands.  Contact him 
+Martin Emms is a cyber security researcher at Newcastle ataad.vanmoorsel@ncl.ac.uk. 
+University focusing on the security impacts of new payment 
+
+ 
+technologies, user authentication using ubiquitous and IoT 
+technologies and related security issues caused by unintentional  
+
+privacy leakage. Martin’s work is enhanced by his industry

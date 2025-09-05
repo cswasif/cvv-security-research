@@ -1,0 +1,1004 @@
+ResearchGate
+
+See discussions, stats, and author profiles for this publication at: https://www.researchgate.net/pu blication/37 2617382
+Analysis of Cyber Security Threats in Payment Gateway Technology
+
+Conference Paper : July 2023
+
+DOL: 10.1109/ICACITES7410.2023.10183063,
+
+CITATIONS READS
+2 366
+
+6 authors, including:
+
+Hari Prapan Sharma Prakash Rv
+GLA University r SR University
+
+34 PUBLICATIONS 229 CITATIONS 48 PUBLICATIONS 319 CITATIONS
+SEE PROFILE SEE PROFILE
+Mohit Tiwari
+
+ee)
+
+Bharati Vidyapeeth College of Engineering, Delhi
+
+855 PUBLICATIONS 1,381 CITATIONS
+
+SEE PROFILE
+
+All content following this page was uploaded by Prakash Rv on 19 January 2024.
+
+The user has requested enhancement of the downloaded file.
+2023 3rd International Conference on Advance Computing and Innovative Technologies in Engineering (ICACITE) | 979-8-3503-9926-4/23/$31.00 ©2023 IEEE | DOI: 10.1109/ICACITE57410.2023.10183063
+
+2023 3rd International Conference on Advance Computing and Innovative Technologies in Engineering (ICACITE)
+
+Analysis of Cyber Security Threats in Payment
+Gateway Technology
+
+Dr. Han Prapan Sharma
+Assistant Professor
+Institute of Business Management,
+GLA University
+Mathura, Uttar Pradesh
+
+hariprapan@gmail.com
+
+Dr Somanchi Hani Krishna
+Associate Professor
+Department of Business Management
+Vignana Bharathi Institute of Technology
+Aushapur Village Ghatkesar Mandal
+Malkajgiri Medchal Dist-501301
+
+Viay Prakash R
+School of Computer Science and Artificial
+Intelligence
+SR University
+Warangal, Telangana, India.
+
+harikrishnasomanchi@gmail.com
+
+Mohit Tiwan
+Assistant Professor
+Department of Computer Science and
+Engineering
+Bharati Vidyapeeth’s College of
+Engineering, Delhi
+
+Tripti Tiwari
+Assistant Professor
+Department of Management Studies
+BVIMR, A-4, Rohtak Road, Paschim
+Vihar, Delhi. Delhi
+tripti.tiwari@bharatividyapeeth.edu
+
+Madarapu Naresh Kumar
+Scientist — C, National Informatics Centre,
+Ministry of Electronics and Information
+Technology
+
+madarapu.naresh@gov.in
+
+A-4, Rohtak Road, Paschim Vihar, Delhi
+mohit.tiwan@bharatividyapeeth.edu
+
+Abstract—There has been a meteoric rise in the use of
+online payment systems recently. Multiple e-payment systems
+exist, each designed to provide the highest degree of security
+while maintaining the greatest possible convenience for online
+shoppers. Cyber-attack techniques, on the other hand, are
+developing at the same rapid pace as security mechanisms. The
+authors of this paper examine the history of electronic
+payment systems, from the development of the corresponding
+language through the emergence of today's standard electronic
+payment systems. It also reveals a lack of security measures
+and approaches to fixing the problem. The current survey
+research makes a significant contribution by outlining the state
+of the electronic payment system framework and_ the
+possibilities it presents for the development of e-commerce in
+the future. The rates of suspicious purchases, which will serve
+as a yardstick in the creation of a trustworthy e-payment
+system, have been briefly discussed and analyzed.
+
+Index Terms—E-Commerce, Financial Frauds, Debit Cards,
+OR code, E-Payment
+
+I. INTRODUCTION
+
+Digital payment systems are increasingly relied upon by
+both buyers and sellers due to the proliferation of the internet
+and IT. Internet commerce refers to the exchange of products
+and services, as well as monetary transactions, over the
+world wide web. E-payment, often referred to as online
+payment or EDI (Electronic data exchange), is one such
+example. Internet banking, often known as an E-banking
+system, has quickly become the most widely used form of
+electronic payment processing in today's digital society. This
+is true across a wide range of industries, from retail to travel
+to finance. It is possible to conduct monetary transactions for
+the purchase of goods and services electronically, without
+the need of physical currency or paper checks, via the use of
+an E- payment or e-banking system. Due to the widespread
+use of online shopping and banking, electronic payment
+technology has entered a new phase during the last several
+decades. A rising number of people are making purchases
+online, and this trend indicates that e-payment systems are
+becoming more popular. Online banking services are quickly
+replacing traditional methods of monetary exchange and are
+therefore seen as essential components of the modern
+financial system. These services provide convenient round-
+
+979-8-3503-9926-4/23/$31.00 ©2023 [EEE
+
+the-clock access to banking options and are designed to
+make online banking more user-friendly. A relatively small
+fraction of internet users actually used an online bank in
+2012, according to a study published in [1].
+
+Establishing the necessary technological infrastructure,
+such as an E-payment system, is a crucial part of the e-
+banking system. There are two main types of electronic
+payment systems: those based on currency (like E-cash and
+pre-paid cards) and those based on accounts (like credit
+cards, debit cards, and electronic checks). Time and place
+play a significant role in the M-payment (mobile payment)
+system, which facilitates the electronic payment process
+through a smart device. When it comes to paying for public
+services, the government sector is home to a plethora of
+businesses that provide E-payment options for residents. As
+the field of information and communication technology
+(ICT) has advanced, mobile services have become more
+popular and widely used, contributing not only to the public
+sector but also to commercial or corporate activity. Research
+from ARCOTEL [2] indicates that public areas have
+coverage of over 90% on their mobile devices, with access
+topping 100%. A financial organization in Ecuador reported
+that in 2014 [3].
+
+Knowing and meeting the needs of one's customers is
+essential in E-banking. In order to increase the number of
+people using E-payment systems, it is necessary to better
+control the variables that influence their decisions to do so.
+The case study demonstrates that few clients are willing to
+use the system despite the banking industry's heavy
+investment in internet technologies.
+
+As such, it is clear that further investigation into the
+elements that affect the spread of electronic payment systems
+is necessary. Different types of electronic banking have been
+investigated to see what aspects of E-payment adoption are
+most important to consumers. E-payment system users often
+worry about the security of making financial transactions
+online. When the stakes are great, trust becomes a huge
+issue. As a result, it's reasonable to assume that consumers’
+level of comfort with E-payment is significantly influenced
+by the assurance they feel in the system's safety and
+reliability [4].
+
+793
+Authorized licensed use limited to: AMITY University. Downloaded on July 25,2023 at 09:39:25 UTC from IEEE Xplore. Restrictions apply.
+2023 3rd International Conference on Advance Computing and Innovative Technologies in Engineering (ICACITE)
+
+More than a decade has passed since the first steps were
+taken to create the M-payment system. Despite this, the
+actual acceptance of M-payment is far different from the
+ideal. 70% of Indian consumers are familiar with the M-
+payment system, although they have yet to utilize it. Fear of
+privacy and security flaws in the various services is a major
+factor in their low adoption rates. A variety of financial
+activities, including E- recharge, E-bill payments, and cash
+withdraw from ATMs, are now possible in our nation thanks
+to the widespread use of mobile phones and associated
+services [5]. The information community, however, is of the
+opinion that M-commerce must advance in the field of the
+M-payment system in order to compete with the already
+available services for personal computers and smart devices.
+
+Mobile payment apps, which have emerged in response
+to the proliferation of e-commerce, need the use of secure
+mobile payment mechanisms. Moreover, the present
+cryptographic techniques are fairly easy to exploit, making
+authentication and authorization vulnerable. Thus, the focus
+of this research is on a security protocol designed to solve the
+vast majority of problems with M-payments in a wireless
+setting [6].
+
+The major goal of this research is to learn how one's
+sense of safety and trust influences their propensity to use an
+electronic payment method. The safety of electronic payment
+systems is another motivation to study this area.
+Additionally, the study presents the statistics graph on yearly
+online fraud rate.
+
+Situational Analysis: The lack of skill on the part of users
+or administrators often poses the greatest threat to network
+safety. Even if these performance indicators should be
+applied in many wireless networks, the current security
+measures are insufficient to meet the need for a safe and
+secure network in the future, especially given the prevalence
+of skilled and persistent hackers. However, the symmetric
+strategy has several limitations as contrasted with the
+asymmetric approach. The ability to determine the message's
+sender based on the digital signature is an example of how
+the asymmetric technique improves upon the symmetric one.
+Since a third party with access to the shared key may
+construct a symmetric ciphertext message, its origination
+cannot be determined.
+
+II. LITERATURE REVIEW
+
+In this part, we'll go through the e-Payment transaction
+techniques shown in Figure 1. All of which have been
+presented by separate researchers; the survey study we're
+looking at here analyses and evaluates these techniques
+relying on their performance indicators and describes them in
+short.
+
+PAYMENT
+GATEWAY
+
+Fig. 1. E payment block diagram [33]
+
+MERCHANT
+FINANCIAL
+INSTITUTION
+
+‘CUSTOMER
+FINANCIAL
+INSTITUTON
+
+Due to the rapid evolution of electronic media and
+communication channels over the last three decades, most
+banks now implement a multichannel policy that allows
+customers to access their accounts via a variety of different
+channels. In 1970, the world's first automated teller machine
+was introduced. Since then, we've seen the advent of
+telephonic banking in the 1980s, internet banking in the
+1990s, and m-banking in the 2010s. However, the pace at
+which electronic payment systems are being used is lower
+than the rate at which they are being developed. Information
+leakage by shops and other parties, as well as concerns about
+data security and privacy, remain significant barriers to
+widespread use of electronic payments. Issues of this kind
+have a direct, detrimental effect on the popularity of online
+banking and the confidence of its customers.
+
+[7] has introduced a secure electronic currency
+transaction mechanism for ride-hailing services that protects
+users’ anonymity. To further increase the adaptability of
+transaction systems, the author also devised a technique for
+verified hash chaining to preserve the divisibility and
+reusability of electronic payments. In [8], a one-time
+password system is described as the mobile payment method.
+Whereas a new architecture for mobile payment systems was
+presented in [9], employing digital signatures and pseudo-
+identity mechanisms to keep mobile wallets safe. Both [10]
+and [11] show that there is a connection between a user's true
+name and their alias. The user has the option of keeping track
+of all transactions here.
+
+[12] presented the results of a research on the elements
+that influence Iranians’ trust in making internet payments.
+They gathered data on transaction details, system
+accessibility, and user friendliness to create a security model
+for the payment system. The authors then compared their
+findings to those of another research. Another work that
+takes a similar tack is [13], which analyzed the ways in
+which many elements (such as social media, marketing
+tactics, trust, usability, connections with consumers,
+accessibility, etc.) affect the e-market.
+
+Several modern electronic payment systems exist, each
+optimized for use on mobile devices and promising improved
+communication at reduced expense. However, keeping a
+user's identity secret is difficult since existing payment
+systems only provide transaction privacy, and their high-
+security features fall short of expectations.
+
+[14] updated the e-Payment system for the blind and
+visually impaired from the perspective of user anonymity.
+Using a customer's mobile phone as a surrogate, this
+approach may also be used to the evolution of the retail
+payment system. The issues with users’ anonymity were
+addressed and security flaws were highlighted in [15] and
+[16]. Users! day-to-day lives and productivity have improved
+thanks to the widespread usage of electronic payment
+methods through mobile or smartphones. Electronic
+payments made using mobile devices are commonplace in
+developing markets.
+
+But the latest communication technology is the rapid
+response code (i.e., QR code), which allows for the storage,
+transfer, and identification of data, and which can be read by
+a mobile device anywhere. The use of QR codes in highly
+secure systems like financial transactions is on the rise.
+
+A innovative mobile payment system for cooperative
+businesses in developing nations is presented in [17]. As
+
+794
+Authorized licensed use limited to: AMITY University. Downloaded on July 25,2023 at 09:39:25 UTC from IEEE Xplore. Restrictions apply.
+2023 3rd International Conference on Advance Computing and Innovative Technologies in Engineering (ICACITE)
+
+internet access is a challenge in certain underdeveloped
+nations, this research enhances the previous QR payment
+technique by finding a solution to the connectivity issue.
+
+Furthermore, authentication and QR __ encrypted
+information were implemented as two © significant
+components to further strengthen security. As a result, the
+proposed plan makes it simpler and safer to send money
+through a cell phone.
+
+This technique is relevant to contemporary developing
+nations, the authors conclude codes were launched in [18] as
+a new method of user interface and exploitation, allowing
+information to be embedded in a graphical representation and
+accessed through mobile applications on smartphones. Due
+to its useful properties, particularly for the mobile payment
+system, QR codes were also used in another study [19]. In
+addition, a visual cryptographic mechanism was proposed
+and demonstrated, showing that m-payment authentication is
+both possible and secure. With the use of biometrics, the
+authors of [20] offer a digital card module they call the
+swing-pay technique. The suggested approach aims to
+provide fingerprint authentication. Through the use of GSM,
+a power unit, Cortex-M3, a Bluetooth device, etc., a safe and
+effective payment system is provided. The results of the
+experiments show that the user might get a message from the
+server confirming the successful completion of the
+transaction and requesting payment.
+
+The most widely used use for mobile payment systems is
+transit payment services, while there are many more e-
+payment applications. Before, travelers had to keep their
+private information hidden from transportation agencies,
+banks, mobile phone companies, smart card companies, and
+others who needed it. Accordingly, researchers presented a
+straightforward method of the privacy-preserving payment
+system to protect the mass transport information of
+passengers. In addition, this method makes it possible to
+provide discounts for transferring passengers and to offer
+postpaid services.
+
+The major motivation behind most suggested electronic
+payment methods is to increase the degree of security
+throughout the electronic transaction process. However, non-
+repudiation is not a feature of other more conventional
+approaches. As a result, a rogue node or attacker may simply
+prevent the online purchase from going through, potentially
+costing the store money. Researchers in [21] looked at a
+method of anonymously paying for cloud services in order to
+get around this problem. The suggested technique satisfies
+the non-repudiation condition from the client end while
+incurring little computational overhead. The authors
+conclude that the suggested electronic payment method is
+superior to the alternatives in terms of fairness, security, and
+efficiency, and is therefore well suited for use in real-time
+cloud computing.
+
+Similar methods for protecting a customer's identity
+while making an online cash purchase were proposed by the
+authors of a study titled [22]. An offline electronic currency
+system with an unknown revocation was presented as a result
+of this work. The suggested research also guarantees the
+capability of preventing retail fraud. Similar offline e-cash
+payment system research is suggested in [23]. In addition,
+the authors developed a protocol for the electronic renewal of
+cash, which allows users to swap out their old currency for a
+new one before it expires.
+
+In [24], the author creates a safe and reliable framework
+for mobile micropayments. An efficient way for digital
+currency systems is provided by the author's use of a hash
+chaining approach to security, together with a basic public
+key cryptosystem that allows for safe routing during m-
+transactions. Alternatively, in [25], the authors provided an
+expanded version of the earlier research that looked at the
+safety concerns associated with a mobile agent-based
+micropayment system. In contrast to the prior research, this
+article presents a lightweight, safe, and dependable technique
+for using offline payments in a mobile commerce system.
+
+III. E-PAYMENT, TERMS AND CONCEPTS
+
+In the late 1950s, the first electronic payment system was
+developed, and since then, it has grown significantly in both
+size and complexity. As a follow-up to the conventional
+payment system, the e-Money transaction-based payment
+mechanism emerged. For the first time, money could be sent
+digitally without going via a single processing hub.
+Electronic checks (e-Checks) and credit card data are sent
+from consumers to online retailers and financial institutions
+using encrypted private communication channels. This
+procedure paved the way for a new path in the evolution of a
+protocol for exchanging digital money. However, the
+widespread use of digital currency has far-reaching
+ramifications for the monetary transaction system, far above
+the mere improvement in transaction efficiency. To that end,
+we've included a quick glossary of E-payment system terms
+in Figure- below.
+
+grr
+
+PAYMENT PROCESSOR
+PERSONAL ACCOUNT
+
+\ Caen
+
+ONLIINEBANKING PAYMENT GATEWAY
+
+Fig. 2. A standard E- Payment service framework
+
+The E-payment procedure involves a number of different
+processing steps. Services like gateways, processors,
+providers, systems, and merchant accounts are examples of
+such amenities.
+
+Each service offering has its own unique set of features
+and functions, but they all contribute to the successful
+conclusion of an E-transaction and the smooth execution of
+an online transaction in one way or another.
+
+The payment system is the initial service since it is
+responsible for relaying the platform's payment demand to
+the payment gateway. The next step in the payment process
+is for the payment processor to check the customer's
+credentials and verify that there are sufficient funds in the
+account to complete the transaction. The E-transaction is
+permitted, and the funds are forwarded from the user's
+
+795
+Authorized licensed use limited to: AMITY University. Downloaded on July 25,2023 at 09:39:25 UTC from IEEE Xplore. Restrictions apply.
+2023 3rd International Conference on Advance Computing and Innovative Technologies in Engineering (ICACITE)
+
+account if there are adequate funds. Once again, the gateway
+notifies the site admin with the customer account after
+receiving the transaction status from the user.
+
+An organization that handles the payment gateway or
+related services is known as a payment service operator. The
+payment system is referred to as such since it facilitates
+monetary transactions and has several functions.
+
+PayPal, for instance, is a payment operator that provides
+a variety of payment services. The funds from a customer's
+debit or credit card purchase are deposited into a separate
+bank account designated as the merchants upon completion
+of the electronic transaction. Customers often need to set up
+the merchant profile with their payment service provider in
+order to receive E-payment. Customer funds deposited into a
+merchant account are transferred on a routine basis. PayPal,
+Google Check, and Authorize.Net are the three most widely
+used services for accepting credit card payments online. All
+of these factors contribute to the dealer's ability to accept
+electronic payments from their customers. It's no secret that
+(www.paypal.com) has swiftly become the industry standard
+for handling online payments. PayPal was originally
+launched as a means for users to send and receive money
+directly, similar to the way that auctions work on eBay.
+While "Google Checkout" offers an online payment option,
+it is limited to credit card purchases.
+
+Authorize.Net is a second alternative payment processor.
+When it comes to credit card payments, the Internet handles
+everything from the dealers to the financing processing
+infrastructure.
+
+The e-commerce companies use an electronic payment
+technique to facilitate a smoother transaction and an easier
+payment process for their clients.
+
+There are several advantages, such as;
+
+a) Time efficiency increases both the efficiency
+and the convenience of business dealings. Since
+all it takes to complete a transaction is a single
+mouse click, customers’ time is not wasted.
+
+b) Costs are reduced, and even a layperson can set
+up an account and begin accepting payments
+online in a matter of minutes.
+
+c) Lowers operating and processing costs as a
+result of decreasing technology prices; for
+instance, today's computers are dirt cheap, and
+access to the internet is free in most of the
+globe. Due to the efficiency of e-payment
+systems, clients may cut down on administrative
+tasks and time spent processing payments.
+
+TV. PRIMARY PAYMENTS METHODS
+
+The past several decades have seen the development of
+many e-Payment transfer methods due to the proliferation of
+the online business transaction system. Numerous online
+payment options are now available. Based on the information
+being shared, they may be broken down into three distinct
+categories.
+
+i. smart/digital card-based e-payment system,
+i. e-Check system
+
+iii. online credit card payment method.
+
+Debit and credit cards, according to recent data, have
+become the most flexible form of digital payment. According
+to the data we have, credit and debit cards are used for more
+than 80% of all online purchases. Customers! credibility and
+the online store's accessibility are both improved by the
+customers’ use of convenient and trusted payment options.
+
+For consumers and businesses alike, the credit/debit card
+transaction system has proven to be the most popular and
+extensively used innovation. There are several benefits to
+making payments in this digital format rather to the
+conventional ones, which lack any really innovative
+elements. Reliability, confidentiality, high transaction speed,
+improved mobility, reduced fraud risk, and a host of other
+attributes rank high on the list of importance. Moreover, both
+consumers and business owners are increasingly turning to
+debit and credit card-based e-card payment systems as a
+means of doing business.
+
+Those who have utilized bank-issued digital cards will
+find this way to be ideal. To add, customers! accounts may be
+accessed using their debit cards. But new concerns about
+security have arisen as a result. This implies that e-card
+payment aims to address a wide range of issues that plague
+online merchants, such as insufficient verification and
+credit/debit card fraud. In addition, it hopes to allay the
+concerns of internet shoppers who worry about credit card
+fraud, such as the need to provide sensitive financial details
+across several websites and the ongoing hassle of attempting
+to convey confidential details over the internet. Paying with a
+credit card or debit card is quick and easy.
+
+To make a purchase, a consumer must supply their credit
+card details to the vendor, and the card organization takes
+care of the rest.
+
+Digital wallets are a type of e-payment transaction that is
+analogous to traditional wallets used in brick-and-mortar
+establishments. The user's bank account may be directly
+accessed via the digital wallet, just as with a debit or credit
+card. The most common web browsers, such as Mozilla
+Firefox and Google Chrome, will often prompt online stores
+to permanently store sensitive data, such as a customer's
+billing or shipping address.
+
+Customers may speed through the payment procedure by
+just clicking their cursor instead of repeatedly putting in their
+personal information.
+
+Online buying using a smartphone app that doubles as a
+digital wallet is becoming more common. In this transaction,
+data is saved and shared across participants via mobile
+devices. The widespread acceptance of this strategy may be
+attributed to the convenience it brings to online buying. If
+you need to move money from one bank account to another,
+you may use the electronic funds transfer technique, which is
+a specialized kind of online money transfer. Electronic bill
+payment, insurance debts, utility bills, and mortgage
+payments are the most often conducted e-fund transactions.
+
+The "payment service operator technique" is another
+common practice. This service gives online stores access to
+many currency options via a defined third-party network.
+This is an effective way for shops to protect themselves
+against criminals. This makes it safe for online merchants to
+accept payments by transferring funds to the account of the
+payment processor. Some examples of widely used online
+
+796
+Authorized licensed use limited to: AMITY University. Downloaded on July 25,2023 at 09:39:25 UTC from IEEE Xplore. Restrictions apply.
+2023 3rd International Conference on Advance Computing and Innovative Technologies in Engineering (ICACITE)
+
+payment systems are Mastercard, Paytm, Payoneer, PayPal,
+Paysafecard, etc.
+
+Online payments and electronic currency exchange,
+however, are seeing a surge in popularity with smart card-
+based e-Payment systems.
+
+At first, smart cards function as a storage medium for
+information with built-in transaction processing capability,
+thanks to their memory chips and _ integrated
+microprocessors. A unique encrypted key on the smart card
+is paired with a secret key saved on the cardholder's
+processor for further protection. These cards are used for a
+variety of purposes, such as paying tolls on highways,
+recharging prepaid cellphones, etc., because of their
+adaptability. Smart payment systems like this are becoming
+more commonplace as m-Commerce develops. E-commerce
+couldn't function without e-Payment systems, which enable
+the electronic transfer of payments for the purchase of
+products and services, as previously mentioned. The
+widespread expansion of e-Payment transactions is mostly
+attributable to the quick proliferation of various electronic
+payment systems. Before the advent of the internet, debit and
+credit cards were already commonly used in industrialized
+nations.
+
+V. SECURITY ASSESEMNT OF E-PAYMENT FRAMEWORK
+
+One of the major reasons highlighted in business analysis
+as holding back the development of the e-commerce system
+is the lack of trust, privacy, and security. The proliferation of
+online payment methods has made protecting users’ personal
+information and financial transactions paramount. This
+section primarily discusses the security needs of advanced e-
+payment systems and highlights the research efforts that have
+been focused on these protocols. The goal of developing a
+secure, low-cost, and efficient security protocol for existing
+and future e-payment systems is driving the fast expansion of
+security features in tandem with the expansion of digital
+technologies. The digital signature of the cardholder, and in
+some cases a picture of the cardholder as an identification
+factor for credit card holder, is provided by the merchant to
+aid in the validation of the cardholder's identity when using
+emerging e-transaction methods such an e-card or digital
+wallet. The card number, verification code, and billing
+information are all that's needed to verify a cardholder's
+identification during the digital transaction. Internet-based
+fraud, product returns, non-delivery claims, and similar
+issues are among the most pressing problems that stores must
+solve. The fraud rate in the current e-payment system is quite
+high when compared to the fraud rate in conventional
+payment systems studied in [26-27].
+
+Typically, cybercriminals have many opportunities to
+steal or alter transaction details. This will allow the thief to
+use the stolen information to shop online and have items sent
+to the fictitious address. If any fraudulent activity is
+discovered at this time, the perpetrators will likely leave the
+area immediately. Online shoppers [28-30] are discouraged
+by the frequent occurrence of data loss related to online
+transactions. While it's true that hackers often target high-
+profile shops, the vast majority of people mistakenly believe
+that ordinary Internet users are at particularly high risk of
+being scammed. As a result, an effective security model is
+presented to deal with these security issues, which may
+eventually become an immunity factor for the users of online
+payment systems and for retailers. In this part, we analyze
+
+the most well-known and influential security procedures,
+which serve as guides for creating a trustworthy online
+payment system.
+
+SET (secure electronic transaction) and SSL (secure
+socket layer) are the two  industry-standard [31-32]
+technologies for online payment security. To prevent
+unauthorized access to sensitive information while in transit
+over the internet, both SET and SSL protocols encrypt and
+digitize the data beforehand. Thus, there is a pressing need in
+the present for an effective, dependable, and trustworthy
+security protocol that may serve as a template for the safety
+and security of both the present and the future of e-payments.
+
+VI. RATE OF FINANCIAL FRAUDS ACROSS SECTORS
+
+The following criteria were used to ensure that the
+examinations had the maximum likelihood of success and
+that all samples met a common standard. During testing,
+variables were minimized or eliminated whenever practical.
+
+In 2021, the attempted fraud rate as a percentage of the
+population rose to 2.7%, from 1.4% in 2014, as detailed by
+the ACI. We also looked at the fraud rate throughout the
+holiday shopping seasons of 2014 and 2021. Millions of
+retail transactions were affected by fraud efforts in both
+years.
+
+Increased use of smartphones and other mobile devices
+has spurred growth in the e-commerce sector. Although
+commercial firms have yet to implement the same degree of
+protection on mobile devices as they do on the internet,
+attackers are aware that mobile devices are more susceptible
+than PCs or laptops.
+
+In 2021, "Anti-fraud command center" data showed that
+mobile devices accounted for 52% of all attempts at client e-
+payment transactions. A total of 162% more fraudulent
+purchases were made using mobile devices in the same year
+compared to the previous year, whereas online fraud grew by
+just 5%.17% of gaming transactions are fraudulent, followed
+by 28% of financial transfers, and 43% of airlines and travel
+services, as reported by RSA. This trend has affected the
+majority of shops today. The proportion of fraudulent
+purchases at major stores is shown in the following pie chart
+(Figure-3).
+
+CLOTHING
+o.7%
+
+AIRLINE
+23.1%
+
+BANKING
+15.1%
+
+GAMING
+9.1% RETAIL,
+
+17.2%
+
+JEWELRY
+12.4%
+
+TRAVEL
+13.4%
+
+Fig. 3. Financial frauds across sectors
+
+The overall rate of fraud transitions was likewise found
+to be greater than the overall rate of valid transaction in the
+case study. In the airline industry, for instance, a valid ticket
+booking will cost you $606, while a fraudulent one would set
+you back $1,930. In 2021, the most often attacked nations
+are those with the most global prominence (e.g., US, UK,
+and China). Nearly three-quarters (75%) of all attacks
+
+797
+Authorized licensed use limited to: AMITY University. Downloaded on July 25,2023 at 09:39:25 UTC from IEEE Xplore. Restrictions apply.
+2023 3rd International Conference on Advance Computing and Innovative Technologies in Engineering (ICACITE)
+
+originate from these nations. Many stores in the United
+Kingdom and the United States have extensive firsthand
+knowledge of the challenges posed by online fraud, which is
+why these two nations place such a premium on finding
+effective solutions.
+
+VII. CONCLUSION
+
+The purpose of this study is to investigate the mobile
+payment system and to get a complete understanding of the
+ways and current tactics that might be advantageous for both
+stakeholders (i.e., merchants and consumers) with regards to
+e-payment security and usability. The online credit card
+transaction technique, e-Check, e-fund, and smart card
+payment services are all covered in the research after an
+introduction to the e-payment system's jargon. Using data
+gathered from reviews of relevant literature, it assessed how
+well-established online payment methods stood up to the
+most popular attacks and fraud techniques of the time. This
+in-depth analysis presents a report on the current state of
+online and mobile payment methods. Comparative
+examination of various payment methods reveals that all e-
+payment methods have advantages and disadvantages in
+terms of personal information protection, financial
+confidentiality, and transaction speed.
+
+REFERENCES
+
+M. H. Joo, Y. Nishikawa, and K. Dandapani, “‘Cryptocurrency, a
+successful application of blockchain technology,’’ Managerial
+Finance, vol. 46, no. 6, pp. 715-733, Aug. 2019.
+
+E. D. Zamani and G. M. Giaglis, ““With a little help from the miners:
+Distributed ledger technology and market disintermediation,”’ Ind.
+Manage. Data Syst., vol. 118, no. 3, pp. 637-652, Apr. 2018.
+
+J. H. Yu, J. Kang, and S. Park, “‘Information availability and return
+volatility in the bitcoin market: Analyzing differences of user opinion
+and interest,”’ Inf. Process. Manage., vol. 56, no. 3, pp. 721-732, May
+2019.
+
+B. E. Mykulyak, “‘Facilitating online crypto-payments now and in the
+future,’’ in The PayTech Book: The Payment Technology Handbook
+for Investors, Entrepreneurs and FinTech Visionaries. U-K.: Wiley,
+2019, pp. 132-133.
+
+J. C. Mendoza-Tello, H. Mora, F. A. Pujol-Lopez, and M. D. Lytras,
+“Social commerce as a driver to enhance trust and intention to use
+cryptocurrencies for electronic payments,’’ IEEE Access, vol. 6, pp.
+50737-50751, 2018.
+
+N. Jonker, ‘“What drives the adoption of crypto-payments by online
+retailers?’’ Electron. Commerce Res. Appl., vol. 35, May 2019, Art.
+no. 100848.
+
+H. B. B. Doyduk, ‘“‘Impact of digital technology and the use of
+blockchain technology from the consumer perspective,”’? in
+Blockchain Economics and Financial Market Innovation. Cham,
+Switzerland: Springer, 2019, pp. 271-292.
+
+H. Yun, G. Lee, and D. J. Kim, “‘A chronological review of empirical
+research on personal information privacy concerns: An analysis of
+contexts and research constructs,’’ Inf. Manage., vol. 56, no. 4, pp.
+570-601, Jun. 2019.
+
+R. Leszezyna, “‘Review of cybersecurity assessment methods:
+Applicability perspective,’? Comput. Secur., vol. 108, Sep. 2021, Art.
+no. 102376.
+
+Y. Jung and J. Park, “‘An investigation of relationships among
+privacy concerns, affective responses, and coping behaviors in
+location-based services,’’ Int. J. Inf. Manage., vol. 43, pp. 15-24,
+Dec. 2018.
+
+C. Mombeuil and H. Uhde, ‘‘Relative convenience, relative
+advantage, perceived security, perceived privacy, and continuous use
+intention of China’s WeChat pay: A mixed-method two-phase design
+study,’’ J. Retailing Consum. Services, vol. 59, Mar. 2021, Art. no.
+102384.
+
+Kumar K, Anand S, Gurjar 8, Saxena V. Image denoising based on
+wavelet transformation. International Conference on Recent Trends of
+
+(1)
+
+[2]
+
+[10]
+
+(11)
+
+[12
+
+[13
+
+[4
+
+[is
+
+[16
+
+[17
+
+[is
+
+[19
+
+[20
+
+[21
+
+[22
+
+[23
+
+[24
+
+[25
+
+[26
+
+[27
+
+[28
+
+[29
+
+[30
+
+Bl
+
+B2
+
+]
+
+J
+
+]
+
+1
+
+]
+
+]
+
+]
+
+J
+
+]
+
+]
+
+Computer Technology in Academic (ICRTCTA). Janardan Rai Nagar
+Rajasthan Vidyapeeth University; pp. 1-7, April 21 to 23, 2012.
+
+D. Sirdeshmukh, J. Singh, and B. Sabol, ‘“Consumer trust, value, and
+loyalty in relational exchanges,’’ J. Marketing, vol. 66, no. 1, pp. 15-
+37, Jan. 2002.
+
+C. F. Herrera and C. F. Blanco, “Consequences of consumer trust in
+PDO food products: The role of familiarity,’’ J. Product Brand
+Manage., vol. 20, no. 4, pp. 282-296, Jul. 2011.
+
+L. Herskind, P. Katsikouli, and N. Dragoni, ‘Privacy and
+cryptocurrencies—A systematic literature review,’’ IEEE Access, vol.
+8, pp. 54044-54059, 2020.
+
+E. Badawi and G.-V. Jourdan, ‘“Cryptocurrencies emerging threats
+and defensive mechanisms: A systematic literature review,’’ IEEE
+Access, vol. 8, pp. 200021—200037, 2020.
+
+M. Conti, E. S. Kumar, C. Lal, and S. Ruj, ““A survey on security and
+privacy issues of bitcoin,’’ IEEE Commun. Surveys Tuts., vol. 20, no.
+4, pp. 3416-3452, 4th Quart., 2018.
+
+P. Patil, K. Tamilmani, N. P. Rana, and V. Raghavan,
+“Understanding consumer adoption of mobile payment in India:
+Extending meta-UTAUT model with personal innovativeness,
+anxiety, trust, and grievance redressal,’’ Int. J. Inf. Manage., vol. 54,
+Oct. 2020, Art. no. 102144.
+
+J. Benamati, M. A. Fuller, M. A. Serva, and J. Baroudi, ‘Clarifying
+the integration of trust and TAM in e-commerce environments:
+Implications for systems design and management,’’ IEEE Trans. Eng.
+Manag., vol. 57, no. 3, pp. 380-393, Aug. 2009.
+
+Y. W. Sullivan and D. J. Kim, “‘Assessing the effects of consumers’
+product evaluations and trust on repurchase intention in e-commerce
+environments,”’ Int. J. Inf. Manage., vol. 39, pp. 199-219, Apr. 2018.
+
+H. Hallikainen and T. Laukkanen, ‘‘National culture and consumer
+trust in e-commerce,’’ Int. J. Inf. Manage., vol. 38, no. 1, pp. 97-106,
+Feb. 2018.
+
+A. Joinson, U.-D. Reips, T. Buchanan, and C. B. P. Schofield,
+“Privacy, trust, and self-disclosure online,’’ Hum. Comput. Interact.,
+vol. 25, no. 1, pp. 1-24, Jan. 2010.
+
+K. Martin, “The penalty for privacy violations: How privacy
+violations impact trust online,’’ J. Bus. Res., vol. 82, pp. 103-116,
+Jan. 2018.
+
+U. Klinger and J. Svensson, “‘The end of media logics? On
+algorithms and agency,’’ New Media Soc., vol. 20, no. 12, pp. 4653-
+4670, Dec. 2018.
+
+T. Dinev and P. Hart, “‘An extended privacy calculus model for e-
+commerce transactions,’’ Inf. Syst. Res., vol. 17, no. 1, pp. 61-80,
+Mar. 2006.
+
+C. Liu, J. T. Marchewka, J. Lu, and C. 8. Yu, ‘““Beyond concern—A
+privacytrust-behavioral intention model of electronic commerce,”’
+Inf. Manage., vol. 42, no. 2, pp. 289-304, Jan. 2005.
+
+Jerrin Yomas Chitra Kiran N "A Critical Analysis on the Evolution in
+the E-Payment System, Secuiry Risk, Threats and Vulnerability"
+Volume 7— No. 23, December 2018 — www.caeaccess.org
+
+Saravanan, T., & Nithya, N. S. (2019). Design of dynamic source
+routing with the aid of fuzzy logic for cross layered mobile ad hoc
+networks. International Journal of Engineering and Advanced
+Technology, 8(6), 4241-4247.
+https://dot.org/10.35940/tjeat.F9024.088619
+
+Aarathi, S., &Vasundra, S. (2019). Impact of healthcare predictions
+with big data analytics and cognitive computing techniques. Int. J.
+Recent Technol. Eng, 8, 4757-4762.
+
+J. S. Dhatterwal, M. Singh Naruka and K. 8. Kaswan, "Multi-Agent
+System based Medical Diagnosis Using Particle Swarm Optimization
+in Healthcare," 2023 International Conference on Artificial
+Intelligence and Smart Communication (AISC), Greater Noida, India,
+2023, pp. 889-893, doi: 10.1109/AISC56616.2023.10085654.
+
+K. 8. Kaswan, M. S. Naruka and J. S. Dhatterwal, "Enhancing
+Effective Learning Capability of SOAR Agent based Episodic
+Memory," 2023 International Conference on Artificial Intelligence
+and Smart Communication (AISC), Greater Noida, India, 2023, pp.
+898-902, doi: 10.1109/AISC56616.2023.10085002.
+
+Gaurav D. Saxena Dr.Dinesh G D Stalin David Mohit Tiwari Tripti
+Tiwari Dr. M. Monisha Dr. Amit Chauhan "ADDRESSING THE
+DISTINCT SECURITY VULNERABILITIES TYPICALLY
+EMERGE ON THE MOBILE AD-HOC NETWORK LAYER"
+January 2023
+
+798
+Authorized licensed use limited to: AMITY University. Downloaded on July 25,2023 at 09:39:25 UTC from IEEE Xplore. Restrictions apply.
+2023 3rd International Conference on Advance Computing and Innovative Technologies in Engineering (ICACITE)
+
+[33] Lu, Shryong, and Scott A. Smolka. "Model checking the secure Simulation of Computer and Telecommunication Systems, pp. 358-
+electronic transaction (SET) protocol." In MASCOTS'99. Proceedings 364. IEEE, 1999.
+of the Seventh International Symposium on Modeling, Analysis and
+
+799
+Authorized licensed use limited to: AMITY University. Downloaded on July 25,2023 at 09:39:25 UTC from IEEE Xplore. Restrictions apply.

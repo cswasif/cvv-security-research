@@ -1,0 +1,2626 @@
+Assessing Security, Privacy, User Interaction, and Accessibility
+Features in Popular E-Payment Applications
+Urvashi Kishnani
+
+Naheem Noah
+
+University of Denver
+Denver, CO, USA
+urvashi.kishnani@du.edu
+
+University of Denver
+Denver, CO, USA
+naheem.noah@du.edu
+
+Sanchari Das
+
+Rinku Dewri
+
+University of Denver
+Denver, CO, USA
+sanchari.das@du.edu
+
+University of Denver
+Denver, CO, USA
+rinku.dewri@du.edu
+
+ABSTRACT
+Mobile payment applications facilitate quick digital transactions;
+thus, evaluating these applications for security, privacy, user interaction, and accessibility is crucial. In our study, we analyzed
+the most downloaded 50 mobile payment applications on Google
+Play Store. Thereafter, we used three open-source tools (MobSF,
+AndroBugs, and RiskInDroid) to assess their security and privacy
+features. We then employed Microsoft’s Accessibility Insights for
+accessibility analysis and evaluated 1, 886, 352 Google Play Store
+reviews, specifically 90, 494 with negative sentiments [score <= 0],
+to understand user interaction issues. Our analysis shows that at
+least one security vulnerability, such as those associated with SSL,
+digital certificates, third-party libraries, weak encryption methods,
+and network configurations, exists in each application. We also
+find that both user-reported and tool-detected issues compromise
+privacy protection principles, such as data minimization, transparency, and purpose limitation. Additionally, we identify 2, 768
+accessibility issues, mainly relating to touch input sizes, accessible
+names of view objects, and meaningful alternative text for images.
+Also, 38.73% of privacy and security concerns originate from user
+account access issues, while 52.93% of usability concerns stem from
+app options not functioning as expected. Based on our findings,
+we propose recommendations to improve the overall robustness of
+these applications.
+
+CCS CONCEPTS
+• Security and privacy → Software and application security;
+Usability in security and privacy; • Human-centered computing → Accessibility.
+
+KEYWORDS
+e-payment applications, security, privacy, user interaction
+Permission to make digital or hard copies of all or part of this work for personal or
+classroom use is granted without fee provided that copies are not made or distributed
+for profit or commercial advantage and that copies bear this notice and the full citation
+on the first page. Copyrights for components of this work owned by others than the
+author(s) must be honored. Abstracting with credit is permitted. To copy otherwise, or
+republish, to post on servers or to redistribute to lists, requires prior specific permission
+and/or a fee. Request permissions from permissions@acm.org.
+EuroUSEC 2023, October 16–17, 2023, Copenhagen, Denmark
+© 2023 Copyright held by the owner/author(s). Publication rights licensed to ACM.
+ACM ISBN 979-8-4007-0814-5/23/10. . . $15.00
+https://doi.org/10.1145/3617072.3617102
+
+ACM Reference Format:
+Urvashi Kishnani, Naheem Noah, Sanchari Das, and Rinku Dewri. 2023.
+Assessing Security, Privacy, User Interaction, and Accessibility Features in
+Popular E-Payment Applications. In The 2023 European Symposium on Usable
+Security (EuroUSEC 2023), October 16–17, 2023, Copenhagen, Denmark. ACM,
+New York, NY, USA, 15 pages. https://doi.org/10.1145/3617072.3617102
+
+1
+
+INTRODUCTION
+
+In the year 2023, it is projected that e-commerce losses due to online
+payment frauds will amount to USD 48 billion worldwide 1 . Mobile
+payment applications have played an essential role in the adoption
+of mobile payment services, offering convenience but at the cost
+of sharing personal data, which in turn leads to increased privacy
+and security risks [24, 62]. This underscores the growing concern
+for the privacy and security of mobile payment applications, which
+often store sensitive financial information and personal data [33].
+Other studies have indicated how usability and accessibility plays a
+vital role in usage of the mobile applications [7, 36]. Prior study by
+Neupane et al., leveraged Manifest permission analysis, FlowDroid,
+and Polisis to identify privacy risks in 455 Internet of Things (IoT)
+applications [43]. Additionally, MobSF [2] was utilized for static
+analysis to evaluate the apps’ security and RiskInDroid [38] was
+used to generate risk profiles for these applications. However, similar works have not been done for e-payment applications, thus, in
+our work, we focused on answering the following research questions:
+• RQ1: What are the most prevalent security and privacy vulnerabilities in e-payment applications, and how do these issues
+pose a threat to users’ financial data and privacy?
+• RQ2: How accurately do users’ perceptions of security and
+privacy align with the actual vulnerabilities present in popular
+user-facing e-payment applications?
+• RQ3: How does the juxtaposition of user perceptions and security vulnerabilities in e-payment applications correspond to
+privacy policy frameworks like General Data Protection Regulation (GDPR) and California Consumer Privacy Act (CCPA)?
+What approaches, compliant with privacy policies, can developers utilize to enhance user trust?
+To investigate these research questions, we collected the 50 most
+downloaded mobile payment applications from the Google Play
+1 https://www.statista.com/statistics/1273177/ecommerce-payment-fraud-losses-
+
+globally/
+
+143
+
+EuroUSEC 2023, October 16–17, 2023, Copenhagen, Denmark
+
+Kishnani et al.
+
+Store and conducted a comprehensive analysis covering three aspects: security, privacy, usability, and accessibility. We employed
+three open-source tools (MobSF, AndroBugs, and RiskInDroid) to
+examine the security and privacy of these applications. To evaluate
+user interface issues, with an emphasis on accessibility, we used
+Microsoft’s Accessibility Insights tool. Furthermore, we gathered
+1, 886, 352 Google Play Store reviews to understand user-perceived
+security, privacy, user interaction, and accessibility concerns. Our
+analysis led to the following contributions:
+• To the best of our knowledge, we provide the first comprehensive evaluation of the top-downloaded mobile payment
+applications, considering security, privacy, user interaction,
+and accessibility. We bridge the gap between user expectations and developer-centric applications in daily digital
+transactions by correlating privacy expectations with vulnerabilities identified through static analysis, thus revealing
+any misalignment between user perceptions and actual risks.
+• We uncover crucial security, privacy, and user-centered issues unique to mobile payment applications, providing valuable insights for developers, policy-makers, and researchers
+from the user real time feedback through reviews. We underline the often overlooked area of accessibility in our work,
+further distinguishing our study’s breadth.
+
+2
+
+RELATED WORK
+
+The growth of e-commerce has emphasized the importance of privacy and security evaluations of payment systems, with mobile
+devices becoming prevalent payment mediums [9, 22, 34]. Wang et
+al. designed a Machine Learning-Assisted Secure Mobile Electronic
+Payment Framework (ML-SMEPF) that identifies malware, authentication issues, and fraud in mobile transactions using the Efficient
+Random Oracle Model [60]. Vincent et al. suggested a digital identity representation-based evaluation method for examining privacy
+issues in NFC payments [59]. Viewing the privacy and security
+of mobile applications through static and dynamic analyses still
+represents an underexplored area but could significantly resolve
+privacy and security issues [25, 27]. Our work employs static analysis to detect vulnerabilities that could compromise mobile payment
+application privacy and security.
+
+2.1
+
+Static and Dynamic Privacy & Security
+Analysis of Mobile Applications
+
+Static and dynamic analysis tools inspect mobile application bytecode and configuration files to spot potential data leaks and furnish
+accurate data leak information [3, 5]. Tools like RiskInDroid [38]
+and MobSF [2, 28] have been deployed to assess the privacy posture
+of Internet of Things (IoT) companion apps [43] and health-related
+Android applications [29]. In the former work, 455 IoT apps were
+collected from the Google Play Store to uncover their privacy posture and assess adherence to best practices. They discovered 129
+apps seeking high network permissions, while 315 applications
+exhibited leaks as a result of the permissions requested. In the latter work, authors delved into the security of 200 health-related
+Android applications using MobSF and found that 43.62% of the
+applications contained at least one security violation. Our work
+specifically focuses on mobile payment applications.
+
+144
+
+Researchers have also performed security analyses on mobile
+payment applications using AndroBugs [12, 32] and reverse engineering [14, 50, 51]. For example, the work by Darvish and Husain. [32] explored the security analysis of 25 mobile money applications by employing Androbugs and APKtool Mobilizer for static
+analysis and Charles Proxy and Burp Suite for dynamic analysis.
+Their findings show that only five applications were performing
+proper SSL pinning, and 17 apps from the selected apps had SSL
+vulnerabilities. Reardon et al. took a different approach, closely
+monitoring apps’ runtime behavior and network traffic to find evidence of side and covert channels being used in sending sensitive
+data over the network for which the sending app did not have permissions to access it [50]. They found that eight apps sent the IMEI
+number of the device to Baidu without proper authorization, and a
+staggering 70 different apps shared location data with 45 different
+domains, despite lacking any location permissions. Many studies
+have primarily focused on similar evaluations of mobile banking
+apps [10, 11]. We provide a comprehensive analysis of mobile payment apps, exploring SSL/certificate issues, third-party libraries,
+code, manifest, network, and permissions.
+
+2.2
+
+User Reviews Analysis
+
+User reviews offer indispensable insights for app users and developers, illuminating user needs and requirements [37, 52]. Researchers have examined user reviews of apps like WhatsApp [63]
+and WeChat [61], and CrossMiner and similar frameworks have
+been introduced to analyze app issues across platforms [35]. User
+reviews have been used to detect privacy and security issues in mobile applications [20, 21, 44, 47]. For instance, Pandita et al. devised
+WHYPER, a technique that utilizes natural language processing to
+scrutinize app descriptions and user reviews for privacy-related
+statements [47]. They evaluated the framework on 581 popular
+Android application descriptions and achieved an average precision, recall, F1-score, and accuracy of 80.1%, 78.6%, 79.3%, and 97.3%
+respectively. Gorla et al. used user reviews to expose inconsistencies between app descriptions and actual app behavior, revealing
+potential security and privacy risks [20]. Leveraging topic clusters
+for classification, they identified 56% of the malicious apps with
+pinpoint accuracy, leaving a mere 16% of “benign” apps wrongly
+classified. In our study, we analyze user reviews in conjunction with
+static analysis to comprehend user security, privacy, and usability
+concerns.
+
+3 METHODOLOGY
+3.1 Application List Generation
+We employed Google Play Store’s category selection feature on
+mobile devices to filter applications in the “Finance" category and
+“Mobile Payment" sub-category. We also conducted a direct search
+using the “Mobile Payment" keyword. These results included globally used applications without country restrictions. After removing
+duplicates, we selected the top 50 applications based on download
+counts. We downloaded the APK files from three websites offering
+APKs 2 in August 2022. For two apps, Credit Card Mobile and Premier Credit Card, we used older APKs from April 2022 as the latest
+2 https://www.apkmirror.com/,
+
+downloader/
+
+https://apkpure.com/, https://apps.evozi.com/apk-
+
+Assessing Popular E-Payment Applications
+
+EuroUSEC 2023, October 16–17, 2023, Copenhagen, Denmark
+
+were unavailable. We then analyzed these APK files using tools as
+detailed below.
+
+3.2
+
+Tools Selection and Usage
+
+We initially compiled a list of 28 free and/or open-source security
+and privacy tools, both academic and industrial. We shortlisted
+10 tools based on requirements like emulator needs, Android API
+level, and environment. We ultimately selected three tools—Mobile
+Security Framework (MobSF), AndroBugs, and RiskInDroid—for
+privacy and security evaluation, considering the type and comprehensiveness of reports produced. For user interaction analysis,
+we employed Microsoft’s Accessibility Insights [19, 57], a stateof-the-art tool providing detailed usability error explanations in a
+user-friendly format. We automated most report generation and
+parsing processes using Python and Bash scripts. These tools are
+open-source and have widespread usage for such app analysis [54].
+Mobile Security Framework (MobSF) conducts static and dynamic analysis on Android, iOS, and Windows applications and
+reports on security vulnerabilities and permissions [2]. We utilized
+the tool due to its consistency and wide level of adoption for static
+analysis [4, 29, 55, 65]. It also provides an application scorecard,
+summarizing the report and giving a security score and issue distribution according to severity levels; High, Warning, Info, and Secure,
+based on risk association. We used MobSF’s Docker image to run a
+local instance and the REST API to generate reports for each application. We automated the APK file upload, scan, and downloaded
+the scorecard report using an open-source Python script 3 . MobSF
+successfully generated reports for 49 of 50 applications with the
+exception US Bank App (APK version 3.17.57). The average time for
+MobSF report generation was 6.31 minutes and after multiple attempts from the research team, MobSF did not generate any report
+and we got timeout without any detailed error. We also contacted
+the developers of the MobSF.
+AndroBugs provides a more focused reports on vulnerabilities with severity classification tags: Critical, Warning, or Notice [32]. AndroBugs attached predefined vulnerability category,
+sub-category, and/or CVE information to some reported vulnerabilities. We used a Bash script on a Linux virtual machine to run
+all 50 APK files with this command-line tool. AndroBugs generated reports for 46 of the 50 applications without errors with the
+remaining fours getting timeout and traceback errors. Thus, for
+those four applications (Capital One Mobile, Lyf Pay, PayPal, and
+tmw) and the rest 46, we generated reports using AndroBugs2 and
+were successful with all except PayPal 4 which received a traceback
+error. It is important to note that both of the tools - AndroBugs
+and AndroBugs2 generated similar reports with both in text format,
+which we parsed using a Python script.
+RiskInDroid provides counts and lists of permissions in four
+sets: Declared (listed in Manifest file), Exploited (listed and used),
+Useless (listed but not used), and Ghost (not listed but attempted
+to use) [38]. RiskInDroid also provides a score for each application,
+indicating the probability of an application being associated with
+the “malware” class according to the classification performed by
+four machine learning classifiers: SVM, MNB, GB, and LR from
+3 https://gist.github.com/ajinabraham/0f5de3b0c7b7d3665e54740b9f536d81
+
+4 https://github.com/androbugs2/androbugs2
+
+145
+
+the scikit-learn library. We utilized this tool to get a detailed specifications of the permissions defined in these apps. We manually
+uploaded each APK file to the application and generated the results.
+RiskInDroid successfully generated reports for all 50 applications,
+which we downloaded in HTML format. We created a Python script
+to automatically parse the HTML files and transform the data into
+a tabular format in CSV files.
+Microsoft Accessibility Insights [39] performs automated
+checks to detect issues in application screens, including low contrast, missing names, and inadequate touch target size, based on
+axe-android rules. The tool generates an automated HTML report
+for each application screen, segmenting it into “Passed checks"
+and “Failed Instances." We downloaded the apps (n=44) and ran the
+tool on an Android emulator. For the remaining applications (n=6),
+we used a real Android device (Samsung Galaxy S10+) running in
+developer mode and connected to a Windows 10 machine due to
+blockers preventing a successful run on the emulator. We manually
+accessed and exported reports for each page in every application.
+For applications where we successfully created accounts (n=10), we
+continued exploring the remaining pages. We wrote a Python script
+to automatically parse the HTML pages and provide the data in a
+tabular format in CSV files. We could not access all pages in each
+application due to limitations, such as the submission of personal
+identifying data, country-specific requirements, or local number
+verification.
+
+3.3
+
+Reviews Collection and Filtering
+
+We used the google-play-scrapper [49] library to collect up to
+100, 000 reviews for each selected mobile payment application, totaling 1, 886, 352 reviews [23, 31, 48]. We extracted privacy and
+security reviews using a three-level keyword list, and usability
+reviews using a single-level keyword list, resulting in 286, 593 privacy and security reviews and 280, 554 usability reviews. Appendix Table 3 gives the keywords list. Applying data pre-processing
+techniques, we obtained 163, 210 privacy and security reviews and
+159, 771 usability reviews [45, 56]. Using the Textblob library [58],
+we performed sentiment analysis and focused on negative reviews
+with a polarity score below 0, yielding 52, 749 negative privacyand security-related reviews and 58, 190 negative usability-related
+reviews. During our analysis, we observed some positively rated
+reviews (4 stars or 5 stars) also expressed negative sentiments. We
+included these reviews in our analysis of negative reviews, as they
+highlight issues that could affect the user experience and require attention. We encountered 3, 949 negative reviews related to privacy
+and security and 4, 136 negative reviews related to usability that,
+despite being rated positively by users, expressed negative sentiments or highlighted areas for improvement. The researchers of
+the paper, manually went over the reviews and performed thematic
+distribution to determine the context of the reviews and selected
+the first 100 out of 52, 749 negative privacy- and security-related
+reviews and 100 out of 58, 190 negative usability-related reviews
+and performed selective manual thematic coding.
+This resulted in various themes for each review category. Furthermore, to collect reviews that align with the themes generated,
+we performed a text-based analysis to generate specific keywords
+that can be attributed to each theme. To achieve this, two coders
+
+Kishnani et al.
+
+Critical
+
+Warning
+
+Non−standard Launch mode
+Unprotected Receiver
+Unprotected Service
+
+Code
+
+Vulnerabilities
+
+Manifest
+
+Network
+
+EuroUSEC 2023, October 16–17, 2023, Copenhagen, Denmark
+
+Certificate
+
+Implicit Service
+Insecure WebView
+CBC with PKCS5/PKCS7
+Hardcoded Secrets
+Weak Certificate Verification
+Janus Vulnerability
+HTTP Connection
+
+Applications
+
+Figure 1: Category and severity (critical or warning) of vulnerabilities in the 50 most downloaded Android mobile payment
+applications.
+independently performed selective manual coding of 1, 000 negative
+privacy- and security-related reviews and negative usability-related
+reviews each, with an inter-rater reliability of 84.65% on average.
+Using the generated keywords, we performed another text-based
+classification of the reviews, identifying the distribution of reviews
+based on the themes previously identified. The data sets of 1, 000 reviews were split into training (75%) and testing dataset (25%) and the
+coders generated keywords for each theme by manually checking
+all the reviews in the training data. Afterward, the keywords generated were applied to the test data to examine the performance of the
+keywords in correctly tagging the test reviews, and the keyword
+performance was examined by calculating the Precision, Recall, and
+F1 scores. Using the generated keywords, we performed another
+text-based classification of the reviews, identifying the distribution of reviews based on the themes previously identified. We also
+analyzed the intersection of privacy and security with usability,
+identifying 20, 445 reviews in both distributions.
+
+3.4
+
+Data Analysis
+
+We analyzed the security status of each application using data from
+MobSF and AndroBugs, including the security score from MobSF
+and the vulnerabilities marked as Critical and Warning from AndroBugs. Then, we assessed the privacy status of each application
+using data from RiskInDroid and the permissions section of MobSF,
+analyzing the privacy-risk score and the distribution of permission
+types. Next, we collected usability data from Microsoft’s Accessibility Insights Tool and negative user interface-focused reviews from
+the Google Play Store, identifying app interface issues that could
+affect seamless user exploration. Finally, we created a mapping
+between our results from tool-based analysis, user reviews, and
+pillars of privacy protection laws such as GDPR and CCPA for a
+cohesion across all facets of our analysis.
+
+146
+
+4 RESULTS
+4.1 Security
+Security-related vulnerabilities and issues are reported from MobSF
+and AndroBugs. MobSF reports vulnerabilities on the scale of High,
+Warning, Info, and Secure, whereas, AndroBugs reports them as
+Critical, Warning, Notice, and Info. We are only reporting on those
+vulnerabilities that have at least one app with Critical-severity in
+AndroBugs and at least one app with High-severity in MobSF. For
+the sake of consistency, we will use the word “Critical" for both
+of these cases. If for some vulnerability or issue, there are apps
+that have received a Warning-level flag, we report that as well. An
+overview of applications vs vulnerabilities data is shown in Figure 1.
+Tables 1 and 2 explain the various vulnerabilities found. Details
+of vulnerability counts per application are provided in Appendix
+Table 5. As explained in Section 3, MobSF provides a score for each
+application based on the number and severity of the vulnerabilities encountered. This score ranges from 0 − 100, where 0 is the
+worst possible score and 100 is the best. The highest score of the
+payment applications is 62 received by CareCredit and the lowest
+is 20 received by PayPal.
+The vulnerabilities are broadly classified into four types: (i) SSL
+and Certificate-Related Vulnerabilities: To ensure secure communication for an application, proper implementation of the Secure
+Socket Layer (SSL) and correct verification of digital certificates
+from other parties are crucial. Failure to do so can result in data
+leakage and Man in the Middle (MITM) attacks. (ii) Code-Related
+Vulnerabilities: Code-related vulnerabilities arise when developers fail to follow best practices or are not current with existing issues
+or vulnerabilities with the technologies used to build the application.
+(iii) Manifest-Related Vulnerabilities: The App Manifest file is
+used to define information related to an app project [16]. It is used to
+specify different types of permissions an app will use, information
+
+Assessing Popular E-Payment Applications
+
+EuroUSEC 2023, October 16–17, 2023, Copenhagen, Denmark
+
+Table 1: Table listing various certificate- and manifest-related vulnerabilities, their description, and the number of affected
+apps (#).
+Vulnerability
+Description
+SSL and Certificate-Related Vulnerabilities
+HTTP Connection Invoking at least one link that uses the
+insecure HTTP protocol.
+
+# Notes
+
+40 Android may support the use of this protocol
+to prevent accidental issues that may arise
+from changes in external URLs.
+Weak SSL Imple- Issues with correctly checking hostnames 9 Sub-issues: Not rigorous verification of Commentation
+and certificates.
+mon Name (CN) in certificates (n=6); improper
+implementation of a WebViewClient (n=3).
+Janus Vulnerability Injection of DEX file into APL file without 48 Affects applications running Android versions
+affecting signature.
+5.0-8.0 and having v1 signature schemes (n=6);
+Applications with Android versions 5.0-7.0
+having a mix of v1 schemes with v2 or v3
+signature schemes (n=42).
+Weak SSL Certifi- Issues with verifying valid certificates 30 Sub-issues: No conditions checked (n=9); concate Verification
+(not self-signed, trusted root CA, not exditions not properly checked (n=21).
+pired, correct CN).
+Certificate Algo- Use of SHA1withRSA which is suscepti- 44 Sub-issues: Certificates signed with
+rithm Vulnerable to ble to collisions.
+SHA1withRSA (n=2); Indicated use of
+Hash Collisions
+SHA1withRSA in Manifest file (n=42).
+Manifest-Related Vulnerabilities
+Launch Mode of Ac- Setting launchMode attribute to 11 A total of 68 uses across the 11 applications
+tivity is not stan- singleTask,
+singleInstance,
+or
+was found.
+dard
+singleInstancePerTask is not recommended.
+Broadcast Receiver Improper broadcast receiver configura- 26 A total of 59 uses across the 26 applications
+is not Protected
+tion can make it accessible by all other
+was found.
+apps.
+Activity is not Pro- Sharing activities without any specific In- 34 A total of 79 uses across the 34 applications
+tected
+tent can leave it exposed to any other apwas found.
+plication.
+Service is not Pro- Sharing services without any specific In- 30 A total of 55 uses across the 30 applications
+tected
+tent can leave it exposed to any other apwas found.
+plication.
+Clear text traffic is Transmitting cleartext data can compro- 11 Apps that work with Android API level 27 or
+Enabled For App
+mise confidentiality and integrity.
+lower by default have the attribute for cleartext set to true.
+ContentProvider is Using content provider is not always re- 16 Sub-issues: ContentProvider not protected
+not Protected
+quired and incorrect usage can cause data
+(n=7); Android API version <17 using default
+leakage to other applications.
+setting of android:exported=true.
+Activity-Alias is not An activity alias is an alternate name for 4 Only set android:exported=true if the acProtected
+an activity.
+tivity is required by other applications.
+Incorrect Intent Fil- Intent filter should contain an action at- 5 Sub-issues: No intent set (n=4); not properly
+ter Settings
+tribute.
+configured (n=1).
+about components of the app, and information about the Android
+versions the app is compatible with. Improper declarations in the
+Manifest file can lead to security issues. (iv) Network-Related
+Vulnerabilities: The Android Manifest contains a reference to a
+file that sets the configuration for network security in an Android
+application. This file specifies which Certificate Authorities (CA)
+and certificates are trusted and whether cleartext traffic is allowed 5 .
+5 https://developer.android.com/training/articles/security-config
+
+147
+
+4.2
+
+Privacy
+
+The privacy analysis of applications focused on the permissions
+requested and used by these applications along with the use of
+analytics, login, marketing, etc. trackers. We found that 147 unique
+permissions were declared across all applications, including those
+provided by the Android framework and those that are custom
+for an application. While some permissions are declared and exploited by all applications, 145 unique permissions were useless
+declarations across the apps, this amounts to a total of 735 unused
+
+EuroUSEC 2023, October 16–17, 2023, Copenhagen, Denmark
+
+Kishnani et al.
+
+Table 2: Table listing various network- and code-related vulnerabilities, their description, and the number of apps (#).
+Vulnerability
+Description
+Network-Related Vulnerabilities
+Insecure Configura- Insecure configurations can allow issues such as
+tions
+cleartext traffic and bypassing certificate pinning.
+
+Code-Related Vulnerabilities
+Hardcoded Secrets Application codes can be reverse-engineered, revealing hardcoded secrets.
+CBC mode with CBC encryption mode used along with
+PKCS5/PKCS7
+PKCS5/PKCS7 padding schemes can lead to
+padding
+Padding oracle attacks.
+Insecure WebView WebViews allow external webpages to be disImplementation
+played. Remote Code Execution (RCE) on WebView, identified by CVE-2013-4710 is a vulnerability that affects Android versions 3.0-4.1.* and
+can lead to Denial of Service (DoS) attacks.
+Implicit Service
+Intents without specified targets are called implicit intents and can cause malicious services to
+go unnoticed in the background.
+Runtime Command Functions that allow runtime commands are vulnerable to command injection.
+
+# Notes
+18 Sub-issues: Allow cleartext to all other
+domains (n=8), Allow cleartext to specified domains (n=7); bypassing certificate pinning (n=1); trusting userinstalled certificates (n=1).
+49 All 49 apps ran with MobSF had hardcoded secrets.
+37 Use exceptions exposed by incorrect
+padding which allows attacker to encrypt or decrypt data without key.
+34 Sub-issues: Allow user-controlled
+code to be executed in WebView
+(n=23); No proper validation of SSL
+certificates in WebView (n=3); both
+the above issues (n=8).
+31 Intents are used to pass messages to
+invoke components.
+19 Runtime
+commands
+executed
+using
+the
+code
+Runtime.getRuntime().exec().
+19 Hardcoded certificate information
+used.
+
+Weak KeyStore Pro- A keystore is used to store cryptographic keys
+tection
+that are used by an application in a way that
+prevents unauthorized access.
+Remote WebView A WebView provides a window for browser con- 19 Allowing remote debug capabilities is
+Debugging
+tent to be displayed in-app, which prevents the
+dangerous as an attacker can use this
+user to be navigated to the browser application.
+to suspend a program to examine or
+modify the state of the application.
+Weak Cryptogra- Using of Electronic Code Book (ECB), Base64, 27 Sub-issues: ECB (n=14); Base64 (n=7);
+phy and Encoding
+weak encryption algorithms such as SHA1, MD4,
+weak cryptographic algorithms (n=6).
+MD5, RC2, RC4, DES, 3DES, and BLOWFISH.
+Fragment Vulnera- Android versions 4.0-4.3 have a critical vulnera- 8
+bility
+bility identified by CVE-2013-6271 that can allow
+an attacker to gain control of the application.
+App Sandbox Per- App sandbox is used to isolate each application to 2 This is deprecated in API level 17.
+mission
+prevent attacks from malicious app. However, Android constants such as MODE_WORLD_READABLE
+and MODE_WORLD_WRITEABLE can allow all other
+applications to read or write data to resources.
+permissions, with the minimum being 4 unused permissions and
+the maximum being 35 unused permissions. Even if an application
+doesn’t actively utilize a particular permission, if that permission is
+listed in the app’s manifest file, it can still be potentially accessed
+by other applications or even exploited by malware, especially if
+the device’s security is compromised [8]. We note that except for
+three applications, all other apps declared at least one dangerous
+permission. The overview of applications vs permissions distribution is shown in Figure 2. Details of permission distribution per
+application are provided in Appendix Table 5. As explained in Section 3, RiskInDroid provides a score for each application, which
+
+148
+
+gives the likelihood of it being associated with the “malware" class
+of applications. Venmo received the minimum and best score obtained of 6.245 whereas VodaPay received the highest and worst
+score of 77.045. Trackers are used to collect data such as location
+or user behavior which can be used for analytical or advertisement
+purposes [41]. Out of the 50 applications, 24 of them had at least
+one tracker. Only Samsung Pay was reported to have zero trackers.
+Declared Permissions: We note that out of the 50 applications
+that we analyzed, 46 of the applications did not use 50% or more
+of the declared permissions. Out of these 46 applications, only 3
+applications had an equal split between the permissions that they
+
+Assessing Popular E-Payment Applications
+
+EuroUSEC 2023, October 16–17, 2023, Copenhagen, Denmark
+
+Not Declared/Not Used
+
+Exploited
+
+Useless
+
+Ghost
+
+READ_PROFILE
+
+INTERNET
+ACCESS_FINE_LOCATION
+
+VIBRATE
+WAKE_LOCK
+RECEIVE
+READ_PHONE_STATE
+
+BIND_GET_INSTALL_REFERRER_SERVICE
+
+WRITE_EXTERNAL_STORAGE
+ACCESS_WIFI_STATE
+ACCESS_NETWORK_STATE
+
+Applications
+
+Figure 2: Permissions handling in the 50 most downloaded mobile payment applications in Android. Here the black legend
+throughout indicates significant Not Declared/Not Used permissions by the apps.
+used and those they did not, whereas, 43 of them strictly declared
+more permissions that were not used as compared to those that
+were used. Out of these 43 applications, 8 of the applications
+did not use 75% or more of the declared permissions. Finally,
+Samsung Pay did not use as many as 92.11% of the permissions
+that it declared. The most declared permissions along with the
+number of apps in which they are declared and use these permissions are: INTERNET (50, 50), ACCESS_NETWORK_STATE (50, 0),
+WAKE_LOCK (50, 50), RECEIVE (49, 0), ACCESS_FINE_LOCATION
+(46, 45), CAMERA (45, 34), USE_FINGERPRINT (44, 0),
+BIND_GET_INSTALL_REFERRER_SERVICE
+(44,
+0),
+and
+WRITE_EXTERNAL_STORAGE (40, 0). It is interesting to note
+that their use varies greatly across applications.
+Ghost Permissions: All applications had at least one permission that was not declared in the manifest file but used in the
+application code. While this count is low for most applications, five
+applications had more than 10 permissions of this type: Citi Mobile
+(11), Pyypl (11), Wells Fargo Mobile (11), Sezzle (13), and BankMobile App (14). The top five ghost permissions across all applications
+are: READ_PROFILE (42), WRITE_SETTINGS (38), MANAGE_ACCOUNTS
+(30), GET_ACCOUNTS (24), AUTHENTICATE_ACCOUNTS (23).
+Dangerous Permissions: Except for Affirm, all applications
+had at least one dangerous permission. The five applications
+with the lowest number of dangerous permissions are: Affirm (0),
+BankMobile App (1), PayRange (2), paysafecard (3) and Moneygram
+(3). The seven applications with the highest number of dangerous
+permissions are: tmw, Revolut, VodaPay (12), Cointab (13), Payzapp
+(15), UltraCash (17) and Paytm (22). The five most occurring dangerous permissions are: ACCESS_FINE_LOCATION (43), CAMERA (42),
+WRITE_EXTERNAL_STORAGE (37), ACCESS_COARSE_LOCATION (37),
+and READ_EXTERNAL_STORAGE (36).
+
+149
+
+4.3
+
+User Interaction
+
+To understand the usability of the 50 mobile applications, we utilized the Microsoft Accessibility Insight tool to generate Interface
+Accessibility Report and analyzed the mobile app reviews collected
+through Google Play Store to provide a User Interaction Report.
+4.3.1 Interface Accessibility Report. In total, we had 464 pages
+analyzed for the available 48 applications, and a total of 2, 768
+issues were collected through Microsoft Accessibility Insights. Out
+of these, 66.94% (n=1, 853) are TouchSize related, 26.19% (n=725)
+are ActiveView related, 5.67% (n=157) are ImageView related, and
+1.19% (n=33) are EditText related. Figure 3 shows the distribution
+of failed instances for each application with respect to the screens
+explored. It is important to emphasize that the analysis of failed
+instances for each application is directly proportional to the number
+of screens analyzed. Therefore, applications with a low number of
+failed instances are not necessarily better performing than those
+with a high number of failed instances.
+The top 5 apps with respect to the number of screens explored
+are: Paysera (n=68), Moneygram (n=22), Sezzle (n=20), Afterpay
+(n=19) and Citizens Pay (n=18). While Paysera showed 485 failed
+instances, Moneygram showed 153 failed instances, Sezzle showed
+117 failed instances, Afterpay showed 140 failed instances, and
+Citizens Bank showed 72 failed instances. For the following apps:
+Mobikwik, Mobile Pay, Ultracash and Pyypl. We were only able
+to explore one screen each. Mobikwik showed 5 failed instances,
+Mobile Pay showed 2 failed instances, Ultracash showed 2 failed
+instances and Pyypl showed 7 failed instances.
+4.3.2 User Interaction Reviews Distribution and Anecdotes. Userprovided reviews continue to be a valuable source for understanding
+users’ opinions [37, 40, 52], even though there have been reports
+of opinion spamming by individuals that post fake reviews for
+
+EuroUSEC 2023, October 16–17, 2023, Copenhagen, Denmark
+
+Kishnani et al.
+
+average failures
+
+number of failures
+
+15
+10
+
+20
+
+Avg. failures per instance
+
+40
+
+5
+
+Failed instance number
+
+60
+
+1
+2
+3
+4
+5
+6
+7
+8
+9
+10 or more
+
+1
+
+1
+Applications
+
+Figure 3: Number of accessibility failures found in 48 out of 50 most downloaded mobile payment applications. A failed instance
+is an analyzed page of the interface with one or more accessibility issues.
+personal gains [30, 42]. In the following section, we discuss the
+distribution of each theme.
+Privacy and Security Reviews Evaluation. To further explore
+the privacy and security of the 50 mobile payment applications,
+we examined the perceived privacy and security shortcomings as
+identified by users through their generated reviews on Google Play
+Store. We collected 𝑛 = 32, 304 reviews that are solely privacy and
+security related. Afterwards, through our manual thematic coding, we extracted the following thematic occurrences: account access, confidentiality, permission, transaction, and user information.
+These reviews are not mutually exclusive, hence a single review
+can have more than one theme tag. For example, the review: “... just
+opened an account... and someone sent me some money to help me and
+almost immediately my account was frozen. I have done everything
+asked to verify my account and still have gotten no response...” is
+tagged to as “account access” review because the user’s account
+is frozen, as “transaction” because the user had been debited, and
+“user information” because the user has provided information for
+account verification. Appendix Table 4 shows the privacy and security themes along with their distribution, precision, recall, and F1
+scores.
+Account Access: In mobile payment, account access is a serious
+privacy and security concern because it can lead to financial loss,
+identity theft, and data misuse when unauthorized individuals gain
+access to personal and financial information. A major concern for
+users while using these applications is ensuring legitimate access
+to their accounts. Evidently, users are worried about not having
+access to their accounts, and this prevents them from performing
+their primary goals of using the application. Inability of users to
+login to their account: Consider the review: “I’m unable to login
+to app almost 2 years now. I have my amount 10000 which I haven’t
+used and got stuck here...” where user has difficulty accessing their
+account. Account lock based on scam or suspicious activity:
+
+150
+
+Consider the review: “... I had a charge back from a scammer, I provided them all the documentation that they asked for, but after that
+they refunded the money to the scammer, and they closed my account
+without any reason...” where the user’s account was closed without proper in-depth investigation. Multi Factor Authentication
+(MFA) Consider the review: “... had a very frustrating experience
+with the login. It only gives you 3 tries with your fingerprint and then
+locks you out and requires you to change your password. Why not
+first allow the user to enter their password?...” where the user was
+not provided with an alternative layer of authentication, and got
+locked out of their account.
+Transaction: Transactions in mobile payment may involve the
+potential exposure of sensitive financial data, such as payment
+details and personal information, which can be targeted by hackers
+or used for unauthorized activities. Certain reviews show concerns
+about the inhibitions of a successful transaction. For instance, users
+complained about Failed transactions as highlighted in the review:
+“My 1000 rupees stuck in tmw wallet I tried to load in Amazon, but
+transaction failed but money in tmw wallet got debited...” Double
+charges in transactions as mentioned in the review “The balance
+is never accurate. You can’t request money without the person being
+double charged...” Another pain point seems to be inability to
+cancel wrong payments as indicated in the review “Impossible to
+cancel payment or get money back if debit out to wrong account with
+same name...”
+User Information: User information in mobile payment includes personal and financial data that, if compromised, can lead to
+identity theft, fraud, and unauthorized access to sensitive information. Mobile payment applications usually request PII to initiate user
+verification while using the application. The concern for users as
+highlighted in the reviews include the inability to remove personal
+data. For instance: In certain instances, users have expressed concerns about this activity. Some of them are related to the inability
+to remove personal data from the app as mentioned in the review
+
+Assessing Popular E-Payment Applications
+
+EuroUSEC 2023, October 16–17, 2023, Copenhagen, Denmark
+
+“Terrible app design for something so simple. It’s literally unusable
+yet I can’t even remove my card info from this awful app, which is a
+major security flaw.” unnecessary data collection that takes place
+as in the review: “Zelle probably now has my name, email/home
+addresses, and card info floating around in some unknown server...”
+Permission: Granting excessive or unnecessary permissions in
+mobile payment apps may result in unauthorized access to personal
+data, location information, and other sensitive resources on the device, potentially compromising user privacy and security. However,
+users need to give these apps certain permissions to ensure proper
+functioning. For instance, an app that scans Check would require
+camera access. However, some of these permissions are deemed
+unnecessary. For example the review: Permissions-tagged reviews
+cover the permissions requested from users by the app before they
+could utilize it for certain operations. Most of these concerns are related to perceived unnecessary permissions requested by mobile
+payment applications that seem to raise a concern for the user. Consider the reviews: “This app needs ‘send and view SMS’ permission to
+send SMS only. I think send SMS permission is quite enough...” “New
+update requires permission to view device use including what other
+apps are running, history, and bookmarks. Why does a card payment
+app need this extra information? Spyware? No thanks.”
+Confidentiality: Unauthorized disclosure or access to sensitive
+financial information can result in financial loss, identity theft,
+and compromised privacy. Mobile payment applications require
+users to provide Personal Identifiable Information (PII). While this
+is necessary, it raises concerns regarding the exposure of users’
+data and its access by third parties. For example the review: data
+being shared with third-parties: “... you have to remember to click
+on make it private otherwise the whole public is going to see your
+transactions. That shouldn’t even be a thing...” where users have
+data shared with other users by default in Venmo and the review
+on inadvertent keeping of user’s information: “Paytm shared
+our data with [international] firms, now paytm losing our trust.. time
+to uninstall this APP”
+Usability Reviews Evaluation. To understand the perceived
+usability issues in the 50 mobile payment applications collected, we
+extracted 37, 745 usability-related reviews. These reviews provide
+information on the issues users face when utilizing these applications. In fact, some of the issues identified inhibit users from completing a transaction. These reviews span the following thematic
+occurrences: Non-functional Options, Customer Support, System
+Errors, Frustration, Application Layout, Hard to Find Options, Slow
+Applications, Dissatisfaction, Application Crashes, Not Easy to Use,
+and Screen Freezes. Again, these reviews are not mutually exclusive, hence a single review can have more than one theme tag. For
+example, the review “App always crashes and bank is horrible. Their
+customer service is worse you will talk to 10 people before someone
+finally tells you the truth” which is “time-based efficiency” because
+the user complained that the app crashes and “customer support”
+because the user was not happy with the reaction of customer support. Appendix Table 4 shows the usability themes along with their
+distribution, Precision, Recall, and F1 scores.
+Non-Functional Options: Non-functional options, such as application options and functionality not working as expected, in
+mobile payment are a usability concern because they can lead to
+
+151
+
+user frustration, inconvenience, and difficulties in completing transactions effectively and efficiently. For instance: “SMS verification
+does not work. Tried multiple times ... Never got any code on my phone
+...” . Sometimes these issues result from application updates: “Why
+can’t I sign in? I have to completely install and reinstall every time!
+UPDATE: can’t login at all....”
+Customer Support: Customer support is an important aspect
+of an application, especially a mobile payment application that
+deals with payment services. Response time, resolution time, and
+customer satisfaction are some of the metrics used to measure the
+effectiveness and efficiency of a customer support service. Users
+have informed the issues experienced while engaging customer
+support teams for complaint resolution as in the case of these
+reviews: “It is Impossible to get in touch with anyone concerning of
+refund I’ve overlaid and I cannot get my money back for some reason
+I wish there was someone that I could talk to...”
+System Errors: System errors in mobile payment are a usability
+concern because they can disrupt transactions, cause frustration
+for users, and hinder the overall functionality and reliability of the
+payment system. Errors in the system where users were presented
+with explicit messages did not usually help the users take corrective
+steps and often left the users stuck and unable to proceed with using
+the application. This is seen in reviews such as “My experience with
+Affirm has been plagued by the company’s inability to correct what
+they call a “system error" which links mine and a total strangers
+accounts together because the last four of our social match. This
+has set off Identity Theft alert on my end. When I went to process a
+payment, I received an email three days later telling me their system
+did not process my payment...”.
+Frustration: When users are frustrated, it can lead to dissatisfaction, abandonment of transactions, and a negative perception of
+the mobile payment experience, potentially impacting adoption and
+continued usage: “The mandatory pop-up ads are annoying when
+you initially log on. They make you actuate the information. It’s the
+last thing you want to do when you’re in a hurry to do a transaction."
+Application Layout: Application layout in mobile payment is
+a usability concern because a poorly designed or confusing layout
+can make it difficult for users to navigate, locate desired features,
+and complete transactions efficiently, negatively impacting the user
+experience: “The new update places the message button next to the
+sign off button. Congrats to the genius who came up with this terrible
+layout!!" “Information provided and ease of use is fine. Automatic
+screen orientation to portrait with inability to rotate to landscape
+orientation is annoying."
+Hard to Find Options: When users find it hard to locate specific
+options, it can lead to user frustration, inefficiency in completing
+tasks, and a poor overall user experience, as users may struggle to
+locate desired features or functions. For instance the review: “I can’t
+even find out what the balance of my account is ... this app does not let
+me do this ...” and sometimes these issues result from application
+updates: “I just updated my app and now I can’t seem to figure out
+how to look at my pending transactions...”
+Slow Applications: For most users, a fast responsive application is of importance and dictates their experience while using
+the application. Slow applications may cause delays in transaction
+processing: “I don’t like how long it takes. For my payment to be
+
+EuroUSEC 2023, October 16–17, 2023, Copenhagen, Denmark
+
+Kishnani et al.
+
+removed from my bank. When I call in. It’s done on the spot. Now all
+these plus option on it. Have made it slow to load on my phone..."
+Dissatisfaction: Also, issues found in the app made users express dissatisfaction with the use of the app: “Very dissatisfied and
+disappointed [in] app. It failed to update my balance after many
+hours..." Also, they have shown frustration in other cases “Very slow
+when using, Frustrating!...”
+Application Crashes: Application crashes interrupt the user’s
+workflow, lead to frustration, and may result in transaction failures
+or loss of data: “Horrible app and bank. Stupid app always crashes
+no matter how often you update it. It will log you out in the middle of
+something..."
+Not Easy to Use: When users cannot intuitively navigate the
+application, it leads to confusion, errors, and a suboptimal user
+experience. For instance: “Also this app is not easy to use for bay
+purchases..." and “This app really is not very easy to run, it won’t ever
+let me log in... Not very easy to understand..."
+Screen Freezes: Sometimes, time-based inefficiency may manifest in the form of screen freezes, where the application becomes
+unresponsive and gets stuck on one screen and the user cannot proceed with any action: “The app always slow and freeze. The spinning
+wheel of death! It is useless...."
+User Info Upload: The process of uploading personal information can be cumbersome, time-consuming, and may require manual
+entry, potentially leading to user frustration and errors during the
+payment process. However, this process can be troublesome in some
+applications and raise complaints such as: “Unable to complete KYC.
+The camera option for selfie and document info itself doesn’t take
+clear picture. Just put an option to upload photo for selfie as well..."
+Privacy-Security-Usability Reviews. While we manually analyzed solely privacy and security reviews and solely usability reviews, we further analyzed the intersection between both sections.
+Privacy-security-usability reviews give an understanding of users’
+concerns which are not only privacy and security concerns but also
+usable concerns. We extracted 20, 445 privacy-security-usability
+reviews. Let’s consider a review that has a combination of “account
+access” and “system error”: “nothing working nothing loading after
+this new account update i would give it 0 stars, i can’t log in cause
+an error appears and i can’t even modify my password because the
+site won’t load...” where the user are not able to login the app due
+to a system error and “Terrible app. The app doesn’t recognise my
+account even though I can log in with the same credentials on the
+website...” where the user can access their account via the website
+but not the app.
+
+Android framework permits less secure default settings applicable
+to all applications, regardless of their criticality, such as payment or
+healthcare; second, this finding suggests that developers and testers
+of these applications might be unaware of the insecure default
+options.
+Based on our privacy assessment, we observe that payment applications frequently exhibit over-privileged behavior, which can
+introduce attack vectors leading to data leakage. Additionally, collecting PII by these applications presents two significant concerns:
+it may cause user frustration and necessitates a robust security
+foundation for the applications. In the case of a social application
+like Venmo, sharing sensitive information with the public may
+compromise the confidentiality of user information.
+Notably, end-users recognize such security flaws in the applications, expressing difficulties with account access (indicating authentication issues), transactions (indicating problems with underlying business logic, implementation, or security), application
+functionality, information confidentiality, and excessive use of permissions. Code- and Manifest-related security issues may result in
+problems with account access, transactions, app crashes, system
+errors, screen freezes, and overall slow apps. However, users may
+not be aware of all issues. For example, users may not easily recognize Certificate- and SSL-related issues like an invalid certificate
+when using a mobile app, as opposed to accessing a website from
+a browser, where certificate-related issues prompt an initial warning and other padlock-like indications near the URL. This lack of
+transparency poses risks for user data, as users may be unable to
+ascertain the safety of their critical data during transit. Applications
+must also strike a balance regarding permission usage. Excessive
+permissions may create barriers to adoption, and the overuse of
+dangerous runtime-requested permissions may raise suspicions
+among users, leading them to perceive the application as “spyware."
+Figure 4 maps the themes from User Reviews to different application
+issues and GDPR pillars.
+As mobile payment application adoption increases, it is crucial
+that these applications remain inclusive for all users. However,
+we identified design and accessibility issues indicating a lack of
+refinement in the finished product from the UI perspective. This
+finding highlights the existing gap in UI/UX development for these
+applications, where developers should prioritize inclusivity and
+accessibility. User complaints about difficulties in finding options
+support this gap in the overall user experience of these applications.
+
+6
+5
+
+DISCUSSION
+
+Our security assessment of the 50 mobile payment applications
+reveals that every application contains at least one critical vulnerability, suggesting that these applications fall short in meeting
+necessary security standards. Developers can mitigate most of these
+vulnerabilities by adhering to best practices and by understanding
+and overriding default configurations. Furthermore, some of the
+reported vulnerabilities have recognized CVE identifiers, implying
+that these well-known issues should ideally be resolved in applications, particularly in payment applications dealing with critical
+user data. This observation highlights a two-fold issue: first, the
+
+152
+
+IMPLICATIONS
+
+Reduction of Permission-based Attacks: Users often grant all
+permissions requested by an application for full functionality [26].
+Improper and over-claimed permissions can lead to permission
+escalation and TOCTOU attacks [17]. Approximately 48% of 1000
+Google Play Store apps were found to be over-privileged [64]. Extraneous permissions should be avoided to prevent data leakage. Tools
+like RiskInDroid, AOSP [1], DYNAMO [13], Stowaway, PScout, and
+Droidtector can analyze permissions [6, 18, 38, 64]. By leveraging
+these tools and adhering to best practices, developers can ensure
+security, compliance, and user trust while meeting regulatory guidelines. Proactive permission management will enable developers to
+
+Assessing Popular E-Payment Applications
+
+EuroUSEC 2023, October 16–17, 2023, Copenhagen, Denmark
+Application Issues
+
+User Reviews
+
+Excessive
+Permissions
+
+Policy Framework
+
+Permission
+Integrity &
+Confidentiality
+
+Confidentiality
+Transaction
+Code- and
+Manifest-Related
+
+Accuracy
+
+Account
+Access
+User
+Information
+P&S Reviews Themes
+
+App Crashes
+
+NonFunctional
+Options
+
+Purpose
+Limitation
+
+Transparency
+
+System Errors
+
+SSL-, Certificateand NetworkRelated
+
+Data
+Minimization
+
+Screen Freezes
+
+Customer
+Support
+
+Slow Apps
+
+User Info
+Upload
+
+Storage
+Limitation
+
+Hard to Find
+Options
+Usability and
+Accessibility
+Issues
+
+Not Easy to
+Use
+
+App Layout
+
+Usability Reviews Themes
+
+Figure 4: Mapping of user review themes with tool-based application vulnerabilities and pillars of common the privacy policy
+frameworks.
+build secure and privacy-respecting applications, fostering a safer
+ecosystem.
+Adherence to Development Best Practices: Android provides
+a best practice guide [15], but tools like AndroBugs and RiskInDroid
+report non-compliant behavior. Developers should be trained to
+understand and stay updated with best practices to mitigate risks.
+Ensuring adherence to guidelines will avoid security loopholes and
+produce safer applications, especially since the Android framework
+defaults to less secure configurations. Introducing tailored default
+configurations based on application security needs can help prevent
+development errors, contributing to a secure and privacy-respecting
+ecosystem.
+User Risk Awareness and Perception: Our research emphasizes that user concerns often align with security and privacy issues
+in applications; however, several critical vulnerabilities remain unknown to users (ref. Figure 4). The lack of security in top e-payment
+applications is reflected in user perceptions. It is vital for end-users
+to be aware of potential risks, such as financial fraud and identity
+theft. By taking precautions like following Android best practices
+for security [46], users can protect their data. Actions like disabling
+installations from unknown sources, using anti-virus programs,
+reviewing permissions before installation, and updating applications regularly can mitigate risks and protect users and their data,
+fostering a secure and privacy-conscious ecosystem.
+Regulatory Measures and Auditing: Security gaps in mobile
+payment applications undermine privacy protection laws and put
+users’ critical data at risk. Compliance with regulations, such as
+GDPR and CCPA, is crucial. However, even government applications sometimes fail to adhere to these regulations [53], necessitating stricter measures for compliance and reducing user data
+
+153
+
+vulnerabilities. Alongside improved development practices, mobile
+payment applications must undergo rigorous, ongoing auditing and
+testing focused on security. Companies should proactively engage
+in regular security audits and testing to identify and address threats.
+To ensure user data privacy and security, encryption and access
+controls must be employed. Mobile payment applications should
+utilize robust encryption algorithms for data in transit and at rest,
+and access controls should limit sensitive information access to authorized individuals. Organizations should establish comprehensive
+incident response plans for managing security breaches, outlining
+steps, roles, responsibilities, notification procedures, and damage
+mitigation strategies. Adopting these measures will enhance the
+mobile payment ecosystem’s security posture and restore user trust.
+
+7
+
+LIMITATIONS AND FUTURE WORK
+
+We performed a comprehensive evaluation of the top 50 mobile
+payment applications from security, privacy, user interaction, and
+accessibility perspectives. Despite our diligent efforts, we couldn’t
+analyze four of these applications using AndroBugs due to an issue
+with the APK file, as detailed in Section 3. To address this, we
+used AndroBugs2 for these four applications. We also recognized
+that potential biases may occur user reviews. To mitigate this, we
+followed the randomized review selection approach from prior
+works [45]. We acknowledge that the popularity of the applications
+might influence the reviews, which falls beyond the scope of this
+study. For future research, we plan to conduct in-situ or naturalistic
+experiments as part of user studies, along with longitudinal usage
+analysis. This will allow us to monitor how users interact with these
+applications in real-world scenarios and enable them to provide
+real-time feedback.
+
+EuroUSEC 2023, October 16–17, 2023, Copenhagen, Denmark
+
+8
+
+Kishnani et al.
+
+CONCLUSION
+
+Given the widespread use of mobile payment applications, a comprehensive understanding of their security, privacy, user interaction, and accessibility features is crucial. By evaluating the
+top-downloaded 50 mobile payment applications, we identified
+developer-level concerns and potential vulnerabilities, such as insecure data storage, weak encryption algorithms, and inadequate permission management. Meanwhile, from the users’ perspective, our
+analysis of user reviews exposed real-time problems like account
+access issues, transaction failures, non-functioning app options,
+system errors, and inefficient customer support. These findings
+emphasize the need for addressing security, privacy, and usability
+issues in mobile payment applications. Based on our results, we
+suggested recommendations for developers to create more secure,
+user-friendly applications that respect privacy principles.
+
+[11]
+
+[12]
+[13]
+
+[14]
+[15]
+[16]
+[17]
+
+ACKNOWLEDGMENTS
+
+[18]
+
+We would like to thank the reviewers of this work for their valuable
+feedback. We extend our gratitude to the Inclusive Security and
+Privacy-Focused Innovative Research in Information Technology
+(InSPIRIT) Laboratory and the Colorado Research Institute for Security and Privacy (CRISP) Laboratory at the University of Denver.
+We also thank Dr. Sven Bugiel for providing valuable feedback on
+the initial draft of this work. Any opinions, findings, conclusions,
+or recommendations expressed in this material are solely those of
+the authors.
+
+[19]
+[20]
+
+[21]
+
+[22]
+
+REFERENCES
+[1] Yousra Aafer, Guanhong Tao, Jianjun Huang, Xiangyu Zhang, and Ninghui
+Li. 2018. Precise android api protection mapping derivation and reasoning. In
+Proceedings of the 2018 ACM SIGSAC Conference on Computer and Communications
+Security. ACM, Toronto, Canada, 1151–1164.
+[2] Aijn Abraham, D Schlecht, G Ma, M Dobrushin, and V Nadal. 2016. Mobile
+security framework (MobSF).
+[3] Ashish Aggarwal and Pankaj Jalote. 2006. Integrating static and dynamic analysis
+for detecting vulnerabilities. In 30th Annual International Computer Software and
+Applications Conference (COMPSAC’06), Vol. 1. IEEE, IEEE, Chicago, Illinois, 343–
+350.
+[4] Chairul Anwar, Sultan Hady, Novi Rahayu, Kraugusteeliana Kraugusteeliana,
+et al. 2023. The Application of Mobile Security Framework (MOBSF) and Mobile
+Application Security Testing Guide to Ensure the Security in Mobile Commerce
+Applications. Jurnal Sistim Informasi dan Teknologi 5, 2 (2023), 97–102.
+[5] Steven Arzt, Siegfried Rasthofer, Christian Fritz, Eric Bodden, Alexandre Bartel, Jacques Klein, Yves Le Traon, Damien Octeau, and Patrick McDaniel. 2014.
+Flowdroid: Precise context, flow, field, object-sensitive and lifecycle-aware taint
+analysis for android apps. Acm Sigplan Notices 49, 6 (2014), 259–269.
+[6] Kathy Wain Yee Au, Yi Fan Zhou, Zhen Huang, and David Lie. 2012. Pscout:
+analyzing the android permission specification. In Proceedings of the 2012 ACM
+conference on Computer and communications security. Association for Computing
+MachineryNew YorkNYUnited States, Raleigh North Carolina USA, 217–228.
+[7] Mars Ballantyne, Archit Jha, Anna Jacobsen, J Scott Hawker, and Yasmine N
+El-Glaly. 2018. Study of accessibility guidelines of mobile applications. In Proceedings of the 17th international conference on mobile and ubiquitous multimedia.
+Association for Computing Machinery, Cairo, Egypt, 305–315.
+[8] Alexandre Bartel, Jacques Klein, Yves Le Traon, and Martin Monperrus. 2012.
+Automatically securing permission-based software by reducing the attack surface: An application to android. In Proceedings of the 27th IEEE/ACM International
+Conference on Automated Software Engineering. Association for Computing MachineryNew YorkNYUnited States, Essen, Germany, 274–277.
+[9] Dong-Qi Cai, Xi Chen, Yu-Hong Han, Xin Yi, Jin-Ping Jia, Cong Cao, and Ling
+Fan. 2020. Implementation of an E-payment security evaluation system based
+on quantum blind computing. International Journal of Theoretical Physics 59, 9
+(2020), 2757–2772.
+[10] Sen Chen, Lingling Fan, Guozhu Meng, Ting Su, Minhui Xue, Yinxing Xue,
+Yang Liu, and Lihua Xu. 2020. An empirical assessment of security risks of
+global android banking apps. In Proceedings of the ACM/IEEE 42nd International
+
+154
+
+[23]
+
+[24]
+[25]
+
+[26]
+[27]
+
+[28]
+[29]
+[30]
+[31]
+
+[32]
+[33]
+
+Conference on Software Engineering. Association for Computing MachineryNew
+YorkNYUnited States, Seoul Republic of Korea, 1310–1322.
+Sen Chen, Ting Su, Lingling Fan, Guozhu Meng, Minhui Xue, Yang Liu, and
+Lihua Xu. 2018. Are mobile banking apps secure? what can be improved?. In
+Proceedings of the 2018 26th ACM Joint Meeting on European Software Engineering
+Conference and Symposium on the Foundations of Software Engineering. Association for Computing Machinery New York United States, Lake Buena Vista FL
+USA, 797–802.
+Hesham Darvish and Mohammad Husain. 2018. Security analysis of mobile
+money applications on android. In 2018 IEEE International Conference on Big Data
+(Big Data). IEEE, IEEE, Seattle, WA, USA, 3072–3078.
+Abdallah Dawoud and Sven Bugiel. 2021. Bringing balance to the force: Dynamic
+analysis of the android application framework. In Network and Distributed System Security Symposium. Network and Distributed System Security Symposium,
+Virtual, 1–18.
+Erik Derr. 2018. The impact of third-party code on android app security. In
+Enigma 2018 (Enigma 2018). USENIX Association, Santa Clara, CA, USA.
+Android Developers. 2022.
+Android Documentation: Security.
+https://developer.android.com/topic/security/.
+Android Developers. 2023.
+Developer Guides: Android Developers.
+https://developer.android.com/guide/.
+Zheran Fang, Weili Han, and Yingjiu Li. 2014. Permission based Android security:
+Issues and countermeasures. computers & security 43 (2014), 205–218.
+Adrienne Porter Felt, Erika Chin, Steve Hanna, Dawn Song, and David Wagner.
+2011. Android permissions demystified. In Proceedings of the 18th ACM conference
+on Computer and communications security. Association for Computing Machinery
+New York NY United States, Toronto, Canada, 627–638.
+Tânia Frazão and Carlos Duarte. 2020. Comparing accessibility evaluation plugins. In Proceedings of the 17th International Web for All Conference. Association
+for Computing Machinery New York NY United States, Taipei, Taiwan, 1–11.
+Alessandra Gorla, Ilaria Tavecchia, Florian Gross, and Andreas Zeller. 2014.
+Checking App Behavior Against App Descriptions. In Proceedings of the 36th International Conference on Software Engineering. ACM, Association for Computing
+Machinery, Hyderabad India, 1025–1035.
+Hamza Harkous, Sai Teja Peddinti, Rishabh Khandelwal, Animesh Srivastava,
+and Nina Taft. 2022. Hark: A Deep Learning System for Navigating Privacy
+Feedback at Scale. In 2022 IEEE Symposium on Security and Privacy (SP). IEEE,
+IEEE, SAN FRANCISCO, CA, 2469–2486.
+Sameer Hayikader, FN Hadi, and Jamaludin Ibrahim. 2016. Issues and security
+measures of mobile banking Apps. International Journal of Scientific and Research
+Publications 6, 1 (2016), 36–41.
+Johannes Huebner, Remo Manuel Frey, Christian Ammendola, Elgar Fleisch, and
+Alexander Ilic. 2018. What people like in mobile finance apps: An analysis of
+user reviews. In Proceedings of the 17th International Conference on Mobile and
+Ubiquitous Multimedia. Association for Computing Machinery, Cairo, Egypt,
+293–304.
+Michael Humbani and Melanie Wiese. 2019. An integrated framework for the
+adoption and continuance intention to use mobile payment apps. International
+Journal of Bank Marketing 37, 2 (2019), 646–664.
+Muhammad Ikram, Narseo Vallina-Rodriguez, Suranga Seneviratne, Mohamed Ali
+Kaafar, and Vern Paxson. 2016. An analysis of the privacy and security risks
+of android vpn permission-enabled apps. In Proceedings of the 2016 internet
+measurement conference. Association for Computing Machinery, Santa Monica
+California USA, 349–364.
+Arushi Jain et al. 2016. Android security: Permission based attacks. In 2016
+3rd International Conference on Computing for Sustainable Global Development
+(INDIACom). IEEE, IEEE, New Delhi, India, 2754–2759.
+Seil Kim, Jae Ik Cho, Hee Won Myeong, and Dong Hoon Lee. 2012. A study on
+static analysis model of mobile application for privacy protection. In Computer
+Science and Convergence: CSA 2011 & WCC 2011 Proceedings, Vol. 114. Springer,
+Springer Netherlands, Jeju Island, Korea, 529–540.
+Narmada Kohli and Mahsa Mohaghegh. 2020. Security Testing Of Android Based
+Covid Tracer Applications. In 2020 IEEE Asia-Pacific Conference on Computer
+Science and Data Engineering (CSDE). IEEE, IEEE, Gold Coast, Australia, 1–6.
+Grace LaMalva and Suzanna Schmeelk. 2020. MobSF: Mobile Health Care Android
+Applications Through The Lens of Open Source Static Analysis. In 2020 IEEE MIT
+Undergraduate Research Technology Conference (URTC). IEEE, IEEE, Virtual, 1–4.
+Yuejun Li, Xiao Feng, and Shuwu Zhang. 2016. Detecting fake reviews utilizing
+semantic and emotion model. In 2016 3rd international conference on information
+science and control engineering (ICISCE). IEEE, IEEE, Beijing, China, 317–320.
+Francisco Liébana-Cabanillas, Francisco Muñoz-Leiva, and Juan SánchezFernández. 2018. A global approach to the analysis of user behavior in mobile
+payment systems in the new electronic environment. Service Business 12, 1 (2018),
+25–64.
+Yu-Cheng Lin. 2015. Androbugs framework: An android application security
+vulnerability scanner. Blackhat Europe 2015 (2015).
+Kathrin Linck, Key Pousttchi, and Dietmar Georg Wiedemann. 2006. Security
+Issues in Mobile Payment from the Customer Viewpoint, In Proceedings of the
+
+Assessing Popular E-Payment Applications
+
+[34]
+
+[35]
+
+[36]
+
+[37]
+[38]
+
+[39]
+[40]
+[41]
+
+[42]
+[43]
+
+[44]
+
+[45]
+
+[46]
+
+[47]
+
+[48]
+
+[49]
+[50]
+
+[51]
+
+[52]
+[53]
+
+EuroUSEC 2023, October 16–17, 2023, Copenhagen, Denmark
+
+Fourteenth European Conference on Information Systems, ECIS 2006, Göteborg,
+Sweden, 2006. University of Augsburg – Working Paper, 1085–1095.
+Samin Yaseer Mahmud, Akhil Acharya, Benjamin Andow, William Enck, and
+Bradley Reaves. 2020. Cardpliance: PCI DSS compliance of android applications.
+In Proceedings of the 29th USENIX Conference on Security Symposium. USENIX
+Association, Wilmington, DE, USA, 1517–1533.
+Yichuan Man, Cuiyun Gao, Michael R Lyu, and Jiuchun Jiang. 2016. Experience
+report: Understanding cross-platform app issues from user reviews. In 2016 IEEE
+27th international symposium on software reliability engineering (ISSRE). IEEE,
+IEEE, Ottawa, ON, Canada, 138–149.
+Delvani Antônio Mateus, Carlos Alberto Silva, Marcelo Medeiros Eler, and André Pimenta Freire. 2020. Accessibility of mobile applications: evaluation by
+users with visual impairment and by automated tools. In Proceedings of the 19th
+Brazilian Symposium on Human Factors in Computing Systems. Association for
+Computing Machinery, Diamantina, Brazil, 1–10.
+Stuart McIlroy, Nasir Ali, Hammad Khalid, and Ahmed E Hassan. 2016. Analyzing
+and automatically labelling the types of user issues that are raised in mobile app
+reviews. Empirical Software Engineering 21, 3 (2016), 1067–1106.
+Alessio Merlo and Gabriel Claudiu Georgiu. 2017. Riskindroid: Machine learningbased risk analysis on android. In Ifip international conference on ict systems
+security and privacy protection. Springer, Information Security and Privacy Protection in Information Processing Systems, Poznan, Poland, 538–552.
+Microsoft. 2022. Accessibility Insights. https://accessibilityinsights.io/.
+Adrian Micu, Angela Eliza Micu, Marius Geru, and Radu Constantin Lixandroiu.
+2017. Analyzing user sentiment in social media: Implications for online marketing
+strategy. Psychology & Marketing 34, 12 (2017), 1094–1100.
+Stylianos Monogios, Kyriakos Magos, Konstantinos Limniotis, Nicholas
+Kolokotronis, and Stavros Shiaeles. 2022. Privacy issues in Android applications: the cases of GPS navigators and fitness trackers. International Journal of
+Electronic Governance 14, 1-2 (2022), 83–111.
+Arjun Mukherjee, Bing Liu, and Natalie Glance. 2012. Spotting fake reviewer
+groups in consumer reviews. In Proceedings of the 21st international conference on
+World Wide Web. Association for Computing Machinery, Lyon, France, 191–200.
+Shradha Neupane, Faiza Tazi, Upakar Paudel, Freddy Veloz Baez, Merzia Adamjee,
+Lorenzo De Carli, Sanchari Das, and Indrakshi Ray. 2022. On the Data Privacy,
+Security, and Risk Postures of IoT Mobile Companion Apps. In IFIP Annual
+Conference on Data and Applications Security and Privacy. Springer, IFIP Annual
+Conference on Data and Applications Security and Privacy, Newark, NJ, USA,
+162–182.
+Duc Cuong Nguyen, Erik Derr, Michael Backes, and Sven Bugiel. 2019. Short
+text, large effect: Measuring the impact of user reviews on android app security
+& privacy. In 2019 IEEE symposium on Security and Privacy (SP). IEEE, IEEE, SAN
+FRANCISCO, CA, 555–569.
+Abu Saleh Md Noman, Sanchari Das, and Sameer Patil. 2019. Techies against
+Facebook: understanding negative sentiment toward Facebook via user generated
+content. In Proceedings of the 2019 CHI Conference on Human Factors in Computing
+Systems. ACM, Glasgow Scotland Uk, 1–15.
+Tae Oh, Bill Stackpole, Emily Cummins, Carlos Gonzalez, Rahul Ramachandran,
+and Shinyoung Lim. 2012. Best security practices for android, blackberry, and
+iOS. In 2012 The First IEEE Workshop on Enabling Technologies for Smartphone
+and Internet of Things (ETSIoT). IEEE, IEEE, Seoul, South Korea, 42–47.
+Rahul Pandita, Xusheng Xiao, Wei Yang, William Enck, and Tao Xie. 2013. WHYPER: Towards Automating Risk Assessment of Mobile Applications. In USENIX
+Security Symposium. USENIX Association, USENIX Association, Washington, DC,
+527–542.
+Ingrid Pettersson, Florian Lachner, Anna-Katharina Frison, Andreas Riener, and
+Andreas Butz. 2018. A Bermuda triangle? A Review of method application
+and triangulation in user experience evaluation. In Proceedings of the 2018 CHI
+conference on human factors in computing systems. ACM, Montreal QC Canada,
+1–16.
+PyPI. 2023. Python Package Index. https://pypi.org/.
+Joel Reardon, Álvaro Feal, Primal Wijesekera, Amit Elazari Bar On, Narseo
+Vallina-Rodriguez, and Serge Egelman. 2019. 50 ways to leak your data: An
+exploration of apps’ circumvention of the android permissions system. In 28th
+USENIX security symposium (USENIX security 19). USENIX Association, Santa
+Clara CA USA, 603–620.
+Bradley Reaves, Jasmine Bowers, Sigmund Albert Gorski III, Olabode Anise, Rahul
+Bobhate, Raymond Cho, Hiranava Das, Sharique Hussain, Hamza Karachiwala,
+Nolen Scaife, et al. 2016. * droid: Assessment and evaluation of android application
+analysis tools. ACM Computing Surveys (CSUR) 49, 3 (2016), 1–30.
+Marco Rossetti, Fabio Stella, and Markus Zanker. 2016. Analyzing user reviews
+in tourism with topic models. Information Technology & Tourism 16, 1 (2016),
+5–21.
+Nayanamana Samarasinghe, Aashish Adhikari, Mohammad Mannan, and Amr
+Youssef. 2022. Et tu, brute? Privacy analysis of government websites and mobile
+apps. In Proceedings of the ACM Web Conference 2022. Association for Computing
+Machinery, Lyon, France, 564–575.
+
+155
+
+[54] Aishwarya Surani, Amani Bawaked, Matthew Wheeler, Braden Kelsey, Nikki
+Roberts, David Vincent, and Sanchari Das. 2023. Security and Privacy of Digital
+Mental Health: An Analysis of Web Services and Mobile Applications. In IFIP Annual Conference on Data and Applications Security and Privacy. Springer, Springer,
+Sophia-Antipolis, France, 319–338.
+[55] Edward Tansen and Deris Wahyu Nurdiarto. 2020. Analisis dan Deteksi Malware
+dengan Metode Hybrid Analysis Menggunakan Framework MOBSF. (JurTI)
+Jurnal Teknologi Informasi 4, 2 (2020), 191–201.
+[56] Chuanqi Tao, Hongjing Guo, and Zhiqiu Huang. 2020. Identifying security issues
+for mobile applications based on user review summarization. Information and
+Software Technology 122 (2020), 106290.
+[57] Faiza Tazi, Suleiman Saka, Griffin Opp, Shradha Neupane, Sanchari Das, Lorenzo
+De Carli, and Indrakshi Ray. 2023. Accessibility Evaluation of IoT Android Mobile
+Companion Apps. In Extended Abstracts of the 2023 CHI Conference on Human
+Factors in Computing Systems. Association for Computing Machinery New York
+NY United States, Hamburg, Germany, 1–7.
+[58] Textblob.
+2023.
+Simplified
+Text
+Processing.
+https://textblob.readthedocs.io/en/dev/.
+[59] Johann Vincent, Vincent Alimi, Aude Plateaux, Chrystel Gaber, and Marc Pasquet.
+2012. A mobile payment evaluation based on a digital identity representation. In
+2012 International Conference on Collaboration Technologies and Systems (CTS).
+IEEE, IEEE, Denver, CO, 410–418.
+[60] Fei Wang, Nan Yang, P. Mohamed Shakeel, and Vijayalakshmi Saravanan. 2021.
+Machine learning for mobile network payment security evaluation system. Transactions on Emerging Telecommunications Technologies n/a, n/a (Jan. 2021), e4226.
+[61] Long Wang, Hiroyuki Nakagawa, and Tatsuhiro Tsuchiya. 2020. Opinion Analysis
+and Organization of Mobile Application User Reviews. In REFSQ Workshops.
+REFSQ, Virtual, 1–9.
+[62] Yaru Wang, Ning Zheng, Ming Xu, Tong Qiao, Qiang Zhang, Feipeng Yan, and
+Jian Xu. 2019. Hierarchical identifier: application to user privacy eavesdropping
+on mobile payment app. Sensors 19, 14 (2019), 3052.
+[63] Paweł Weichbroth and Anna Baj-Rogowska. 2019. Do online reviews reveal
+mobile application usability and user experience? The case of WhatsApp. In 2019
+Federated Conference on Computer Science and Information Systems (FedCSIS).
+IEEE, IEEE, Leipzig, Germany, 747–754.
+[64] Sha Wu and Jiajia Liu. 2019. Overprivileged permission detection for android
+applications. In ICC 2019-2019 IEEE International Conference on Communications
+(ICC). IEEE, IEEE, Shanghai, China, 1–6.
+[65] Benjamin Yankson, Patrick CK Hung, Farkhund Iqbal, Liaqat Ali, et al. 2021.
+Security assessment for Zenbo robot using Drozer and mobSF frameworks. In
+2021 11th IFIP International Conference on New Technologies, Mobility and Security
+(NTMS). IEEE, IEEE, Paris, France, 1–7.
+
+EuroUSEC 2023, October 16–17, 2023, Copenhagen, Denmark
+
+Kishnani et al.
+
+Table 4: Themes and distribution of reviews with the Precision (P), Recall (R), and F1 scores in each theme.
+
+APPENDIX
+Table 3: Full list of keywords used to extract security, privacy,
+and usability reviews.
+Category
+Privacy and
+Security
+Primary
+Keywords
+
+Keywords
+private, confidential, privacy, confidentiality,
+secure, security, safe, personal information, access, risk, risky, scam, unsafe, steal, stole, fraud,
+protect, protection, breach, security, phish, spyware, malware, hack, virus, spam, leak, permission, read calendar, write calendar, read messages, intrusive, malicious, invade, safety, disclose, violate, lock, unlock, password, fake, theft
+Privacy and account, transaction, credit, debit, card, adverSecurity
+tisement, bluetooth, calendar, contact, location,
+Secondary
+mail, camera, files, network, phone, phone call,
+Keywords
+call, internet, information, data, identity, app,
+payment, money
+Privacy and drain, block, lock, close, freeze, crash, shut,
+Security
+hang, stuck, glitch, laggy, stall, crush, scrape,
+Addendum fail, recover, trust, sketchy, limit, easy, wrong,
+Keywords
+lost, change, check, monitor, track, turn off,
+false, shut, misleading, intercept, verify, deny,
+prove, lose, harvest
+User Inter- doesnt come, doesn’t come, does not come,
+action Key- doesnt even come, doesn’t even come, does
+words
+not even come, doesnt show, doesn’t show, not
+showing, doesnt even show, doesn’t even show,
+does not even show, not even showing, doesnt
+appear, doesn’t appear, does not appear, not
+appearing, doesnt even appear, doesn’t even
+appear, does not even appear, not even appearing, doesn’t work, does not work, doesnt even
+work, doesn’t even work, does not even work,
+cannot load, can not load, can’t load, cannot
+even load, can not even load, can’t even load,
+doesnt load, doesn’t load, does not load, doesnt
+even load, doesn’t even load, does not even
+load, wont load, won’t load, would not load,
+will not load, wont even load, won’t even load,
+would not even load, will not even load, loading, error, errors, link, slow, slowing, slowness,
+slows, button, freezing, freezes, glitch, glitches,
+glitching, glitched, bug, crash, crashes, message, ui, ux, gui, interface, gone wrong, went
+wrong, code, updating, update, network issue,
+network issues, connection issue, connection
+issues, forever, maintenance, decimal, buffer,
+buffers, buffering, nothing works, notification,
+notifications, not getting, fix, remember, click,
+clicked, tap, accessible, screen, feature, features,
+clunky, cache, keeps refreshing, keep refreshing, connect, connecting, connection, reminder,
+automatically, layout, lag, lagging, lagged, otp,
+delay, delays, difficult to use, not easy to to
+use, graphics, installed, installing, close app, 5g,
+5gs, 4g, 4gs, shut down, shuts, shutting down,
+browser, desktop, something is wrong, technical, battery, timed out, display, unavailable
+
+156
+
+Theme
+Privacy & Security
+Account Access
+Transaction
+User Info
+Permission
+Confidentiality
+Usability
+Non-functional Options
+Customer Support
+System Errors
+Frustration
+Application Layout
+Hard to Find Options
+Slow Applications
+Dissatisfaction
+Application Crashes
+Not Easy to Use
+Screen Freezes
+User Info Upload
+
+Distribution
+
+P (%)
+
+R (%)
+
+F1 (%)
+
+20431 (38.73%)
+16624 (31.52%)
+6609 (12.53%)
+717 (1.26%)
+651 (1.23%)
+
+90.14
+88.40
+96.30
+80.00
+87.50
+
+92.75
+77.22
+74.29
+100.00
+87.50
+
+91.43
+82.43
+83.88
+88.89
+87.50
+
+30798 (52.93%)
+10872 (18.68%)
+6632 (11.40%)
+6233 (10.71%)
+4872 (8.37%)
+3929 (6.75%)
+3137 (5.39%)
+2004 (3.44%)
+1742 (2.99%)
+1735 (2.98%)
+1268 (2.18%)
+852 (1.46%)
+
+60.65
+92.31
+94.23
+100.0
+78.12
+67.74
+78.79
+91.67
+100.0
+90.91
+93.33
+85.71
+
+82.46
+93.75
+76.56
+100.0
+96.15
+72.41
+89.66
+100.0
+91.3
+90.91
+93.33
+80.0
+
+69.89
+93.02
+84.48
+100.0
+86.21
+70.0
+83.87
+95.65
+95.45
+90.91
+93.33
+82.76
+
+Assessing Popular E-Payment Applications
+
+EuroUSEC 2023, October 16–17, 2023, Copenhagen, Denmark
+
+Table 5: Application names with Security Score (SS), number of (C)ritical and (W)arning severity issues in Certificate (CERT),
+Code, Manifest (MNFST), and Network (NTWK) categories (with total across all categories); along with the Permission Score (PS),
+number of permissions reported as Declared (DP), Exploited (EP), Useless (UP), Ghost (GP), and Dangerous (DaP) permissions.
+
+Applications
+
+SS
+
+Affirm
+Afterpay
+BankMobile
+Capital One
+Cards
+CareCredit
+Cash App
+Citi Mobile
+Citizens Bank
+Cointab
+Credit One
+Discover
+Ecobank
+eSewa
+GoBank
+GPay
+Green Dot
+IME Pay
+Klarna
+Lyf Pay
+M&T Bank
+MobiKwik (Business)
+MobilePay
+MoneyGram
+My Boost
+Navy Federal
+OxigenWallet
+PayPal
+PayRange
+paysafecard
+Paysera
+Paytm
+PayZapp
+PREMIER Card
+Pyypl
+QuadPay
+Revolut
+Sezzle
+Shell
+Step
+SunTrust
+T Wallet
+tmw
+UltraCash
+US Bank
+Venmo
+VodaPay
+Samsung Pay (Watch)
+Wells Fargo
+Zelle
+
+43
+42
+41
+47
+30
+62
+48
+49
+53
+60
+37
+47
+31
+37
+36
+31
+21
+38
+39
+44
+49
+54
+43
+39
+48
+40
+42
+20
+43
+51
+46
+40
+34
+44
+36
+45
+45
+35
+39
+47
+45
+44
+43
+31
+41
+41
+33
+48
+41
+
+CERT
+C W
+1
+1
+1
+1
+1
+2
+1
+3
+2
+2
+1
+1
+0
+2
+1
+2
+0
+3
+1
+1
+1
+2
+2
+3
+1
+0
+1
+2
+1
+1
+1
+2
+1
+3
+1
+1
+2
+3
+1
+3
+3
+0
+1
+2
+1
+1
+1
+3
+0
+2
+2
+2
+1
+2
+1
+2
+3
+1
+1
+2
+3
+0
+1
+3
+3
+2
+3
+1
+2
+2
+1
+2
+1
+1
+1
+1
+1
+2
+2
+2
+3
+0
+2
+2
+1
+1
+1
+1
+0
+0
+2
+1
+2
+1
+0
+2
+1
+2
+1
+2
+
+CODE
+C W
+7
+0
+7
+0
+3
+0
+5
+0
+5
+0
+5
+0
+3
+0
+6
+0
+5
+0
+4
+0
+6
+0
+10
+0
+3
+0
+4
+0
+5
+0
+5
+0
+4
+0
+4
+0
+6
+0
+4
+0
+4
+0
+3
+0
+4
+0
+4
+0
+5
+0
+3
+0
+6
+0
+6
+0
+5
+0
+4
+0
+3
+0
+6
+0
+8
+0
+3
+0
+3
+0
+5
+0
+5
+0
+4
+0
+7
+0
+6
+0
+5
+0
+8
+0
+3
+0
+5
+0
+3
+0
+7
+0
+6
+0
+4
+0
+6
+0
+4
+0
+
+MNFST
+C
+W
+2
+0
+3
+0
+0
+2
+0
+1
+4
+2
+1
+2
+2
+0
+4
+0
+1
+0
+0
+1
+3
+0
+2
+1
+4
+0
+3
+0
+5
+0
+4
+0
+5
+1
+6
+0
+4
+1
+2
+1
+0
+1
+0
+0
+2
+1
+2
+1
+2
+1
+3
+0
+2
+2
+3
+0
+2
+1
+3
+0
+2
+1
+7
+0
+4
+1
+3
+0
+3
+1
+3
+0
+4
+2
+6
+0
+3
+1
+3
+0
+0
+0
+1
+1
+4
+0
+2
+2
+0
+0
+5
+0
+2
+1
+4
+0
+2
+0
+2
+0
+
+157
+
+NTWK
+C
+W
+1
+0
+0
+0
+1
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+1
+0
+1
+0
+1
+0
+2
+0
+0
+0
+0
+0
+0
+0
+0
+0
+1
+0
+1
+0
+1
+0
+1
+0
+1
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+2
+0
+0
+0
+0
+0
+1
+0
+
+TOTAL
+C W
+11
+1
+11
+1
+5
+4
+6
+4
+11
+4
+7
+3
+5
+2
+11
+2
+6
+3
+5
+2
+10
+2
+14
+4
+8
+0
+8
+2
+11
+1
+10
+2
+10
+4
+11
+1
+12
+4
+7
+4
+7
+1
+4
+2
+7
+2
+8
+4
+8
+3
+9
+2
+11
+4
+10
+2
+10
+2
+8
+2
+8
+1
+15
+3
+16
+3
+10
+1
+9
+3
+10
+2
+10
+3
+11
+1
+11
+3
+11
+2
+8
+0
+11
+3
+8
+1
+8
+3
+3
+0
+14
+1
+12
+2
+8
+2
+9
+2
+8
+2
+
+PS
+
+DP
+
+EP
+
+UP
+
+GP
+
+DaP
+
+19.73
+36.14
+14.89
+11.46
+33.42
+13.06
+12.58
+17.44
+15.84
+35.77
+25.66
+28.99
+22.25
+18.12
+12.59
+43.71
+17.37
+30.41
+8.17
+18.25
+12.49
+24.94
+12.45
+23.39
+42.83
+15.01
+15.66
+13.97
+40.93
+18.91
+9.69
+48.56
+11.80
+12.67
+8.86
+31.20
+49.64
+10.65
+22.85
+13.30
+13.05
+19.11
+24.97
+7.02
+39.14
+6.25
+77.05
+10.05
+8.38
+15.62
+
+10
+17
+8
+23
+34
+14
+25
+24
+23
+23
+11
+44
+24
+18
+25
+18
+18
+20
+15
+38
+22
+9
+20
+12
+21
+23
+18
+31
+12
+15
+19
+53
+31
+12
+36
+33
+38
+31
+20
+24
+18
+24
+27
+25
+41
+21
+33
+21
+19
+14
+
+3
+8
+4
+9
+6
+6
+12
+9
+13
+10
+5
+10
+10
+6
+11
+7
+7
+7
+5
+7
+9
+4
+9
+7
+5
+7
+9
+11
+5
+6
+7
+20
+16
+3
+12
+16
+3
+7
+8
+8
+7
+9
+6
+12
+11
+9
+14
+7
+11
+7
+
+7
+9
+4
+14
+28
+8
+13
+15
+10
+13
+6
+34
+14
+12
+14
+11
+11
+13
+10
+31
+13
+5
+11
+5
+16
+16
+9
+20
+7
+9
+12
+33
+15
+9
+24
+17
+35
+24
+12
+16
+11
+15
+21
+13
+30
+12
+19
+14
+8
+7
+
+9
+4
+14
+8
+7
+5
+4
+11
+6
+6
+5
+9
+6
+6
+6
+6
+5
+5
+10
+7
+3
+4
+5
+5
+4
+8
+7
+5
+4
+5
+5
+1
+1
+5
+11
+6
+6
+13
+3
+6
+5
+5
+1
+9
+3
+7
+3
+11
+3
+9
+
+0
+7
+1
+0
+8
+4
+10
+8
+11
+13
+5
+9
+11
+8
+8
+10
+5
+10
+5
+7
+11
+4
+5
+3
+8
+7
+10
+0
+2
+3
+7
+22
+15
+4
+9
+12
+9
+4
+7
+8
+8
+10
+12
+17
+10
+12
+7
+7
+7
+
+

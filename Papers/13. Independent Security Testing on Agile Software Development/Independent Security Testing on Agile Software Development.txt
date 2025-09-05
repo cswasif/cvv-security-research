@@ -1,0 +1,1432 @@
+2015 10th International Conference on Availability, Reliability and Security
+
+Independent Security Testing on Agile Software Development:
+a Case Study in a Software Company
+
+Jesús Chóliz, Julián Vilas, and José Moreira
+Department of Research and Security.
+Scytl Secure Electronic Voting, S.A.
+Barcelona, Spain.
+e-mail: {jesus.choliz, julian.vilas, jose.moreira}@scytl.com
+
+Abstract – Agile methodologies are becoming increasingly
+common on Software Engineering Teams. Unfortunately,
+their relation with the security activities is complex to
+approach, even more complex when the Security Team has
+strong requirements of independence. This paper shows a
+case study of a software security testing process, based on
+the Microsoft Software Development Lifecycle for Agile, on a
+company moving their Software Engineering Teams from
+waterfall to agile. The results of this case study show a
+successful synchronization between the tasks of agile
+Software Engineering Teams and the independent Security
+Team.
+
+present a case study focused on the software security
+testing process, as a part of an agile-based Secure Software
+Development Lifecycle (S-SDL), inspired in the Microsoft
+Security Development Lifecycle (SDL) for Agile [3]. We
+will show how we approached this methodology, paying
+especial attention to the scenario where the organization is
+committed to preserve the independence of the Security
+Team as a different business unit from other business areas
+like the Software Engineering Department. The
+organizational environment, the testing methodology, and
+the tools that we have adopted to support the process will
+be discussed below.
+The Company in this case study is a software company
+that develops privacy- and cryptography-related systems.
+The Company has been working for years in a traditional
+waterfall-based approach, and now is moving their
+Software Engineering Teams to agile methodologies,
+mainly by using Scrum. We will show how the Security
+Team has worked to address this transition. Also, from the
+experience gained in the process, we will also highlight the
+main conclusions, qualitative results and differences with
+respect to the previous methodology applied in the
+company.
+The paper is organized as follows. In Section II, we
+will present the main problems and benefits derived from
+the constraint of requesting independence of the Security
+Team from the Agile Teams. In Section III, we will briefly
+review the background in incorporating security into agile
+methodologies. Sections IV, V and VI are devoted to
+developing the technical solution with the methodology
+that we propose for synchronizing tasks between both
+teams, and the different tools employed to support these
+tasks. Next, in Section VII, we will present some results
+derived from our experience in implementing the
+methodology, and, finally, the conclusions are drawn in
+Section VIII.
+
+Keywords-component; Agile; testing; security testing;
+segregation of duties; web application; Microsoft SDL;
+
+I.
+
+INTRODUCTION
+
+Software Engineering Teams from most companies,
+whether software development companies, professional
+services firms, or even Software Engineering Departments
+from non-software related companies, are moving their
+software development lifecycles from traditional waterfall
+approaches to agile methodologies, using mainly Scrum,
+the most popular agile framework.
+According to the Agile manifesto [1] and its principles
+[2], by using agile methodologies with continuous and
+iterative software deliveries, Software Engineering Teams
+are approaching the software requirements progressively,
+building software at short notice, and accepting changes in
+the requirements at any moment. To do this, Agile Teams
+are starting to work on source code from the very first
+moment, instead of the traditional approach of waterfall
+methodologies, which required to gather and process all
+the requirements and design a software architecture before
+the first lines of code were produced. Agile Teams are then
+self-sufficient to define their own designs and system
+architectures as the requirements are processed and
+included in their backlog.
+Traditional software development methods have
+required long discussions among interdisciplinary teams to
+determine the best designs or to analyze the software from
+several points of view. Agile principles, however, are
+oriented to achieve technical excellence, create the best
+designs, and promote quality and working software by
+using small, highly knowledgeable teams. Unfortunately,
+this way of working creates new complexities when
+different stakeholders from different business units (e.g.,
+security, legal, usability, compliance, etc.) need to
+participate in the process of building software, but they
+cannot be integrated in the Agile Team. In this paper, we
+978-1-4673-6590-1/15 $31.00 © 2015 IEEE
+DOI 10.1109/ARES.2015.79
+
+II.
+
+THE PROBLEM
+
+The segregation of duties between critical functions is
+a very well-known best practice in medium- and largesized companies, and even a legal requirement in specific
+sectors, in order to avoid risk scenarios where critical and
+incompatible job responsibilities are handled by the same
+person. A typical example in the finance area is the
+separation of “cash payable” and “cash receivable” duties,
+aimed to reduce the risk of financial fraud.
+Although the clearest goal of separation of duties is to
+restrict the power of one single person in a specific
+process, this mechanism is also used to ensure the
+522
+
+appropriate separation of duties between departments and
+avoid conflicts of interest between their agendas.
+There are several approaches to implement segregation
+of duties, for example: based on risk [4], following
+compliance requirements [5, 6], or specific studies for IT
+and security functions [7]. Also, there are well-known
+standards such as the CMMI, which established the
+requirement of independence between the Project
+Management and the Quality Teams [8].
+However, for our purposes, the most relevant best
+practice in the industry is the one that states that the
+Security Department should be an independent business
+unit by working as an independent team [9], and having
+the CISO/CSO reporting directly to the CEO [10]. This
+way, it is assured that the Security Department will raise
+the risks concerning the organization to the appropriate
+level, independently of the interests of other business units.
+In the particular scenario of this case study, the
+Security Team determines security requirements, threat
+assessment, and security testing activities. The team works
+independently from other business units and is able to raise
+any detected security risk to the Senior Management.
+Additionally, with this organization, the Security Team can
+provide their services to the two main technological areas,
+the Product Development Department and the Solutions
+Delivery Department, worldwide.
+On the other hand, the Scrum guide [11] states that
+“Development Teams do not contain sub-teams dedicated
+to particular domains like testing or business analysis,”
+with the philosophy of creating integrated teams with all
+the required roles inside them. By doing this, the approach
+of the Agile Teams is enforcing their organizations to build
+teams with, at least, someone with skills on security
+matters. Otherwise, security requirements, architecture
+designs, and security verifications might be simply
+overlooked.
+However, this new organization of teams collides with
+the best practice of maintaining the Security Team in a
+business unit independent of other business areas like the
+Software Engineering Teams. In this specific case, it
+should be ensured that the Security Team and the Software
+Engineering Teams are not running under the same
+operative agenda, although they are sharing the same
+business objectives from the company’s perspective.
+Otherwise, the potential conflicts regarding priorities and
+risk assessment of any issue would be solved by the same
+business unit that delivers the software, increasing the
+possibility of overlooking security matters.
+Moreover, at the same time both teams have to work
+synchronized with the periodic and incremental deliveries
+in order to provide a comprehensive and timely software
+security testing. Thus, in this paper we will show how we
+solved this problem while preserving the Security Team as
+an independent business unit.
+This synchronization between teams is of paramount
+importance, considering how the cost of bug-fixing
+increases as the software development process progresses.
+This situation has been widely confirmed by several
+studies, as cited for instance in [12]. This way, a successful
+security testing methodology synchronized with the Agile
+Team would provide early detection of security bugs,
+while a failure in synchronizing teams would revert in a
+
+late security testing process with a late detection of
+security bugs.
+We would also like to point out that there are some
+other principles of agile methodologies that are directly
+confronted with the traditional security activities on a SSDLC. For example, the Assurance Requirements from the
+international standard on software security Common
+Criteria/ISO15408 [13] request specific documentation
+from Software Engineering Teams, while the agile
+philosophy
+requests
+“working
+software
+over
+comprehensive documentation”. Although this situation is
+also a problem that affects the security testing process we
+have described, its solution is out of the scope of this case
+study.
+Finally, we would like to point out that we will focus
+the case study exclusively on the software security testing
+process. Hence, other security assessments related to
+network security, infrastructure penetration testing, etc. are
+also out of the scope of this paper.
+III.
+
+RELATED WORK
+
+As commented above, the strict, traditional ideas of
+software security usually fit comfortably in a production
+model where a full set of security requirements for the
+system is created initially, followed by its design,
+implementation and verification processes. This was
+already pointed out, e.g., by Beznosov and Kruchten [14].
+Unfortunately, integrating security into agile development
+processes, while preserving the so-called agile values [1, 2,
+15], is by no means a simple task. It is true that the Agile
+Manifesto commits to “working software,” which could be
+somehow understood as a primitive software security
+premise. But this claim by itself leaves ample room in
+terms of what is understood as software security by the
+parties involved in the process.
+Also, the benefits of third-party objectivity and
+independent assessment to state that a solution satisfies the
+desired security requirements have been clearly identified,
+for example, in [9]. However, willing to include the
+additional constraint of independence in the security
+testing process further complicates the integration of
+security into the agile development process. Moreover, it
+may pose the danger to incur in documentation-focused
+processes, which are in conflict with the agile philosophy.
+During the last years there have been several efforts to
+reconcile software security with the conflicting premises
+imposed by the agile methodologies. About a decade ago,
+the works by Beznosov and Kruchten [14], and
+Beznosov [16] already addressed the problem of
+combining incremental functionalities of the resulting
+product at each iteration with security assurance. However,
+despite the unquestionable value of the proposed strategies
+and insight given in these works, they failed to provide
+actual details about the implementation of a specific agilefriendly methodology incorporating security. Also, they
+identified as a future line of research the problem of
+producing the necessary evidence to allow external review,
+testing or evaluation of the product. Subsequently, further
+works that also addressed the problem of integrating
+security into agile methodologies appeared [17–20].
+Given the heterogeneous nature of the Agile Teams, it
+is widely adopted to embed security into the agile process,
+roughly by making developers and testers of the team think
+
+523
+
+like an attacker as the system functionality is incremented.
+That is, security must be integrated into current workflows,
+probably by making security testing an integral part of the
+QA testing plan [21, 22, 38]. However, this has the
+potential drawback of introducing uncertainty in the
+responsibilities of the team members. Also, it can be
+difficult to guarantee that the team possesses the required
+expertise and skills to test that the application meets the
+required security expectations. These issues are of special
+concern when the testing activities involve mission-critical
+security parts of the application.
+There is an OWASP 1 approach [23] which proposes
+the concept of “evil user stories” in an attempt to
+incorporate security into the agile process. This
+methodology consists in “hacking the product backlog” by
+introducing security-focused user stories. An evil user
+story describes malicious software requirements expressed
+in plain language, as a regular user story would do,
+including, but not limited to, software security, privacy or
+cryptography issues. For example, an evil user story could
+state “as a hacker, I can send bad data in URLs, so I can
+access data and functions for which I'm not authorized.”
+This approach has the drawback that security features are
+required to be included in every single feature of the
+backlog, as applicable, in every sprint. Also, as noted by
+Othmane et al. [24], this approach implies a verification of
+a list of security requirements for the software in full in
+each increment, plus the additional constraint that all
+security requirements have to be implemented in the first
+iteration of the development. Nonetheless, no specific
+premises are given to perform an independent verification.
+Probably, the most widely known software security
+methodology is Microsoft's framework, which is integrated
+in what they call Security Development Lifecycle (SDL)
+[25]. This framework consists of 13 sequential steps that
+cover almost all the development lifecycle. The advantages
+and drawbacks against other frameworks [26–28] are
+discussed, for example, in [20, 29].
+Microsoft SDL was subsequently integrated into the
+agile process [3], being the methodology that best fits our
+needs for independent testing. In essence, it classifies the
+security practices into categories, according to how often
+they should be executed: one-time practices, every-sprint
+practices and bucket practices. The former practices are
+defined as those that are carried out after a set of sprint
+iterations. Basically, it is trying to ensure that no line of
+code is going into production without been subject to a
+proper security review. We will discuss this methodology
+further in the next section, where we will present our
+approach, extensively based on Microsoft SDL for Agile.
+IV.
+
+participate directly in this process as a part of the Agile
+Team.
+To achieve this, we use automated and semi-automated
+tools that will be directly involved in the software
+development process and will act as the “trigger
+interfaces” for the Security Team to report findings and
+security bugs. Additionally, we will schedule some
+specific software security testing activities coordinated
+with the schedule of sprints and releases.
+B. Scope
+The Company where we implement the present study is
+a software company that not only develops software
+products, but also delivers projects with their software-asa-service solutions.
+According to this, the Security Team needs to consider
+in the scope the security tests for the following two
+categories, based on their segments of technology:
+• Software Security Tests, exclusively focused on
+the discovery of vulnerability and security bugs
+that might be exploited using application-provided
+functionalities.
+• Infrastructure Security Tests, focused on the
+identification of any potential issue due to the
+outdating or security misconfiguration of
+infrastructure services, e.g., web server,
+application server, operating system, among
+others.
+This paper is focused on the activities related to
+Software Security Tests, and not on Infrastructure Security
+Tests. However, this latter category is also mentioned as a
+part of the methodology in the discussion below.
+C. Security Testing Activities
+In relation to the first category, Software Security
+Tests, before approaching how to schedule their execution,
+our first need is to list the specific activities that will be
+conducted during the project timeline by the Security
+Team. These tasks include:
+1) Software security inspections, where security
+testers manually review the surface of the software
+solution, understanding and checking its client-server
+protocols, resources, features, and functional security
+controls.
+2) Security checks on business logic, making use of
+implemented functionalities looking for misuse scenarios
+in front of, for example:
+• impersonation,
+• elevation of privileges,
+• privacy breaches,
+• unauthorized access,
+• break workflows,
+and in general, any other potential attack to the platform
+that could be identified as a result from previous activities
+of the lifecycle such as the Threat Assessment process. An
+example of how this Threat Assessment feeds the software
+security testing process is included in the Appendix B of
+this paper.
+
+APPROACH TO THE SOLUTION
+
+A. Overview and Objectives
+Departing from the Microsoft SDL for Agile
+framework, our solution is focused on improving the
+synchronization tasks between the Security Team and the
+Software Engineering Team, taking into account the fact
+that the releases from the Software Engineering Team are
+frequent and iterative, and that the Security Team cannot
+1
+
+OWASP is an open project promoting security on web applications, in
+terms of education, methodologies, tools, and techniques among others.
+
+524
+
+For these reasons, we have identified the following
+four categories where we schedule the software security
+testing activities to be executed:
+
+3) Automated web vulnerability analysis, executing
+security scanners against the targeted web application
+dynamically, i.e., when the software is running.
+4) Manual web vulnerability analysis, performing
+manual attacks against the targeted web application with
+the software running, just using a web browser or a web
+proxy as tools.
+5) Automated source code analysis.
+6) Manual code reviews of top-critical parts of the
+application.
+7) Third-party dependencies analysis, looking for
+published vulnerabilities that could affect the application
+security.
+8) Log analysis, verifying that accurate, proportional,
+and appropriate information is properly registered in the
+software traces, and that no sensitive information is being
+logged by mistake.
+
+1) Security tests after the first sprint:
+In addition to the usual activities, which are common at
+the beginning of the testing phase (i.e., understanding the
+software, its goal and features, its technology, etc.), the
+objective of this stage is to configure the security testing
+environment needed for the rest of the stages. That is,
+configuring the automated tools for dynamic analysis and
+source code analysis.
+Additionally, we will establish the periodicity of the
+automated tools, and we will also run the tools for the first
+time in order to establish a baseline.
+2) Security tests for every subsequent sprint:
+Every automated tool configured after the first sprint is
+executed at least once per sprint, looking for software
+implementation errors that could lead to vulnerabilities
+related to most common attacks, as the ones specified by
+OWASP Top 10 [30], CWE/SANS 25 [31] or WASC [32].
+The results from these analyses will be automatically
+added to the dashboard of the Security Team, who can
+react immediately upon discovery of high-risk
+vulnerabilities. The first step will be to contrast the
+findings in the software, in order to eliminate false
+positives, and if confirmed, the bugs will be documented,
+prioritized, and reported in the ticketing tool.
+Also, on every sprint, at least one task of the bucket is
+executed.
+
+D. Schedule
+After the Security Team has identified the goal of
+minimum security testing practices, in order to establish a
+schedule and to achieve synchronization with the Agile
+Team, we will use a custom testing methodology based on
+the Microsoft SDL for Agile, as stated above.
+The Microsoft SDL for Agile is a framework that
+proposes several security-related tasks to be executed at
+different stages of the project lifecycle in the following
+format [3]:
+1) Every-sprint practices: essential security practices
+that should be performed in every release.
+2) Bucket practices: important security practices that
+must be completed on a regular basis but can be spread
+across multiple sprints during the project lifetime.
+3) One-time practices: foundational security practices
+that must be established once at the start of every new
+agile-based project.
+
+3) Security tests in bucket:
+While the software product is in the development stage,
+every task of this list must be executed at least every N
+sprints, where N is determined at the beginning of the
+project, and it depends on the product size and criticality.
+The following actions are considered at this stage:
+• Supervision and, if necessary, update of the
+configuration of the automated tools (web
+vulnerability scanners and source code analyzers).
+• Software security inspections + manual and
+dynamic application security testing, using tools
+for tampering data (web proxies), looking for
+vulnerabilities on the implementation which were
+not detected by automated tools.
+• Security checks on business logic, where the tests
+do not focus on typical vulnerabilities from web
+applications but on specific misuses of the targeted
+software that break its logic.
+
+Currently, we have adapted Microsoft SDL for Agile to
+our needs with the following two objectives:
+• Arranging the methodology for the usage of
+automated tools, in a way convenient to our
+specific needs, ensuring that the Security Team
+can be continuously synchronized but not directly
+involved with the Software Engineering Team.
+This arrangement requires an initial set of
+activities to configure the automated tools. On the
+other hand, it allows us to perform some tasks on
+every sprint that were planned on the bucket in the
+original methodology.
+• Creating a new category for security tests before a
+release. Because of the nature of the software
+products developed by the Company where we
+implement this case study, the software resulting
+on single sprints is not as critical as a software
+released for its deployment into production
+environment. Thus we can maintain important
+security testing activities on a bucket, although a
+mandatory set of tasks to be executed before a
+release is something that better fits our needs.
+
+4) Security tests on every release:
+Before the delivery of a new release, in addition to the
+“on every sprint” tasks, a set of security tests is manually
+executed by the Security Team. That is, automated
+dynamic security checks, source code analysis, manual
+dynamic testing combined with manual code review, logs
+review, among others. Tools like web proxies or similar
+are used for tampering requests, modifying sequence or
+throughput, or for spidering purposes.
+In Table I, we describe the mapping of our needs for
+minimum security testing activities with the proposed
+schedule of security testing stages.
+
+525
+
+TABLE I.
+
+•
+
+TESTING SCHEDULES
+Security testing categories
+
+Security Testing
+Activities
+
+After the
+1st sprint
+
+1. Software security
+(*)
+inspections
+2. Security checks on
+business logic
+3. Automated dynamic
+analysis
+3.1. Configure web
+vulnerability scanner
+4. Manual web
+vulnerability analysis
+5. Automated source
+code analysis
+5.1. Configure source
+code analyzer
+6.Manual code reviews
+7. Third-party
+dependencies analysis
+8. Log analysis
+(*)
+
+Every
+sprint
+
+Bucket
+
+Every
+release
+
+•
+
+9
+
+9
+
+•
+
+9
+
+9
+
+•
+
+9
+9
+
+9
+9
+
+9
+
+•
+
+9
+9
+
+•
+
+9
+9
+
+9
+
+9
+9
+
+This task is also performed as the starting point for task number 4.
+
+This way, on this schedule we are including in the first
+steps of the Software Development Lifecycle, those
+activities related with the configuration and execution of
+automated tools that will be running during the entire
+project timeline. We will also schedule their review for
+ensuring their effectiveness.
+On the other hand, we will schedule specific activities
+related to manual security testing, such as inspection,
+dynamic testing, business logic or code reviews, on a
+certain basis (not for every sprint), emphasizing the
+importance of the releases.
+For a better synchronization between the Security
+Team and the Software Engineering Team, these activities
+should be included in the project chart. This scheduling is
+straightforward for those activities included in the
+categories “after first sprint” and “every release,” and
+maybe it is not be necessary for the activities scheduled on
+“every sprint” since they are automated tasks. However,
+the activities planned to be executed from the “bucket” are
+not so predictable, so we just introduce a “generic” task on
+every sprint named “security task from the bucket,” and
+we refine this definition for every sprint as the project
+progresses.
+By doing this, we can ensure that the activities
+performed by the Security Team are also visible to other
+stakeholders such as the Product Management Team, and
+that the Software Engineering Team is aware of our duties,
+so their impact and suitability can be discussed.
+V.
+
+It must be fully functional and updated on a
+regular basis, so that the last version of the
+targeted software is tested.
+It should contain test data simulating the expected,
+normal behavior of the application.
+When the application has different users/roles, at
+least two users for every role should be created for
+security testing purposes.
+The tester should have access to every available
+log entry, communication channel, and also to the
+database records and any other backend
+information if any, e.g., mail boxes.
+It should permit that the tester debugs the source
+code while interacting dynamically with the
+application.
+Preferably the testing environment should be
+exclusively for security testing purposes. In this
+case, we deploy the software with the support of
+the Software Engineering Team on a dedicated
+server provided by the Security Team, e.g., a
+virtual machine on OpenNebula technology [39].
+In a worst-case scenario, for low-critical projects,
+the Security Team could perform the security tests
+against an already functional environment created
+for functional testing purposes, or a preproduction
+environment.
+
+Once the testing environment is set up, a first end-toend verification process should be performed in order to
+ensure that the entire system is working as expected.
+B. After first sprint, configuration of automated tools
+As explained above, the security testing processes will
+make extensive use of automated security tools as an
+important support to the activities. Currently, the Security
+Team is using the following tools:
+• Acunetix Web Vulnerability Scanner (Acunetix
+WVS) [33], for scheduled and on-demand
+automated dynamic testing.
+• HP Fortify Static Code Analyzer (Fortify SCA)
+[34], for scheduled and on-demand code analysis.
+• OWASP Dependency-Check [35], for scheduled
+and on-demand automated vulnerability scanning
+of third party dependencies.
+After the first sprint, there should be some application
+functionalities to test. Otherwise this process should be
+postponed to the first sprint delivering some functionality.
+The goal is to become familiar with the application design
+by browsing the features, and analyzing the structure and
+frameworks on the source code.
+Then, the security tester will configure and run the
+different automated tools against the targeted application
+or source code, and tune them according to the distinctive
+features of the application.
+In this way:
+• Acunetix WVS is configured in a way that it can
+access every application web page, form, and
+function, including both authenticated and
+unauthenticated zones.
+• Fortify SCA is configured to compile the solution
+and follow the data flows.
+
+TECHNICAL SPECIFICATIONS
+
+In this section, we provide an overview of the technical
+specifications of those activities that we consider the most
+interesting security testing activities from a methodological
+point of view.
+A. Prerequisite: set up a security testing environment
+In order to execute the security tests, we need a suitable
+environment defined during the first stages of the project.
+The requirements of the environment are:
+
+526
+
+•
+
+of automated processes, due to the complexity of their
+nature. For instance, potential issues on authentication and
+authorization processes.
+Also, working only at source code level is harder than
+combining manually static with dynamic testing, where it
+is possible to see the values of the variables and their
+execution paths at runtime.
+For these reasons, manual testing is of paramount
+importance when executing security testing of web
+applications.
+When executing this manual process, the Security
+Team follows a predefined procedure for testing, based on
+industry proven references like OWASP Application
+Security Verification Standard Project [37].
+Considering that the automated tools are properly
+analyzing some of the security threats, the Security Team
+then focuses their attention mainly on:
+• session management,
+• account management,
+• authorization,
+• Cross-Site Request Forgery,
+• configuration issues: fingerprinting, resource
+discovery, data leakage (supported by automatic
+tools),
+• brute-forcing.
+
+OWASP Dependency-Check will be directly
+configured on the continuous integration service
+(Jenkins [40]) to be run on every compilation.
+
+During this process, the results of the automated tools
+are analyzed by the Security Team in order to check their
+effectiveness and support the tools in their activities by
+tuning their configuration.
+Once the Security Team considers that the automated
+tools are properly configured, a baseline for the analysis of
+the software is created, and also a calendar for scheduled
+scans.
+We provide a sample of the procedure to improve the
+configuration of the Source Code Analyzer tool, Fortify
+SCA, in Appendix A.
+C. On every sprint: Run automated tools
+Every sprint the automated tools mentioned above will
+be executed against the targeted application:
+• Fortify SCA will be executed against the source
+code.
+• Acunetix WVS will be executed against the testing
+environment.
+• OWASP Dependency-Check will be executed on
+the Continuous Integration process.
+
+During this phase the Security Testing Team also
+makes use of the Active Scan feature of Burp Suite [36]
+for on-demand automated vulnerability scanning. In this
+scenario, the scanner is executed manually and on-demand.
+It is not the same automated process as the ones that were
+configured at the beginning of the project.
+
+The results from these three processes are sent to the
+dashboard of the Security Team, and if any critical risk
+arises, it is reviewed, documented, prioritized, and
+reported.
+No manual testing, code review, or tool configuration
+update is done during this task, just the minimum activity
+required to confirm or reject any potential issue or false
+positive.
+
+F. On every release: Full application analysis,
+combining dynamic analysis plus code review, and
+logs inspection.
+When a sprint generates a release to be delivered to the
+customer, we consider that the status of the source code is
+stable when it has been deployed on pre-production
+environments but before being transferred to production
+servers. For this reason we need to provide strong
+assurance on the security level of the released software.
+
+D. On a bucket: Review configuration of automated tools
+This task is part of the bucket, and its goal is to review
+the current configuration of automated scanners just in
+case they are not working as expected, for instance
+because of application updates.
+To do this, the same operations that were executed
+after the first sprint, when deploying the tools, should be
+repeated in all cases. That is, for dynamic scanners, source
+code analyzers and for the dependency scanners.
+The data flows should be properly followed, and the
+tools should have access to all the resources.
+The results of the scanners are analyzed again by the
+Security Team, who supports the tools by tuning their
+configuration, and updating the baseline of the application.
+
+In this stage we will execute the full set of security
+testing activities:
+• perform software security inspections,
+• security checks on business logic,
+• manual dynamic analysis,
+• manual code reviews,
+• logs inspection.
+
+E. On a bucket and before every release: Manual
+dynamic testing
+Although the automated approach is performing
+comprehensive security tests, there are some
+vulnerabilities that are really difficult to find by this kind
+
+These tests also use as inputs the results from the
+automated scanners.
+
+527
+
+Figure 1. Security testing tools
+
+VI.
+
+In Table II we show how these proposed tools are
+supporting the tasks required by the Software Security
+Testing methodology.
+
+REQUIRED TOOLS
+
+All the processes described in the previous section,
+their related tools, and other supporting tools, are
+integrated with the following structure:
+
+TABLE II.
+Phase
+
+A. The workstation from the security tester, running just
+an Internet Browser, a web proxy (Burp Suite), and
+Eclipse as the Integrated Development Environment
+(IDE).
+B. A Source Code Repository, running a GIT repository
+named Stash, and also old repositories running
+Subversion.
+
+SELECTION OF TOOLS
+
+Tools
+
+Features
+
+1.Software
+security
+inspections
+
+Burp Suite
+
+- Sniffing of web resources.
+- Show history of web resources
+and requests.
+- Show content of web requests
+and responses.
+
+2.Security
+checks on
+business logic
+
+Burp Suite
+
+- Manual interception of web
+requests for tampering.
+
+- Crawling of web resources.
+- Sniffing of web resources.
+Acunetix Web
+3.Automated
+- Automated detection of web
+Vulnerability Scanner.
+dynamic
+vulnerabilities.
+Burp Suite Scan
+analysis
+- Execution of scripts for
+detecting vulnerabilities.
+- Manual interception of web
+requests for tampering.
+- Automation of massive web
+4.Manual web
+Burp Suite
+requests for tampering,
+vulnerability
+IDE Eclipse
+repetition, and fuzzing.
+analysis
+- Debug software on remote
+servers.
+- Automated detection of
+potential issues on the source
+code, based on the software
+5. Automated
+logic.
+source code
+HP Fortify SCA
+- Detailed reporting of
+analysis.
+vulnerabilities and initial
+recommendations.
+- Navigation through the source
+6.Manual code
+code.
+IDE Eclipse
+reviews
+- Debug software on remote
+servers.
+- Automated detection of
+7.Third-party
+OWASP Dependency vulnerabilities from third-party
+dependencies
+software based on published
+Checker
+analysis
+vulnerabilities.
+
+C. A Continuous Integration Environment, where the
+source code is analyzed for quality purposes using
+Sonar, all the dependencies are provided using Nexus,
+the software is built by Maven, and OWASP
+Dependency-Check is executed. All these stages are
+scheduled and executed by Jenkins.
+D. A set of security servers, running the Source Code
+Analyzer and the Software Security Center from HP
+Fortify, and Acunetix Web Vulnerability Scanner.
+E. An internal cloud system running OpenNebula, where
+the software is deployed, on systems previously
+configured with the support of an IT automation tool
+named Ansible, getting the binary files from Jenkins.
+F. Other supporting tools, such as Splunk to analyze the
+logs registered from the security tests, and for the
+tasks of logs inspection. Also, the Security Team
+accesses to an Oracle Database in order to verify
+directly on the database the result of the payloads.
+Figure 1 shows how these tools are integrated
+providing the proper testing environment for the Security
+Team.
+
+8.Log analysis
+
+528
+
+Splunk
+
+- Data mining and detailed
+queries on the logs.
+
+VII. RESULTS
+
+of the projects, where the security testing starts after
+finishing the software development stage.
+Additionally, while analyzing other metrics such as the
+number of security bugs with respect to the number of
+requirements and user stories, or the percentage of invested
+time on security testing in relation to the development
+effort, the case study did not show any relevant
+information, since the ratios were uniform in all the cases,
+and any deviation was easily justifiable.
+
+Once the methodology has been developed and
+implemented in several software projects, we analyzed the
+results in order to check the effectiveness of the proposed
+methodology in synchronizing the security testing tasks
+with the Agile Teams.
+For this purpose we gathered data from a sample of 4
+projects with similar attributes under the following
+conditions:
+• Project A – Based on the new agile methodology,
+it is a new software development project.
+• Project B – Based on the new agile methodology,
+it is a customization of an existing software
+solution.
+• Project C – Based on the previous waterfall
+methodology, it is a new software development
+project.
+• Project D – Based on the previous waterfall
+methodology, it is a customization of an existing
+Software solution.
+
+TABLE III.
+
+Projects
+Stages
+
+Figure 2 shows the timeline of the detection of security
+bugs, by sprint or by month.
+
+Project A - Agile, Development
+12
+10
+8
+6
+4
+2
+0
+
+7
+6
+5
+4
+3
+2
+1
+0
+
+B
+
+C
+
+D
+
+First Period
+
+0,00%
+
+0,00%
+
+0,00%
+
+0,00%
+
+Second Period
+
+39,02%
+
+31,25%
+
+0,00%
+
+0,00%
+
+Third Period
+
+15,85%
+
+62,50%
+
+12,50%
+
+21,43%
+
+Last Month
+
+14,63%
+
+6,25%
+
+87,50%
+
+78,57%
+
+In this case study we have approached the problem of
+integrating the software-security-related activities (which
+traditionally fit well in a waterfall approach) in an agilebased Software Development Lifecycle. This case study
+occurs in an organization moving their Software
+Engineering Teams from waterfall to agile methodologies.
+Specifically, we have focused the study on the security
+testing activities, with the clear objective of synchronizing
+the tests from the Security Team with the agile rhythm of
+sprints, with frequent deliveries, of the Software
+Engineering Teams. Furthermore, it is a high priority that
+the Security Team preserves its independence in order to
+ensure the fairness of their findings and the appropriate
+prioritization of their reported issues.
+We can conclude that the case study has been
+successful: the transition from waterfall to agile of
+Software Engineering Teams has enforced the Security
+Team to apply a new methodology, achieving the desired
+synchronization of the Security Team with the sprints of
+the Software Engineering Team. As an expected, direct
+consequence, in this new scenario the detection of security
+findings occurs earlier in the lifecycle instead of at the end
+of the project timeline.
+
+Project B - Agile, Customization
+
+Project C - Waterfall, Development
+8
+
+A
+
+VIII. CONCLUSION
+
+9
+8
+7
+6
+5
+4
+3
+2
+1
+0
+
+14
+
+DISTRIBUTION OF FINDINGS
+
+Project D - Waterfall, Customization
+12
+10
+8
+6
+4
+2
+0
+
+Figure 2. Issues found per sprint/month
+
+This data shows how the bug finding process started
+earlier and more gradually in the case of the agile projects,
+while in the waterfall projects it was all at a once during
+the last period. This is to be expected if the testing process
+is properly established and implemented: an earlier testing
+stage will produce earlier results.
+In Table III we show the distribution on periods, where
+periods are understood as groups of sprints/months
+according to the duration of the project, and the last month
+of the project, which consists in closing the software.
+In the agile Projects A and B, the first sprints did not
+present any finding concerning security bugs; this is due to
+the fact that on the first iterations of the software there are
+just a small quantity of available features, the Software
+Engineering Team is usually busy building the basis of the
+software components, and the security testing
+methodology concentrates the tasks of configuring the
+testing environments and the automated tools. After this
+first period, the number of findings detected by the security
+testing process is gradual.
+In the case of the waterfall Projects C and D, the main
+quantity of findings is concentrated during the last periods
+
+Acknowledgment. We would like to thank the
+anonymous reviewers for their valuable comments and
+suggestions.
+REFERENCES
+[1]
+[2]
+[3]
+
+[4]
+
+529
+
+K. Beck et al., “Manifesto for Agile Software Development,”
+[Online]. Available: http://agilemanifesto.org/
+K. Beck et al., “Principles behind the Agile Manifesto,” [Online].
+Available: http://agilemanifesto.org/principles.html
+Microsoft, “Agile Development Using Microsoft Security
+Development
+Lifecycle,”
+[Online].
+Available:
+http://www.microsoft.com/en-us/sdl/discover/sdlagile.aspx.
+Ernst & Young, “A risk-based approach to segregation of duties,”
+Insights on governance, risk and compliance, May 2010, [Online].
+Available: http://www.ey.com/publication/vwluassets/ey_segregati
+on_of_duties/$file/ey_segregation_of_duties.pdf.
+
+[28] G. McGraw, “Software Security: Building Security In,” AddisonWesley, New York, 2006.
+[29] B. De Win, R. Scandariato, K. Buyens, J. Grégoire, W. Joosen,
+“On the secure software development process: CLASP, SDL and
+Touchpoints compared.” Information and Software Technology
+vol. 51, no. 7, 1152–1171, 2009.
+[30] OWASP,
+“Top
+Ten
+Project,”
+[Online].
+Available:
+https://www.owasp.org/index.php/Category:OWASP_Top_Ten_Pr
+oject.
+[31] CWE/SANS, “TOP 25 Most Dangerous Software Errors,”
+[Online]. Available: https://www.sans.org/top25-software-errors.
+[32] Web Application Security Consortium (WASC), [Online].
+Available: http://www.webappsec.org.
+[33] Acunetix Web Vulnerability Scanner, [Online]. Available:
+https://www.acunetix.com/vulnerability-scanner.
+[34] HP Fortify Static Code Analyzer, [Online]. Available:
+http://www8.hp.com/us/en/software-solutions/static-code-analysissast.
+[35] OWASP
+Dependency
+Check,
+[Online].
+Available:
+https://www.owasp.org/index.php/OWASP_Dependency_Check.
+[36] Portswigger
+Burp
+Suite,
+[Online].
+Available:
+http://portswigger.net/burp.
+[37] OWASP, “Application Security Verification Standard Project,”
+[Online].
+Available:
+https://www.owasp.org/index.php/
+Category:OWASP_Application_Security_Verification_Standard_P
+roject.
+[38] Scott W. Ambler + Associates, “Agile Testing and Quality
+Strategies: Discipline Over Rhetoric,” [Online]. Available:
+http://www.ambysoft.com/essays/agileTesting.html#IndependentPa
+rallelTesting.
+[39] Open Nebula, [Online]. Available: http://opennebula.org.
+[40] Jenkins CI, [Online]. Available: http://jenkins-ci.org.
+
+[5]
+
+PCI Security Standards Council, [Online]. Available:
+https://www.pcisecuritystandards.org/security_standards/pcidss_ag
+reement.php
+[6] Public Law 107–204, July 2002, [Online]. Available:
+http://www.gpo.gov/fdsys/pkg/PLAW-107publ204/pdf/PLAW107publ204.pdf
+[7] J. Gregg, M. Nam, S. Northcutt, and M. Pokladnik, “Separation of
+Duties in Information Technology,” [Online]. Available:
+http://www.sans.edu/research/security-laboratory/article/itseparation-duties
+[8] CMMI for Development, Version 1.3 (CMMI-DEV, V1.3),
+[Online]. Available: http://www.sei.cmu.edu/reports/10tr033.pdf.
+[9] Steve Lipner, “The trustworthy computing security development
+lifecycle,”
+March
+2005,
+[Online].
+Available:
+https://msdn.microsoft.com/en-us/library/ms995349.aspx.
+[10] K. Coleman, “Separation of Duties and IT Security,” CSO, Aug.
+2008, [Online]. Available: http://www.csoonline.com/article/
+2123120/it-audit/separation-of-duties-and-it-security.html
+[11] The
+Scrum
+Guide,
+[Online].
+Available:
+http://www.scrumguides.org/docs/scrumguide/v1/Scrum-GuideUS.pdf
+[12] S. McConnell, Code Complete, 2nd ed., Redmond, WA: Microsoft
+Press, 2004
+[13] Common Criteria for Information Technology Security Evaluation
+- Part 3: Security assurance components, Sep. 2012, [Online].
+Available:
+http://www.commoncriteriaportal.org/files/ccfiles/
+CCPART3V3.1R4.pdf
+[14] K. Beznosov, and P. Kruchten, “Towards agile security assurance,”
+in Proc. of the 2004 Workshop on New Security Paradigms
+(NSPW), Nova Scotia, Canada, Sep. 2004, pp. 47–54.
+[15] Agile Alliance, [Online]. Available: http://www.agilealliance.org.
+[16] K. Beznosov, “Extreme security engineering: on employing XP
+practices to achieve ‘good enough security’ without defining it,” in
+Proc. of the ACM Workshop on Business Driven Security
+Engineering (BizSec), Fairfax, VA, Oct. 2003.
+[17] X. Ge, R. F. Paige, F. A. Polack, H. Chivers, and P. J. Brooke,
+“Agile development of secure web applications," in Proc.
+International Conference on Web Engineering (ICWE), New York,
+NY, 2006, pp. 305–312.
+[18] H. Keramati, and S. Mirian-Hosseinabadi, “Integrating software
+development security activities with agile methodologies,” in Proc.
+IEEE/ACS International Conference on Computer Systems and
+Application (AICCSA), Apr. 2008, pp. 749–754.
+[19] S. Sonia, and A. Singhal, “Integration Analysis of Security
+Activities from the Perspective of Agility,” in Proc. AGILE India,
+Feb. 2012, pp 40–47.
+[20] T. Ayalew, T. Kidane, and B. Carlsson, “Identification and
+Evaluation of Security Activities in Agile Projects,” in Secure IT
+Systems, ser. LNCS 8208, Oct. 2013, pp 139–153.
+[21] Quotium, “Agile Development for Application Security Manager,”
+[Online]. Available: http://www.quotium.com/resources/agiledevelopment-for-application-security-managers.
+[22] A. Reichert, “Agile process: Time to incorporate security testing,”
+[Online]. Available: http://searchsoftwarequality.techtarget.com/
+tip/Agile-process-Time-to-incorporate-security-testing.
+[23] OWASP, “Agile software development: don't forget evil user
+stories,” [Online]. Available: https://www.owasp.org/index.php/
+Agile_Software_Development:_Don%27t_Forget_EVIL_User_Sto
+ries.
+[24] L. Othmane, P. Angin, H. Weffers, and B. Bhargava, “Extending
+the agile development process to develop acceptably secure
+software,” IEEE Trans. Dep. Sec. Comp., vol. 11, no. 6, pp. 497–
+509, Nov. 2014.
+[25] Microsoft, Security Development Lifecycle, [Online]. Available:
+http://www.microsoft.com/en-us/sdl.
+[26] OWASP,
+“CLASP
+Project,”
+[Online].
+Available:
+https://www.owasp.org/index.php/Category:OWASP_CLASP_Proj
+ect
+[27] G. McGraw, “Seven Touchpoints for Software Security,” [Online].
+Available: http://www.swsec.com/resources/touchpoints/
+
+APPENDIX A
+This appendix presents a sample of the procedure for
+improving the configuration of the Source Code Analyzer
+tool – Fortify SCA.
+a) Navigate through the application and map
+relevant functions at source code level.
+b) Select as examples:
+• One feature that is reflecting user supplied
+data.
+• One feature that is querying the database
+with user supplied data.
+• The login process.
+c) On these features:
+• Identify how external data is gathered
+(sources), how it is sent to external elements
+like databases or how it is sent back to the
+browser (sinks), and run Fortify SCA to
+check if the tool is marking correctly these
+functions as taint sources or sinks. If sources
+or sinks are not being properly detected,
+contact Fortify SCA support and try to add
+proper custom rules to model the expected
+behavior.
+• Identify which in-house or third-party
+external libraries, if any, are being used on
+the data-flow paths, from sources to sinks.
+• When data is flowing through functions
+defined on third-party libraries, i.e., with no
+access to the source code, define passthrough or cleanse custom rules.
+• When data is flowing through functions
+defined in libraries for which we own the
+
+530
+
+•
+
+•
+
+•
+
+the taint source/sink custom rules;
+otherwise, review the process again.
+d) Run Fortify SCA and review results to determine
+if any other adjustments need to be made.
+e) Integrate project analysis on Maven/Jenkins to
+automatize the execution of the tool.
+
+source code, add the source code of this
+library to the analysis. Repeat this data-flow
+analysis recursively on the external function
+to track what happens with the data flow.
+Having the data-flow analysis covered by
+source code or pass-through/cleanse rules,
+create a taint source custom rule with a
+specific taint flag where the data is being
+taken from the user.
+Create a taint sink custom rule with the same
+specific taint flag where data is being sent to
+the external entity (database, authentication
+repository, back to the user's browser, etc.)
+Execute Fortify SCA to check if taint paths
+have been correctly followed. If OK, remove
+
+TABLE IV.
+
+APPENDIX B
+Table IV shows an example of how the threat
+modelling process feeds the security testing process, to
+perform the checks on the business logic.
+The process of threat modelling is performed by
+security analysts within the Security Department. The list
+of identified threats is shared with the security testers to
+design the checks on the business logic.
+
+EXAMPLE OF SECURITY TESTING ON BUSINESS LOGIC FROM THE THREAT ASSESSMENT
+
+Objective of the attack
+
+Test description
+
+Responses
+
+Result
+
+Logs
+
+Bug ID
+
+A malware could try to
+reuse a token to vote
+after the real voter or to
+invalidate a vote.
+
+Stop and copy the vote request, send the vote, and send
+again the same vote.
+
+HTTP code
+
+OK / Fail
+
+Copy
+here
+
+Tracking
+number if any
+
+Stop and copy the vote request, and send the same vote
+twice quickly at the same moment.
+Stop and copy the vote request, drop it and send a new vote
+for the same contest. Then, send both requests.
+
+A malware could try to
+modify the token to use
+the original one.
+
+A malware or MitM
+could try to modify the
+vote to insert inexistent
+candidates
+while
+selecting the voting
+options.
+A malware or MitM
+could try to modify the
+vote once prepared.
+
+Stop and copy the vote request, send the vote, logout, login,
+and send the same vote (with the old token) in the new
+voting session.
+Stop and copy the vote request from a different
+environment (integration). Send it in the demo
+environment.
+Stop the vote request and modify some bits from the auth
+token.
+Create one voter session, and retrieve the token ID. Login
+and cast a vote using the new token but replacing the token
+ID.
+Create one voter session, and retrieve the token ID. Login
+with a different voter ID, and cast a vote using the new
+token but replacing the vote.
+Modify the voting options while selecting the vote, using
+inexistent values.
+Modify the vote by duplicating the values.
+Modify the voting options by using more options than the
+maximum.
+Stop the vote request and modify some bits from the vote,
+or replace the voting options while keeping the signature.
+Stop the vote request and remove the digital signature.
+Stop and copy the vote request from a different election
+(using the same ID system). Send it in the real election.
+Stop the vote request and modify the signature.
+
+…
+
+…
+
+531
+
+
