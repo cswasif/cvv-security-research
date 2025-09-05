@@ -1,7 +1,13 @@
-Payment Security Research Documentation
-========================================
+Fraud Detection in Payment Gateways: Mitigating Card-Not-Present Vulnerabilities Through Enhanced CVV Validation and PCI DSS Compliance
+=======================================================================================================================================
 
-Welcome to the comprehensive documentation for Payment Security Research. This documentation covers all aspects of payment card security, CVV validation vulnerabilities, and PCI DSS compliance research.
+**Abstract**
+
+This thesis investigates vulnerabilities in online payment gateways that facilitate Card-Not-Present (CNP) fraud, specifically focusing on the critical issue of systems accepting transactions despite missing or bypassed Card Verification Value (CVV) data. Such oversights enable widespread carding attacks, undermining the security of digital transactions. Through a structured empirical analysis, this research meticulously documents these vulnerabilities and assesses their impact on payment security, providing research-based evidence of current system failings. It critically evaluates the implications for PCI DSS compliance, highlighting how adherence to robust standards is compromised. Proposing non-AI based prevention strategies, the study advocates for stringent server-side CVV validation, secure merchant integration practices, and enhanced protocol enforcement to bolster fraud detection. This work aims to provide actionable recommendations for fortifying payment gateway defenses against evolving cyber threats, ultimately critiquing existing practices and contributing to a more secure online commerce environment.
+
+**Documentation Overview**
+
+This documentation covers all aspects of payment card security, CVV validation vulnerabilities, and PCI DSS compliance research.
 
 .. toctree::
    :maxdepth: 2
